@@ -2,12 +2,11 @@ import React from "react";
 import { Image, ImageBackground, StyleSheet, Text, View } from "react-native";
 import ShareButton from "../components/button/share.button";
 import { APP_COLOR } from "../utils/constant";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import bg from "@/assets/auth/welcome-background.png";
-import fbLogo from "@/assets/auth/facebook.png";
-import ggLogo from "@/assets/auth/google.png";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, Redirect } from "expo-router";
+const bg = require("@/assets/auth/welcome-background.png");
+const fbLogo = require("@/assets/auth/facebook.png");
+const ggLogo = require("@/assets/auth/google.png");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
