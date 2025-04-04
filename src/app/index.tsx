@@ -44,7 +44,9 @@ const WelcomePage = () => {
       >
         <View style={styles.container}>
           <View style={styles.welcomeText}>
-            <Text style={styles.heading}>WelcomeTo</Text>
+            <View className="bg-red-500 p-4">
+              <Text className="text-white text-lg font-bold">Xin chào</Text>
+            </View>
             <Text style={styles.body}>July</Text>
             <Text style={styles.footer}>Nen tang giao do vip nhat vn</Text>
           </View>

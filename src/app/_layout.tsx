@@ -1,6 +1,6 @@
 import { Slot, Stack } from "expo-router";
 import { Text, View } from "react-native";
-
+import "../../global.css";
 const RootLayout = () => {
   return (
     <Stack
