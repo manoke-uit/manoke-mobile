@@ -13,4 +13,7 @@ export const APP_COLOR = {
   BLUE: "#8FDDDC",
   BUTTON1: "#E4E3E9",
   LT_PINK: "#FEB0D1",
+  GREY_BG: "#282424",
+  GREY_BT: "#585454",
+  RED: "#FF0004",
 };

@@ -1,10 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Animated, Dimensions, Image, Text, TextInput, TouchableOpacity } from "react-native";
+import { 
+    View, 
+    Animated, 
+    Dimensions, 
+    Image, 
+    Text, 
+    TextInput, 
+    TouchableOpacity 
+    } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_COLOR } from "@/utils/constant";
 import tw from "twrnc";
 import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
@@ -23,6 +32,10 @@ const SignUp = () => {
             useNativeDriver: true,
         }).start();
     }, []);
+
+    const handleSignUp = async () => {
+        
+    };
 
     const isButtonActive = email.length > 0 && password.length > 0;
 
@@ -83,6 +96,7 @@ const SignUp = () => {
 
                     <View style={tw`w-full items-center mt-5`}>
                         <TouchableOpacity
+                            onPress={() => router.push("./signup2")} // chưa viết hàm xử lý email
                             style={tw`w-[80%] h-[50px] rounded-lg items-center justify-center ${
                                 isButtonActive 
                                     ? `bg-[${APP_COLOR.PURPLE}]` 

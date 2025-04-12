@@ -7,14 +7,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_COLOR } from "@/utils/constant";
 import { useRouter } from "expo-router";
 import tw from "twrnc";
-import { router } from "expo-router";
 import { loginAPI } from "@/utils/api";
 import Toast from "react-native-toast-message";
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
