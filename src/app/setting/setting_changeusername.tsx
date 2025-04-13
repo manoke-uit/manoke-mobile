@@ -18,11 +18,12 @@ import { loginAPI } from "@/utils/api";
 import Toast from "react-native-toast-message";
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
-const avatar = require("@/assets/auth/Image/avt.png");
+const icon = require("@/assets/auth/Icon/changeu.png");
 
-const SettingAccount = () => {
+const ChangeUsername = () => {
   const slideAnim = useRef(new Animated.Value(screenWidth)).current; 
   const router = useRouter();
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -31,7 +32,6 @@ const SettingAccount = () => {
       useNativeDriver: true,
     }).start();
   }, []);
-
 
   return (
     <SafeAreaView style={tw`flex-1 bg-[${APP_COLOR.BLACK}]`}>
@@ -60,37 +60,27 @@ const SettingAccount = () => {
             </View>
 
             <View className="pt-10 justify-center items-center">
-                <Image source={avatar} />
-                <Text className="pt-5 text-white text-[20px]">admin</Text>
+                <Image source={icon} />
+                <Text className="pt-3 text-white text-[27px] font-bold">
+                    Change Username
+                </Text>
+                <Text className="pt-5 text-white px-12 items-center text-center text-[16px]">
+                    Enter your new username.
+                </Text>
             </View>
 
-            <View className="pt-10 w-[90%] rounded-xl overflow-hidden">
-                    <TouchableOpacity
-                        style={tw`rounded-t-xl bg-[${APP_COLOR.GREY_BT}] pl-8 pr-2 py-3 flex-row justify-between items-center `}
-                    >
-                        <Text className="text-white text-[17px]">Change Profile Image</Text>
-                        <Ionicons name="chevron-forward-outline" size={24} color="white" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={tw`bg-[${APP_COLOR.GREY_BT}] pl-8 pr-2 py-3 flex-row justify-between items-center `}
-                    >
-                        <Text className="text-white text-[17px]">Change Username</Text>
-                        <Ionicons name="chevron-forward-outline" size={24} color="white" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => router.replace('/setting/setting_changepassword')}
-                        style={tw`bg-[${APP_COLOR.GREY_BT}] pl-8 pr-2 py-3 flex-row justify-between items-center `}
-                    >
-                        <Text className="text-white text-[17px]">
-                            Change Password
-                          </Text>
-                        <Ionicons name="chevron-forward-outline" size={24} color="white" />
-                    </TouchableOpacity>
-            </View>
-          
+            <View className="w-[80%] pt-10 justify-center items-center">
+              <TextInput
+                      placeholder="admin"
+                      style={tw`w-full h-[50px] text-[17px] bg-white/20 rounded-lg px-4 mb-4 text-white`}
+                      placeholderTextColor={APP_COLOR.WHITE40}
+                      value={username}
+                      onChangeText={setUsername}
+                  />
+              </View>
         </Animated.View>
     </SafeAreaView>
   );
 };
 
-export default SettingAccount;
+export default ChangeUsername;

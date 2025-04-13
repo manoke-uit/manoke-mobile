@@ -71,6 +71,7 @@ const Setting = () => {
                 </LinearGradient>
                 <View className="pt-10 w-full">
                     <TouchableOpacity
+                        onPress={() => router.replace('/setting/setting_account')}
                         style={tw`bg-[${APP_COLOR.GREY_BT}] rounded-[5px] p-3 flex-row justify-between items-center`}
                     >
                         <Ionicons name="person-outline" size={24} color="white" />
