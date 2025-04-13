@@ -1,5 +1,5 @@
 import { Slot, Stack } from "expo-router";
-import { Text, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import "../../global.css";
 import Toast from "react-native-toast-message";
 const RootLayout = () => {
@@ -47,12 +47,10 @@ const RootLayout = () => {
             headerTitle: "Trang chu",
           }}
         />
-        <Stack.Screen
-          name="product/index"
-          options={{
-            headerTitle: "San pham",
-          }}
-        />
+
+        <Stack.Screen name="(user)/record" />
+
+        <Stack.Screen name="(user)/playlist" />
       </Stack>
       <Toast />
     </>

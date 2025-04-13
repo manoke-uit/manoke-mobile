@@ -63,6 +63,20 @@ const TabLayout = () => {
       <Tabs.Screen
         name="favorites"
         options={{
+          headerTitle: () => (
+            <Text className="text-white text-3xl font-bold">Favorites</Text>
+          ),
+          headerRight: () => (
+            <Ionicons
+              name="settings-outline"
+              size={24}
+              color="white"
+              style={{ marginRight: 16 }}
+            />
+          ),
+          headerStyle: {
+            backgroundColor: APP_COLOR.LIGHT_PINK,
+          },
           tabBarIcon: ({ color, size }) => (
             <FontAwesome name="heart" size={size} color={color} />
           ),
@@ -71,6 +85,20 @@ const TabLayout = () => {
       <Tabs.Screen
         name="history"
         options={{
+          headerTitle: () => (
+            <Text className="text-white text-3xl font-bold">History</Text>
+          ),
+          headerRight: () => (
+            <Ionicons
+              name="settings-outline"
+              size={24}
+              color="white"
+              style={{ marginRight: 16 }}
+            />
+          ),
+          headerStyle: {
+            backgroundColor: APP_COLOR.LIGHT_PINK,
+          },
           tabBarIcon: ({ color, size }) => (
             <FontAwesome name="history" size={size} color={color} />
           ),
@@ -79,6 +107,18 @@ const TabLayout = () => {
       <Tabs.Screen
         name="profile"
         options={{
+          headerTitle: "",
+          headerRight: () => (
+            <Ionicons
+              name="settings-outline"
+              size={24}
+              color="white"
+              style={{ marginRight: 16 }}
+            />
+          ),
+          headerStyle: {
+            backgroundColor: APP_COLOR.LIGHT_PINK,
+          },
           tabBarIcon: ({ color, size }) => (
             <FontAwesome name="user" size={size} color={color} />
           ),
