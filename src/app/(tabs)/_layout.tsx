@@ -1,7 +1,8 @@
-import { Tabs } from "expo-router";
+import { router, Tabs } from "expo-router";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { APP_COLOR } from "@/utils/constant";
+import AnimatedTabIcon from "@/components/animation/tabAnimate";
 
 const TabLayout = () => {
   return (
@@ -19,6 +20,7 @@ const TabLayout = () => {
       <Tabs.Screen
         name="home"
         options={{
+          tabBarLabel: "Home",
           headerTitle: () => (
             <Text className="text-white text-3xl font-bold">Discover</Text>
           ),
@@ -28,19 +30,26 @@ const TabLayout = () => {
               size={24}
               color="white"
               style={{ marginRight: 16 }}
+              onPress={() => router.push("/setting")}
             />
           ),
           headerStyle: {
             backgroundColor: APP_COLOR.LT_PINK,
           },
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="home" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <AnimatedTabIcon
+              name="home"
+              color={color}
+              size={size}
+              focused={focused}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
+          tabBarLabel: "Search",
           headerTitle: () => (
             <Text className="text-white text-3xl font-bold">Search</Text>
           ),
@@ -50,19 +59,26 @@ const TabLayout = () => {
               size={24}
               color="white"
               style={{ marginRight: 16 }}
+              onPress={() => router.push("/setting")}
             />
           ),
           headerStyle: {
             backgroundColor: APP_COLOR.LIGHT_PINK,
           },
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="search" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <AnimatedTabIcon
+              name="search"
+              color={color}
+              size={size}
+              focused={focused}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
+          tabBarLabel: "Favorites",
           headerTitle: () => (
             <Text className="text-white text-3xl font-bold">Favorites</Text>
           ),
@@ -72,19 +88,26 @@ const TabLayout = () => {
               size={24}
               color="white"
               style={{ marginRight: 16 }}
+              onPress={() => router.push("/setting")}
             />
           ),
           headerStyle: {
             backgroundColor: APP_COLOR.LIGHT_PINK,
           },
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="heart" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <AnimatedTabIcon
+              name="heart"
+              color={color}
+              size={size}
+              focused={focused}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
+          tabBarLabel: "History",
           headerTitle: () => (
             <Text className="text-white text-3xl font-bold">History</Text>
           ),
@@ -94,19 +117,26 @@ const TabLayout = () => {
               size={24}
               color="white"
               style={{ marginRight: 16 }}
+              onPress={() => router.push("/setting")}
             />
           ),
           headerStyle: {
             backgroundColor: APP_COLOR.LIGHT_PINK,
           },
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="history" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <AnimatedTabIcon
+              name="history"
+              color={color}
+              size={size}
+              focused={focused}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
+          tabBarLabel: "Profile",
           headerTitle: "",
           headerRight: () => (
             <Ionicons
@@ -114,13 +144,19 @@ const TabLayout = () => {
               size={24}
               color="white"
               style={{ marginRight: 16 }}
+              onPress={() => router.push("/setting")}
             />
           ),
           headerStyle: {
             backgroundColor: APP_COLOR.LIGHT_PINK,
           },
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="user" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <AnimatedTabIcon
+              name="user"
+              color={color}
+              size={size}
+              focused={focused}
+            />
           ),
         }}
       />
