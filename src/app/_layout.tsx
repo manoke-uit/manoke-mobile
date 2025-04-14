@@ -64,21 +64,27 @@ const RootLayout = () => {
           }}
         />
         <Stack.Screen
-          name="(user)/setting"
+
+          name="(setting)/setting"
+
           options={{
             animation: "slide_from_right",
             gestureEnabled: true,
           }}
         />
         <Stack.Screen
-          name="(user)/account"
+
+          name="(setting)/account"
+
           options={{
             animation: "slide_from_right",
             gestureEnabled: true,
           }}
         />
         <Stack.Screen
-          name="(user)/changePassword"
+
+          name="(setting)/changePassword"
+
           options={{
             animation: "slide_from_right",
             gestureEnabled: true,
@@ -86,14 +92,18 @@ const RootLayout = () => {
         />
 
         <Stack.Screen
-          name="(user)/changeProfile"
+
+          name="(setting)/changeProfile"
+
           options={{
             animation: "slide_from_right",
             gestureEnabled: true,
           }}
         />
         <Stack.Screen
-          name="(user)/changeUsername"
+
+          name="(setting)/changeUsername"
+
           options={{
             animation: "slide_from_right",
             gestureEnabled: true,
