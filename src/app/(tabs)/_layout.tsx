@@ -30,7 +30,7 @@ const TabLayout = () => {
               size={24}
               color="white"
               style={{ marginRight: 16 }}
-              onPress={() => router.push("/setting")}
+              onPress={() => router.push("/(setting)/setting")}
             />
           ),
           headerStyle: {
@@ -59,7 +59,7 @@ const TabLayout = () => {
               size={24}
               color="white"
               style={{ marginRight: 16 }}
-              onPress={() => router.push("/setting")}
+              onPress={() => router.push("/(setting)/setting")}
             />
           ),
           headerStyle: {
@@ -88,7 +88,7 @@ const TabLayout = () => {
               size={24}
               color="white"
               style={{ marginRight: 16 }}
-              onPress={() => router.push("/setting")}
+              onPress={() => router.push("/(setting)/setting")}
             />
           ),
           headerStyle: {
@@ -117,7 +117,7 @@ const TabLayout = () => {
               size={24}
               color="white"
               style={{ marginRight: 16 }}
-              onPress={() => router.push("/setting")}
+              onPress={() => router.push("/(setting)/setting")}
             />
           ),
           headerStyle: {
@@ -144,7 +144,7 @@ const TabLayout = () => {
               size={24}
               color="white"
               style={{ marginRight: 16 }}
-              onPress={() => router.push("/setting")}
+              onPress={() => router.push("/(setting)/setting")}
             />
           ),
           headerStyle: {

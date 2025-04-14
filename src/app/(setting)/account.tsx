@@ -35,7 +35,7 @@ const AccountPage = () => {
       <View className="bg-neutral-700 rounded-lg overflow-hidden mb-10">
         <TouchableOpacity
           className="flex-row justify-between items-center px-4 py-4 border-b border-neutral-600"
-          onPress={() => router.push("/(user)/changeProfile")}
+          onPress={() => router.push("/(setting)/changeProfile")}
         >
           <Text className="text-white">Change Profile Image</Text>
           <Entypo name="chevron-right" size={16} color="#fff" />
@@ -43,7 +43,7 @@ const AccountPage = () => {
 
         <TouchableOpacity
           className="flex-row justify-between items-center px-4 py-4 border-b border-neutral-600"
-          onPress={() => router.push("/(user)/changeUsername")}
+          onPress={() => router.push("/(setting)/changeUsername")}
         >
           <Text className="text-white">Change Username</Text>
           <Entypo name="chevron-right" size={16} color="#fff" />
@@ -51,7 +51,7 @@ const AccountPage = () => {
 
         <TouchableOpacity
           className="flex-row justify-between items-center px-4 py-4"
-          onPress={() => router.push("/(user)/changePassword")}
+          onPress={() => router.push("/(setting)/changePassword")}
         >
           <Text className="text-white">Change Password</Text>
           <Entypo name="chevron-right" size={16} color="#fff" />
