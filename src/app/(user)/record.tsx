@@ -4,8 +4,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { APP_COLOR } from "@/utils/constant";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-
+import { useNavigation } from "@react-navigation/native";
 const RecordingsScreen = () => {
+  const navigation = useNavigation();
   const recordings = [
     { id: "1", name: "Name of Song", artist: "Artist", time: "00s" },
     { id: "2", name: "Name of Song", artist: "Artist", time: "00s" },
@@ -29,7 +30,10 @@ const RecordingsScreen = () => {
         className="h-full"
       >
         <View className="bg-neutral-900 rounded-2xl px-6 py-6 h-[75vh]">
-          <TouchableOpacity onPress={() => router.back()} className="self-end">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="self-end"
+          >
             <Text className="text-pink-400 font-bold text-base mr-1 ">
               Done
             </Text>

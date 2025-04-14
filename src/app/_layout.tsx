@@ -48,9 +48,57 @@ const RootLayout = () => {
           }}
         />
 
-        <Stack.Screen name="(user)/record" />
+        <Stack.Screen
+          name="(user)/record"
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
 
-        <Stack.Screen name="(user)/playlist" />
+        <Stack.Screen
+          name="(user)/playlist"
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="(user)/setting"
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="(user)/account"
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="(user)/changePassword"
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
+
+        <Stack.Screen
+          name="(user)/changeProfile"
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="(user)/changeUsername"
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
       </Stack>
       <Toast />
     </>
