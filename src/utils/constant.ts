@@ -16,4 +16,5 @@ export const APP_COLOR = {
   GREY_BG: "#282424",
   GREY_BT: "#585454",
   RED: "#FF0004",
+  WHITE40: "#979797",
 };
