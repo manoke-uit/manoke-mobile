@@ -2,9 +2,10 @@ import { Slot, Stack } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import "../../global.css";
 import Toast from "react-native-toast-message";
+import AppProvider from "./context/appContext";
 const RootLayout = () => {
   return (
-    <>
+    <AppProvider>
       <Stack
         screenOptions={{
           headerStyle: {
@@ -101,7 +102,7 @@ const RootLayout = () => {
         />
       </Stack>
       <Toast />
-    </>
+    </AppProvider>
   );
 };
 export default RootLayout;

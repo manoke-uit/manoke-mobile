@@ -36,22 +36,23 @@ const SignIn = () => {
   const isButtonActive = username.length > 0 && password.length > 0;
 
   const handleSignIn = async () => {
-    router.replace("/(tabs)/home");
-    // const response = await loginAPI(username, password);
-    // if (response && response.data) {
-    //   Toast.show({
-    //     type: "success",
-    //     text1: "Success",
-    //     text2: "Logged in successfully!",
-    //   });
-    //   router.replace("/(tabs)/home");
-    // } else {
-    //   Toast.show({
-    //     type: "error",
-    //     text1: "Failed",
-    //     text2: "Login Failed!",
-    //   });
-    // }
+    const response = await loginAPI(username, password);
+    if (response) {
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Logged in successfully!",
+      });
+      setTimeout(() => {
+        router.replace("/(tabs)/home");
+      }, 1000);
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "Failed",
+        text2: "Login Failed!",
+      });
+    }
   };
 
   return (
