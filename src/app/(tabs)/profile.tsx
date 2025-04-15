@@ -7,9 +7,10 @@ import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import { MotiPressable } from "moti/interactions";
 import AnimatedWrapper from "@/components/animation/animate";
+import { useCurrentApp } from "../context/appContext";
 
 const ProfileTab = () => {
-  const navigation = useNavigation();
+  const { theme } = useCurrentApp();
 
   return (
     <LinearGradient

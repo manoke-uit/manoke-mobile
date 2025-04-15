@@ -15,11 +15,14 @@ import { useRouter } from "expo-router";
 import tw from "twrnc";
 import { loginAPI } from "@/utils/api";
 import Toast from "react-native-toast-message";
+import { useCurrentApp } from "../context/appContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
 const avatar = require("@/assets/auth/Icon/avatar.png");
 
 const SignIn = () => {
+  const { setAppState } = useCurrentApp();
   const slideAnim = useRef(new Animated.Value(-modalHeight)).current;
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -39,6 +42,7 @@ const SignIn = () => {
     router.replace("/(tabs)/home");
     // const response = await loginAPI(username, password);
     // if (response && response.data) {
+    //   await AsyncStorage.setItem("access_token", response.data.access_token);
     //   Toast.show({
     //     type: "success",
     //     text1: "Success",
