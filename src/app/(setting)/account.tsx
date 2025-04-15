@@ -1,67 +1,98 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { Ionicons, Entypo } from "@expo/vector-icons";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  Animated,
+  Dimensions,
+  Image,
+  Text,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { APP_COLOR } from "@/utils/constant";
 import { useRouter } from "expo-router";
+import tw from "twrnc";
+import { Ionicons } from "@expo/vector-icons";
+import { loginAPI } from "@/utils/api";
+import Toast from "react-native-toast-message";
+import ChangeProfile from "./changeProfile";
+const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
+const modalHeight = screenHeight * 0.9;
+const avatar = require("@/assets/auth/Image/avt.png");
 
 const AccountPage = () => {
+  const slideAnim = useRef(new Animated.Value(screenWidth)).current; 
   const router = useRouter();
 
+  useEffect(() => {
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+
   return (
-    <ScrollView
-      contentContainerStyle={{
-        flexGrow: 1,
-        paddingVertical: 40,
-        paddingHorizontal: 20,
-        backgroundColor: "#121212",
-      }}
-    >
-      <View className="flex-row justify-between items-center mb-10">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={30} color="hotpink" />
-        </TouchableOpacity>
-        <Text className="text-pink-400 text-xl font-bold m-auto">Settings</Text>
-        <TouchableOpacity onPress={() => router.replace("/home")}>
-          <Text className="text-pink-400 font-bold text-base">Done</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View className="items-center mb-10">
-        <View className="w-20 h-20 rounded-full bg-pink-300 items-center justify-center">
-          <Ionicons name="person" size={40} color="#fff" />
-        </View>
-        <Text className="text-white mt-3 text-lg font-semibold">admin</Text>
-      </View>
-
-      <View className="bg-neutral-700 rounded-lg overflow-hidden mb-10">
-        <TouchableOpacity
-          className="flex-row justify-between items-center px-4 py-4 border-b border-neutral-600"
-          onPress={() => router.push("/(setting)/changeProfile")}
+    <SafeAreaView style={tw`flex-1 bg-[${APP_COLOR.BLACK}]`}>
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              width: "100%",
+              height: modalHeight,
+              backgroundColor: APP_COLOR.GREY_BG,
+              transform: [{ translateX: slideAnim }],
+              left: 0,
+              bottom: 0,
+            },
+            tw`rounded-t-2xl items-center justify-start`,
+          ]}
         >
-          <Text className="text-white">Change Profile Image</Text>
-          <Entypo name="chevron-right" size={16} color="#fff" />
-        </TouchableOpacity>
+            <View className="w-full flex-row justify-between px-4 mt-2">
+                <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="chevron-back-outline" size={20} color={APP_COLOR.PINK} />
+                </TouchableOpacity>
 
-        <TouchableOpacity
-          className="flex-row justify-between items-center px-4 py-4 border-b border-neutral-600"
-          onPress={() => router.push("/(setting)/changeUsername")}
-        >
-          <Text className="text-white">Change Username</Text>
-          <Entypo name="chevron-right" size={16} color="#fff" />
-        </TouchableOpacity>
+                <TouchableOpacity onPress={() => router.replace('/home')}>
+                    <Text style={tw`text-[${APP_COLOR.PINK}] text-[14px]`}>Done</Text>
+                </TouchableOpacity>
+            </View>
 
-        <TouchableOpacity
-          className="flex-row justify-between items-center px-4 py-4"
-          onPress={() => router.push("/(setting)/changePassword")}
-        >
-          <Text className="text-white">Change Password</Text>
-          <Entypo name="chevron-right" size={16} color="#fff" />
-        </TouchableOpacity>
-      </View>
+            <View className="pt-10 justify-center items-center">
+                <Image source={avatar} />
+                <Text className="pt-5 text-white text-[20px]">admin</Text>
+            </View>
 
-      <TouchableOpacity className="bg-neutral-700 py-3 rounded-xl items-center">
-        <Text className="text-red-400 font-bold">Log out</Text>
-      </TouchableOpacity>
-    </ScrollView>
+            <View className="pt-10 w-[90%] rounded-xl overflow-hidden">
+                    <TouchableOpacity
+                        onPress={() => router.push('/(setting)/changeProfile')}
+                        style={tw`rounded-t-xl bg-[${APP_COLOR.GREY_BT}] pl-8 pr-2 py-3 flex-row justify-between items-center `}
+                    >
+                        <Text className="text-white text-[17px]">Change Profile Image</Text>
+                        <Ionicons name="chevron-forward-outline" size={24} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => router.push('/(setting)/changeUsername')}
+                        style={tw`bg-[${APP_COLOR.GREY_BT}] pl-8 pr-2 py-3 flex-row justify-between items-center `}
+                    >
+                        <Text className="text-white text-[17px]">Change Username</Text>
+                        <Ionicons name="chevron-forward-outline" size={24} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => router.push('/(setting)/changePassword')}
+                        style={tw`bg-[${APP_COLOR.GREY_BT}] pl-8 pr-2 py-3 flex-row justify-between items-center `}
+                    >
+                        <Text className="text-white text-[17px]">
+                            Change Password
+                          </Text>
+                        <Ionicons name="chevron-forward-outline" size={24} color="white" />
+                    </TouchableOpacity>
+            </View>
+          
+        </Animated.View>
+    </SafeAreaView>
   );
 };
 

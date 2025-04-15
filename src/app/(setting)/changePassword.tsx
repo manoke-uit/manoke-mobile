@@ -1,102 +1,115 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  Animated,
   View,
+  Animated,
+  Dimensions,
+  Image,
   Text,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_COLOR } from "@/utils/constant";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
+import tw from "twrnc";
+import { Ionicons } from "@expo/vector-icons";
+import { loginAPI } from "@/utils/api";
+import Toast from "react-native-toast-message";
+const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
+const modalHeight = screenHeight * 0.9;
+const icon = require("@/assets/auth/Icon/change.png");
 
 const ChangePassword = () => {
-  const [oldPass, setOldPass] = React.useState("");
-  const [newPass, setNewPass] = React.useState("");
+  const slideAnim = useRef(new Animated.Value(screenWidth)).current; 
+  const router = useRouter();
+  const [oldpassword, setOldpassword] = useState("");
+  const [newpassword, setNewpassword] = useState("");
 
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-
-  const handleDone = () => {
-    Animated.timing(fadeAnim, {
+  useEffect(() => {
+    Animated.timing(slideAnim, {
       toValue: 0,
-      duration: 300,
+      duration: 600,
       useNativeDriver: true,
-    }).start(() => {
-      router.replace("/home");
-    });
-  };
+    }).start();
+  }, []);
+
+  const isButtonActive = oldpassword.length > 0 && newpassword.length > 0;
 
   return (
-    <LinearGradient
-      colors={[APP_COLOR.LIGHT_PINK, APP_COLOR.BLACK]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-      locations={[0, 0.3]}
-      style={{ flex: 1 }}
-    >
-      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1 justify-start px-6 pt-16"
+    <SafeAreaView style={tw`flex-1 bg-[${APP_COLOR.BLACK}]`}>
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              width: "100%",
+              height: modalHeight,
+              backgroundColor: APP_COLOR.GREY_BG,
+              transform: [{ translateX: slideAnim }],
+              left: 0,
+              bottom: 0,
+            },
+            tw`rounded-t-2xl items-center justify-start`,
+          ]}
         >
-          <View className="flex-row justify-between items-center mb-6">
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text className="text-pink-400">‹ Account</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleDone}>
-              <Text className="text-pink-400 font-bold">Done</Text>
-            </TouchableOpacity>
-          </View>
+            <View className="w-full flex-row justify-between px-4 mt-2">
+                <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="chevron-back-outline" size={20} color={APP_COLOR.PINK} />
+                </TouchableOpacity>
 
-          <View className="items-center mb-6">
-            <Ionicons name="sync-outline" size={48} color="white" />
-            <Text className="text-white font-bold text-xl mt-2">
-              Change Password
-            </Text>
-            <Text className="text-gray-300 text-center mt-1">
-              To change your password, enter the{"\n"}current one followed by
-              the new one.
-            </Text>
-          </View>
+                <TouchableOpacity onPress={() => router.replace('/home')}>
+                    <Text style={tw`text-[${APP_COLOR.PINK}] text-[14px]`}>Done</Text>
+                </TouchableOpacity>
+            </View>
 
-          <View className="gap-4 mt-6">
-            <TextInput
-              className="bg-neutral-700 text-white px-4 py-3 rounded-md"
-              placeholder="Old Password"
-              placeholderTextColor="#999"
-              secureTextEntry
-              value={oldPass}
-              onChangeText={setOldPass}
-            />
-            <TextInput
-              className="bg-neutral-700 text-white px-4 py-3 rounded-md"
-              placeholder="New Password"
-              placeholderTextColor="#999"
-              secureTextEntry
-              value={newPass}
-              onChangeText={setNewPass}
-            />
-          </View>
+            <View className="pt-10 justify-center items-center">
+                <Image source={icon} />
+                <Text className="pt-3 text-white text-[27px] font-bold">
+                    Change Password
+                </Text>
+                <Text className="pt-5 text-white px-12 items-center text-center text-[17px]">
+                    To change your password, enter the current one followed by the new one.
+                </Text>
+            </View>
 
-          <TouchableOpacity
-            className="mt-6 bg-neutral-800 py-3 rounded-md items-center"
-            disabled={!oldPass || !newPass}
-            onPress={() => {}}
-          >
-            <Text
-              className={`font-bold ${
-                oldPass && newPass ? "text-white" : "text-neutral-500"
-              }`}
-            >
-              Change Password
-            </Text>
-          </TouchableOpacity>
-        </KeyboardAvoidingView>
-      </Animated.View>
-    </LinearGradient>
+            <View className="w-[80%] pt-10 justify-center items-center">
+                <TextInput
+                    placeholder="Old Password"
+                    style={tw`w-full h-[50px] text-[17px] bg-white/20 rounded-lg px-4 mb-4 text-white`}
+                    placeholderTextColor={APP_COLOR.WHITE40}
+                    value={oldpassword}
+                    onChangeText={setOldpassword}
+                />
+                <TextInput
+                    placeholder="New Password"
+                    style={tw`w-full h-[50px] text-[17px] bg-white/20 rounded-lg px-4 mb-4 text-white`}
+                    placeholderTextColor={APP_COLOR.WHITE40}
+                    value={newpassword}
+                    onChangeText={setNewpassword}
+                />
+            </View>
+
+            <View className="w-[80%] pt-10">
+                <TouchableOpacity
+                    style={tw`p-2 rounded-lg items-center justify-center ${
+                        isButtonActive
+                        ? `bg-[${APP_COLOR.PINK}]`
+                        : `bg-[${APP_COLOR.WHITE40}]`
+                    }`}
+                    
+                >
+                    <Text style={tw`p-1 text-[17px] text-lg font-roboto font-bold ${
+                        isButtonActive
+                        ? `text-white`
+                        : `text-black/60`
+                        }`}
+                    >
+                        Change Password
+                    </Text>
+                </TouchableOpacity>
+            </View>          
+        </Animated.View>
+    </SafeAreaView>
   );
 };
 
