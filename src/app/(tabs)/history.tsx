@@ -1,5 +1,6 @@
 import AnimatedWrapper from "@/components/animation/animate";
 import { APP_COLOR } from "@/utils/constant";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Text, TextInput, View, ScrollView } from "react-native";
@@ -20,12 +21,20 @@ const HistoryTab = () => {
       style={{ flex: 1 }}
     >
       <AnimatedWrapper fade scale slideUp style={{ flex: 1 }}>
-        <ScrollView className="flex-1 px-4 pt-16">
-          <TextInput
-            className="bg-gray-200 rounded-xl px-4 py-3 text-black"
-            placeholder="Find your favorite songs..."
-            placeholderTextColor="#888"
-          />
+        <ScrollView className="flex-1 px-4 pt-8">
+          <View className="flex-row items-center bg-white/20 px-4 py-2 rounded-xl mb-6">
+                <Ionicons
+                  name="search"
+                  size={20}
+                  color="white"
+                  className="mr-2"
+                />
+                <TextInput
+                  placeholder="Try typing a song or an artist..."
+                  placeholderTextColor="#eee"
+                  className="flex-1 text-white"
+                />
+            </View>
           <View className="mt-5">
             {songs.map((item) => (
               <View
