@@ -3,14 +3,16 @@ import { Image } from "react-native";
 import { APP_COLOR } from "../utils/constant";
 import { LinearGradient } from "expo-linear-gradient";
 import { MotiView } from "moti";
-import { Redirect } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AppProvider, { useCurrentApp } from "./context/appContext";
+import { getAccountAPI } from "@/utils/api";
 
 const Logo = require("@/assets/auth/Logo/Logo.png");
 
 const WelcomePage = () => {
   const [shouldRedirect, setShouldRedirect] = useState(false);
-
+  const { setAppState } = useCurrentApp();
   useEffect(() => {
     const timer = setTimeout(() => {
       setShouldRedirect(true);
@@ -18,7 +20,17 @@ const WelcomePage = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
+  useEffect(() => {
+    const fetchAccount = async () => {
+      const res = await getAccountAPI();
+      if (res) {
+        setAppState(res);
+        router.replace("/(tabs)/home");
+      } else {
+      }
+      fetchAccount();
+    };
+  }, []);
   if (shouldRedirect) {
     return <Redirect href={"/(auth)/start"} />;
   }

@@ -1,11 +1,35 @@
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import AnimatedWrapper from "@/components/animation/animate";
+import { getAllSongs } from "@/utils/api";
 
 const HomeTab = () => {
+  const [songs, setSongs] = useState<ISong[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getSongs = async () => {
+      try {
+        const res = await getAllSongs();
+        setSongs(res.items);
+      } catch (error) {
+        console.error("Error loading songs", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getSongs();
+  }, []);
+
   return (
     <LinearGradient
       colors={[APP_COLOR.LT_PINK, APP_COLOR.BLACK]}
@@ -17,7 +41,7 @@ const HomeTab = () => {
       <AnimatedWrapper fade scale slideUp style={{ flex: 1 }}>
         <ScrollView className="flex-1 px-4">
           <View className="pt-8">
-            <View className="bg-pink-500 rounded-xl p-4 mb-6 ">
+            <View className="bg-pink-500 rounded-xl p-4 mb-6">
               <Text className="text-white text-base font-bold">
                 Sing without limits.
               </Text>
@@ -34,16 +58,26 @@ const HomeTab = () => {
                   <Text className="text-white font-bold">See All</Text>
                 </TouchableOpacity>
               </View>
+
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 className="flex-row"
               >
-                {[...Array(5)].map((_, i) => (
-                  <View
-                    key={i}
-                    className="w-[100px] h-[100px] bg-neutral-300  rounded-xl mr-3"
-                  />
+                {songs.slice(0, 10).map((song, i) => (
+                  <View key={i} className="w-[120px] mr-3">
+                    <Image
+                      source={{ uri: song.imageUrl }}
+                      className="w-full h-[120px] rounded-xl mb-2"
+                      resizeMode="cover"
+                    />
+                    <Text
+                      className="text-white font-semibold text-sm"
+                      numberOfLines={1}
+                    >
+                      {song.albumTitle}
+                    </Text>
+                  </View>
                 ))}
               </ScrollView>
             </View>
@@ -55,15 +89,28 @@ const HomeTab = () => {
                   <Text className="text-white font-bold">See All</Text>
                 </TouchableOpacity>
               </View>
-              <View className="flex-row flex-wrap justify-between">
-                {[...Array(6)].map((_, i) => (
-                  <View key={i} className="w-[48%] mb-4">
-                    <View className="w-full h-[100px] bg-neutral-300 rounded-xl mb-2" />
-                    <Text className="text-white font-bold">Song</Text>
-                    <Text className="text-gray-400 text-sm">Artist</Text>
-                  </View>
-                ))}
-              </View>
+
+              {loading ? (
+                <ActivityIndicator size="large" color="#fff" />
+              ) : (
+                <View className="flex-row flex-wrap justify-between">
+                  {songs.slice(0, 6).map((song, i) => (
+                    <View key={i} className="w-[48%] mb-4">
+                      <Image
+                        source={{ uri: song.imageUrl }}
+                        className="w-full h-[100px] rounded-xl mb-2"
+                        resizeMode="cover"
+                      />
+                      <Text className="text-white font-bold" numberOfLines={1}>
+                        {song.title}
+                      </Text>
+                      <Text className="text-gray-400 text-sm" numberOfLines={1}>
+                        {song.albumTitle}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           </View>
         </ScrollView>
