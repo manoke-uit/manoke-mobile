@@ -1,5 +1,5 @@
 import { router, Tabs } from "expo-router";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { APP_COLOR } from "@/utils/constant";
 import AnimatedTabIcon from "@/components/animation/tabAnimate";
@@ -10,11 +10,22 @@ const TabLayout = () => {
       screenOptions={{
         headerShown: true,
         tabBarStyle: {
-          backgroundColor: "#000",
+          backgroundColor: APP_COLOR.BLACK, 
           borderTopWidth: 0,
+          elevation: 0, 
+          height: 70, 
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          overflow: "hidden",
+          position: "absolute", 
         },
+        
         tabBarActiveTintColor: APP_COLOR.PINK,
         tabBarInactiveTintColor: "#888",
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "600",
+        },
       }}
     >
       <Tabs.Screen
@@ -22,11 +33,17 @@ const TabLayout = () => {
         options={{
           tabBarLabel: "Home",
           headerTitle: () => (
-            <Text className="text-white text-3xl font-bold">Discover</Text>
+            <Text 
+              style={{ paddingTop: 70, marginBottom: 40 }}
+              className="text-white text-3xl font-bold"
+            >
+                Discover
+            </Text>
           ),
+          headerShadowVisible: false,
           headerRight: () => (
-            <Ionicons
-              name="settings-outline"
+            <MaterialCommunityIcons
+              name="cog-outline"
               size={24}
               color="white"
               style={{ marginRight: 16 }}
@@ -35,13 +52,15 @@ const TabLayout = () => {
           ),
           headerStyle: {
             backgroundColor: APP_COLOR.LT_PINK,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
           },
           tabBarIcon: ({ color, size, focused }) => (
-            <AnimatedTabIcon
-              name="home"
+            <MaterialCommunityIcons
+              name={focused ? "home-variant" : "home-variant-outline"}
               color={color}
-              size={size}
-              focused={focused}
+              size={size + 2}
             />
           ),
         }}
@@ -51,26 +70,34 @@ const TabLayout = () => {
         options={{
           tabBarLabel: "Search",
           headerTitle: () => (
-            <Text className="text-white text-3xl font-bold">Search</Text>
+            <Text 
+              style={{ paddingTop: 70, marginBottom: 40 }}
+              className="text-white text-3xl font-bold"
+            >
+              Search
+            </Text>
           ),
           headerRight: () => (
-            <Ionicons
-              name="settings-outline"
+            <MaterialCommunityIcons
+              name="cog-outline"
               size={24}
               color="white"
               style={{ marginRight: 16 }}
               onPress={() => router.push("/(setting)/setting")}
             />
           ),
+          headerShadowVisible: false,
           headerStyle: {
             backgroundColor: APP_COLOR.LIGHT_PINK,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
           },
           tabBarIcon: ({ color, size, focused }) => (
-            <AnimatedTabIcon
-              name="search"
+            <MaterialCommunityIcons
+              name={focused ? "magnify" : "magnify"}
               color={color}
-              size={size}
-              focused={focused}
+              size={size + 2}
             />
           ),
         }}
@@ -80,26 +107,34 @@ const TabLayout = () => {
         options={{
           tabBarLabel: "Favorites",
           headerTitle: () => (
-            <Text className="text-white text-3xl font-bold">Favorites</Text>
+            <Text 
+              style={{ paddingTop: 70, marginBottom: 40 }}
+              className="text-white text-3xl font-bold"
+            >
+              Favorites
+            </Text>
           ),
           headerRight: () => (
-            <Ionicons
-              name="settings-outline"
+            <MaterialCommunityIcons
+              name="cog-outline"
               size={24}
               color="white"
               style={{ marginRight: 16 }}
               onPress={() => router.push("/(setting)/setting")}
             />
           ),
+          headerShadowVisible: false,
           headerStyle: {
             backgroundColor: APP_COLOR.LIGHT_PINK,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
           },
           tabBarIcon: ({ color, size, focused }) => (
-            <AnimatedTabIcon
-              name="heart"
+            <MaterialCommunityIcons
+              name={focused ? "heart" : "heart-outline"}
               color={color}
-              size={size}
-              focused={focused}
+              size={size + 2}
             />
           ),
         }}
@@ -109,26 +144,34 @@ const TabLayout = () => {
         options={{
           tabBarLabel: "History",
           headerTitle: () => (
-            <Text className="text-white text-3xl font-bold">History</Text>
+            <Text 
+              style={{ paddingTop: 70, marginBottom: 40 }}
+              className="text-white text-3xl font-bold"
+            >
+              History
+            </Text>
           ),
           headerRight: () => (
-            <Ionicons
-              name="settings-outline"
+            <MaterialCommunityIcons
+              name="cog-outline"
               size={24}
               color="white"
               style={{ marginRight: 16 }}
               onPress={() => router.push("/(setting)/setting")}
             />
           ),
+          headerShadowVisible: false,
           headerStyle: {
             backgroundColor: APP_COLOR.LIGHT_PINK,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
           },
           tabBarIcon: ({ color, size, focused }) => (
-            <AnimatedTabIcon
-              name="history"
+            <MaterialCommunityIcons
+              name={focused ? "history" : "history"}
               color={color}
-              size={size}
-              focused={focused}
+              size={size + 2}
             />
           ),
         }}
@@ -139,23 +182,26 @@ const TabLayout = () => {
           tabBarLabel: "Profile",
           headerTitle: "",
           headerRight: () => (
-            <Ionicons
-              name="settings-outline"
+            <MaterialCommunityIcons
+              name="cog-outline"
               size={24}
               color="white"
               style={{ marginRight: 16 }}
               onPress={() => router.push("/(setting)/setting")}
             />
           ),
+          headerShadowVisible: false,
           headerStyle: {
             backgroundColor: APP_COLOR.LIGHT_PINK,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
           },
           tabBarIcon: ({ color, size, focused }) => (
-            <AnimatedTabIcon
-              name="user"
+            <MaterialCommunityIcons
+              name={focused ? "account-circle" : "account-circle-outline"}
               color={color}
-              size={size}
-              focused={focused}
+              size={size + 2}
             />
           ),
         }}
