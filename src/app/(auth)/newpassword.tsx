@@ -13,16 +13,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_COLOR } from "@/utils/constant";
 import tw from "twrnc";
 import { useRouter } from "expo-router";
-import Toast from "react-native-toast-message";
-import { registerAPI } from "@/utils/api";
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
 const avatar = require("@/assets/auth/Icon/avatar.png");
 
-const SignUp2 = () => {
+const NewPassword = () => {
   const slideAnim = useRef(new Animated.Value(-modalHeight)).current;
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
@@ -35,8 +32,7 @@ const SignUp2 = () => {
     }).start();
   }, []);
 
-  const isButtonActive =
-    username.length > 0 && password.length && confirmPassword.length > 0;
+  const isButtonActive = password.length && confirmPassword.length > 0;
 
   return (
     <SafeAreaView style={tw`flex-1`}>
@@ -65,24 +61,16 @@ const SignUp2 = () => {
             <Text
               style={tw`font-roboto text-2xl font-bold text-center text-[${APP_COLOR.TEXT_PURPLE}]`}
             >
-              Register
+              New Password
             </Text>
             <Text
               style={tw`text-sm text-center mt-2 px-10 text-[${APP_COLOR.TEXT_PURPLE}]`}
             >
-              Enter your username and choose a password.
+              Enter your new password.
             </Text>
           </View>
 
           <View style={tw`w-full items-center mt-10`}>
-            <TextInput
-              placeholder="Username"
-              style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
-              placeholderTextColor={"#66339980"}
-              value={username}
-              onChangeText={setUsername}
-            />
-
             <TextInput
               placeholder="Password"
               secureTextEntry={true}
@@ -112,7 +100,7 @@ const SignUp2 = () => {
               }`}
             >
               <Text style={tw`text-white text-lg font-roboto font-bold`}>
-                Sign Up
+                Confirm
               </Text>
             </TouchableOpacity>
           </View>
@@ -122,4 +110,4 @@ const SignUp2 = () => {
   );
 };
 
-export default SignUp2;
+export default NewPassword;
