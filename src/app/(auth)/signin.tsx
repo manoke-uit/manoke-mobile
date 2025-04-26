@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import tw from "twrnc";
 import { loginAPI } from "@/utils/api";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
 const avatar = require("@/assets/auth/Icon/avatar.png");
@@ -36,21 +37,34 @@ const SignIn = () => {
   const isButtonActive = username.length > 0 && password.length > 0;
 
   const handleSignIn = async () => {
-    const response = await loginAPI(username, password);
-    if (response) {
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: "Logged in successfully!",
-      });
-      setTimeout(() => {
-        router.replace("/(tabs)/home");
-      }, 1000);
-    } else {
+    try {
+      const response = await loginAPI(username, password);
+      console.log("Login API response: ", response);
+      if (response?.accessToken) {
+        await AsyncStorage.setItem("access_token", response.accessToken);
+
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Logged in successfully!",
+        });
+
+        setTimeout(() => {
+          router.replace("/(tabs)/home");
+        }, 1000);
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Failed",
+          text2: "Login Failed!",
+        });
+      }
+    } catch (error) {
+      console.log("Login error: ", error);
       Toast.show({
         type: "error",
-        text1: "Failed",
-        text2: "Login Failed!",
+        text1: "Error",
+        text2: "Something went wrong!",
       });
     }
   };

@@ -6,7 +6,7 @@ export const registerAPI = (email: string, password: string, name: string) => {
 };
 export const loginAPI = (email: string, password: string) => {
   const url = `/auth/login`;
-  return axios.post<IUserLogin>(url, { email, password });
+  return axios.post<ILogin>(url, { email, password });
 };
 export const printAsyncStorage = () => {
   AsyncStorage.getAllKeys((err, keys) => {
@@ -26,4 +26,9 @@ export const getAccountAPI = () => {
 export const getAllSongs = () => {
   const url = `/songs`;
   return axios.get<IPaginatedSongs>(url);
+};
+
+export const changePasswordAPI = (userId: string, newPassword: string) => {
+  const url = `/users/${userId}`;
+  return axios.patch(url, { password: newPassword });
 };

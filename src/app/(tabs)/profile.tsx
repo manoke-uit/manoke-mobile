@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -7,9 +7,22 @@ import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import { MotiPressable } from "moti/interactions";
 import AnimatedWrapper from "@/components/animation/animate";
-
+import { getAccountAPI } from "@/utils/api";
 const ProfileTab = () => {
   const navigation = useNavigation();
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    const fetchEmail = async () => {
+      try {
+        const res = await getAccountAPI();
+        setEmail(res.email);
+      } catch (error) {
+        console.log("Lỗi load profile:", error);
+      }
+    };
+
+    fetchEmail();
+  }, []);
 
   return (
     <LinearGradient
@@ -25,8 +38,9 @@ const ProfileTab = () => {
             <View className="w-20 h-20 bg-pink-200 rounded-full items-center justify-center">
               <Ionicons name="person" size={40} color="#000" />
             </View>
-            <Text className="text-white font-bold text-xl mt-3">admin</Text>
-            <Text className="text-gray-300">admin.123@gmail.com</Text>
+            <Text className="text-white font-bold text-xl mt-3">
+              {email || "Loading..."}
+            </Text>
           </View>
 
           <View className="space-y-3">
