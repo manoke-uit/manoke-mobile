@@ -18,14 +18,15 @@ declare global {
     email: string;
     password: string;
   }
-  interface IUserLogin {
-    email: string;
-    password: string;
+  interface ILogin {
+    accessToken: string;
   }
-  interface IFetchUser {
+  export interface IFetchUser {
     userId: string;
     email: string;
+    adminSecret?: string;
   }
+
   export interface ISong {
     title: string;
     albumTitle: string;
