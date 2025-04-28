@@ -15,7 +15,6 @@ import { useRouter } from "expo-router";
 import tw from "twrnc";
 import { loginAPI } from "@/utils/api";
 import Toast from "react-native-toast-message";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
 const avatar = require("@/assets/auth/Icon/avatar.png");
@@ -37,34 +36,21 @@ const SignIn = () => {
   const isButtonActive = username.length > 0 && password.length > 0;
 
   const handleSignIn = async () => {
-    try {
-      const response = await loginAPI(username, password);
-      console.log("Login API response: ", response);
-      if (response?.accessToken) {
-        await AsyncStorage.setItem("access_token", response.accessToken);
-
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Logged in successfully!",
-        });
-
-        setTimeout(() => {
-          router.replace("/(tabs)/home");
-        }, 1000);
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Failed",
-          text2: "Login Failed!",
-        });
-      }
-    } catch (error) {
-      console.log("Login error: ", error);
+    const response = await loginAPI(username, password);
+    if (response) {
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Logged in successfully!",
+      });
+      setTimeout(() => {
+        router.replace("/(tabs)/home");
+      }, 1000);
+    } else {
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: "Something went wrong!",
+        text1: "Failed",
+        text2: "Login Failed!",
       });
     }
   };
@@ -101,14 +87,14 @@ const SignIn = () => {
             <Text
               style={tw`text-sm text-center mt-2 px-10 text-[${APP_COLOR.TEXT_PURPLE}]`}
             >
-              Enter the username and password you used when you created your
+              Enter your email and password you used when you created your
               account to log in.
             </Text>
           </View>
 
           <View style={tw`w-full items-center mt-10`}>
             <TextInput
-              placeholder="Username"
+              placeholder="Email"
               style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
               placeholderTextColor={"#66339980"}
               value={username}
