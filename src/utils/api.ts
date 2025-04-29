@@ -32,3 +32,31 @@ export const changePasswordAPI = (userId: string, newPassword: string) => {
   const url = `/users/${userId}`;
   return axios.patch(url, { password: newPassword });
 };
+export const getScoresAPI = () => {
+  const url = `/scores`;
+  return axios.get<IPaginatedScores>(url);
+};
+export const createScoreAPI = (payload: {
+  audioUrl: string;
+  finalScore: number;
+  userId: string;
+  songId: string;
+  createdAt: string;
+}) => {
+  const url = `/scores`;
+  return axios.post<IScore>(url, payload);
+};
+export const createPlaylistAPI = (payload: {
+  title: string;
+  userId: string;
+  imageUrl: string;
+  description: string;
+  songIds: string[];
+}) => {
+  const url = `/playlists`;
+  return axios.post<IPlaylist>(url, payload);
+};
+export const getPlaylistsAPI = () => {
+  const url = `/playlists`;
+  return axios.get<IPaginatedPlaylists>(url);
+};

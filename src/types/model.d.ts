@@ -43,4 +43,28 @@ declare global {
     items: ISong[];
     meta: IPaginationMeta;
   }
+  export interface IScore {
+    id: string;
+    audioUrl: string;
+    finalScore: number;
+    userId: string;
+    songId: string;
+    createdAt: string;
+  }
+  export interface IPaginatedScores {
+    items: IScore[];
+    meta: IPaginationMeta;
+  }
+  export interface IPlaylist {
+    title: string;
+    userId: string;
+    imageUrl: string;
+    description: string;
+    songIds: string[];
+  }
+
+  export interface IPaginatedPlaylists {
+    items: IPlaylist[];
+    meta: IPaginationMeta;
+  }
 }
