@@ -1,5 +1,6 @@
 import axios from "@/utils/api.customize";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "./supabase";
 export const registerAPI = (email: string, password: string, name: string) => {
   const url = `/auth/signup`;
   return axios.post<IRegister>(url, { email, password, name });
@@ -59,4 +60,26 @@ export const createPlaylistAPI = (payload: {
 export const getPlaylistsAPI = () => {
   const url = `/playlists`;
   return axios.get<IPaginatedPlaylists>(url);
+};
+export const uploadAvatar = async (fileUri: string, userId: string) => {
+  const fileName = `${userId}_${Date.now()}.jpg`;
+
+  const response = await fetch(fileUri);
+  const blob = await response.blob();
+
+  const { data, error } = await supabase.storage
+    .from("avatars")
+    .upload(fileName, blob, {
+      contentType: "image/jpeg",
+      upsert: true,
+    });
+
+  if (error) {
+    console.error("Upload failed:", error);
+    return null;
+  }
+
+  const url = supabase.storage.from("avatars").getPublicUrl(fileName)
+    .data.publicUrl;
+  return url;
 };
