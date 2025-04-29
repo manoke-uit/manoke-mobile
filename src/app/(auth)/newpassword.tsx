@@ -11,18 +11,17 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_COLOR } from "@/utils/constant";
-import { useRouter } from "expo-router";
 import tw from "twrnc";
-import { loginAPI } from "@/utils/api";
-import Toast from "react-native-toast-message";
+import { useRouter } from "expo-router";
+
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
 const avatar = require("@/assets/auth/Icon/avatar.png");
 
-const SignIn = () => {
+const NewPassword = () => {
   const slideAnim = useRef(new Animated.Value(-modalHeight)).current;
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -33,27 +32,7 @@ const SignIn = () => {
     }).start();
   }, []);
 
-  const isButtonActive = username.length > 0 && password.length > 0;
-
-  const handleSignIn = async () => {
-    const response = await loginAPI(username, password);
-    if (response) {
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: "Logged in successfully!",
-      });
-      setTimeout(() => {
-        router.replace("/(tabs)/home");
-      }, 1000);
-    } else {
-      Toast.show({
-        type: "error",
-        text1: "Failed",
-        text2: "Login Failed!",
-      });
-    }
-  };
+  const isButtonActive = password.length && confirmPassword.length > 0;
 
   return (
     <SafeAreaView style={tw`flex-1`}>
@@ -82,24 +61,16 @@ const SignIn = () => {
             <Text
               style={tw`font-roboto text-2xl font-bold text-center text-[${APP_COLOR.TEXT_PURPLE}]`}
             >
-              Login
+              New Password
             </Text>
             <Text
               style={tw`text-sm text-center mt-2 px-10 text-[${APP_COLOR.TEXT_PURPLE}]`}
             >
-              Enter your email and password you used when you created your
-              account to log in.
+              Enter your new password.
             </Text>
           </View>
 
           <View style={tw`w-full items-center mt-10`}>
-            <TextInput
-              placeholder="Email"
-              style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
-              placeholderTextColor={"#66339980"}
-              value={username}
-              onChangeText={setUsername}
-            />
             <TextInput
               placeholder="Password"
               secureTextEntry={true}
@@ -108,34 +79,28 @@ const SignIn = () => {
               value={password}
               onChangeText={setPassword}
             />
-            <TouchableOpacity>
-              <Text
-                style={tw`text-sm text-center mt-2 text-[${APP_COLOR.TEXT_PURPLE}]`}
-              >
-                Password Lost?
-              </Text>
-            </TouchableOpacity>
+
+            <TextInput
+              placeholder="Confirm password"
+              secureTextEntry={true}
+              style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
+              placeholderTextColor={"#66339980"}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
           </View>
 
-          <View style={tw`w-full items-center mt-10`}>
+          <View style={tw`w-full items-center mt-5`}>
             <TouchableOpacity
+              onPress={() => router.push("./start")} // chưa viết hàm xử lý tạo tk
               style={tw`w-[80%] h-[50px] rounded-lg items-center justify-center ${
                 isButtonActive
                   ? `bg-[${APP_COLOR.PURPLE}]`
                   : `bg-[${APP_COLOR.LIGHT_PURPLE}]`
               }`}
-              onPress={handleSignIn}
             >
               <Text style={tw`text-white text-lg font-roboto font-bold`}>
-                Sign In
-              </Text>
-            </TouchableOpacity>
-            {/* Nhớ sửa thành handleSignIn */}
-            <TouchableOpacity onPress={() => router.push("/signup")}>
-              <Text
-                style={tw`text-sm text-center mt-2 text-[${APP_COLOR.TEXT_PURPLE}]`}
-              >
-                No Manoke Account?
+                Confirm
               </Text>
             </TouchableOpacity>
           </View>
@@ -145,4 +110,4 @@ const SignIn = () => {
   );
 };
 
-export default SignIn;
+export default NewPassword;

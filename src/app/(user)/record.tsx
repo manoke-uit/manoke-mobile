@@ -1,54 +1,58 @@
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Entypo } from "@expo/vector-icons";
 import { APP_COLOR } from "@/utils/constant";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useNavigation } from "@react-navigation/native";
+
+const recordings = [
+  { id: "1", name: "Name of Song", artist: "Artist", time: "00s" },
+  { id: "2", name: "Name of Song", artist: "Artist", time: "00s" },
+  { id: "3", name: "Name of Song", artist: "Artist", time: "00s" },
+  { id: "4", name: "Name of Song", artist: "Artist", time: "00s" },
+  { id: "5", name: "Name of Song", artist: "Artist", time: "00s" },
+  { id: "6", name: "Name of Song", artist: "Artist", time: "00s" },
+  { id: "7", name: "Name of Song", artist: "Artist", time: "00s" },
+  { id: "8", name: "Name of Song", artist: "Artist", time: "00s" },
+  { id: "9", name: "Name of Song", artist: "Artist", time: "00s" },
+];
+
 const RecordingsScreen = () => {
-  const navigation = useNavigation();
-  const recordings = [
-    { id: "1", name: "Name of Song", artist: "Artist", time: "00s" },
-    { id: "2", name: "Name of Song", artist: "Artist", time: "00s" },
-    { id: "3", name: "Name of Song", artist: "Artist", time: "00s" },
-    { id: "4", name: "Name of Song", artist: "Artist", time: "00s" },
-  ];
   return (
     <LinearGradient
-      colors={[APP_COLOR.LIGHT_PINK, APP_COLOR.BLACK]}
+      colors={[APP_COLOR.BLACK, APP_COLOR.BLACK]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       locations={[0, 0.5]}
       style={{ flex: 1 }}
     >
+      {/* Custom Header */}
+      <View
+        className="w-full flex flex-row"
+        style={{
+          paddingVertical: 30,
+          paddingHorizontal: 20,
+          backgroundColor: "transparent",
+        }}
+      >
+        <TouchableOpacity 
+          onPress={() => router.back()}
+          className="w-10 h-10 items-center justify-center rounded-full bg-pink-500/30">
+          <Ionicons name="chevron-back-outline" size={25} color={APP_COLOR.WHITE} />
+        </TouchableOpacity>
+        <Text className="text-pink-500 text-3xl font-bold ml-4">Recording</Text>
+
+      </View>
+
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 16,
-          paddingTop: 48,
-          paddingBottom: 32,
+          paddingBottom: 80,
         }}
-        className="h-full"
+        className="h-full color-transparent"
       >
-        <View className="bg-neutral-900 rounded-2xl px-6 py-6 h-[75vh]">
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="self-end"
-          >
-            <Text className="text-pink-400 font-bold text-base mr-1 ">
-              Done
-            </Text>
-          </TouchableOpacity>
-          <View className="items-center mb-6">
-            <Ionicons name="mic" size={48} color="pink" />
-            <Text className="text-white font-bold text-2xl mt-2">
-              Your recordings
-            </Text>
-            <Text className="text-gray-300 text-center mt-1">
-              Your recordings will be stored here.
-            </Text>
-          </View>
-
-          {recordings.map((item) => (
+        <View className=" rounded-2xl px-6 py-6 h-[75vh]">
+        {recordings.map((item) => (
             <View key={item.id} className="flex-row items-center mb-5">
               <View className="w-24 h-24 bg-gray-400 rounded-lg mr-4" />
               <View className="justify-center">

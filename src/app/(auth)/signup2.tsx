@@ -85,6 +85,7 @@ const SignUp2 = () => {
 
             <TextInput
               placeholder="Password"
+              secureTextEntry={true}
               style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
               placeholderTextColor={"#66339980"}
               value={password}
@@ -93,6 +94,7 @@ const SignUp2 = () => {
 
             <TextInput
               placeholder="Confirm password"
+              secureTextEntry={true}
               style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
               placeholderTextColor={"#66339980"}
               value={confirmPassword}
