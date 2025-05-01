@@ -8,9 +8,14 @@ import { router } from "expo-router";
 import { MotiPressable } from "moti/interactions";
 import AnimatedWrapper from "@/components/animation/animate";
 import { getAccountAPI } from "@/utils/api";
+import { useCurrentApp } from "../context/appContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const ProfileTab = () => {
   const navigation = useNavigation();
+  const { setAppState } = useCurrentApp();
   const [email, setEmail] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchEmail = async () => {
       try {
@@ -23,6 +28,17 @@ const ProfileTab = () => {
 
     fetchEmail();
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("accessToken");
+      await AsyncStorage.removeItem("userId");
+      setAppState(null);
+      router.replace("/(auth)/start");
+    } catch (err) {
+      console.log("Lỗi khi logout:", err);
+    }
+  };
 
   return (
     <LinearGradient
@@ -109,7 +125,7 @@ const ProfileTab = () => {
                 scale: pressed ? 0.95 : 1,
               })}
               transition={{ type: "timing", duration: 150 }}
-              onPress={() => console.log("Log out")}
+              onPress={handleLogout}
               style={{
                 backgroundColor: "#171717",
                 paddingVertical: 12,
