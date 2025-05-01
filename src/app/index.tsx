@@ -17,8 +17,9 @@ const WelcomePage = () => {
   useEffect(() => {
     const fetchAccount = async () => {
       try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         const res = await getAccountAPI();
-        if (res) {
+        if (res.userId) {
           setAppState(res);
           router.replace("/(tabs)/home");
         } else {

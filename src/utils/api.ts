@@ -1,6 +1,7 @@
 import axios from "@/utils/api.customize";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "./supabase";
+import * as FileSystem from "expo-file-system";
 export const registerAPI = (email: string, password: string, name: string) => {
   const url = `/auth/signup`;
   return axios.post<IRegister>(url, { email, password, name });
@@ -62,24 +63,40 @@ export const getPlaylistsAPI = () => {
   return axios.get<IPaginatedPlaylists>(url);
 };
 export const uploadAvatar = async (fileUri: string, userId: string) => {
-  const fileName = `${userId}_${Date.now()}.jpg`;
+  try {
+    const fileName = `${userId}_${Date.now()}.jpg`;
 
-  const response = await fetch(fileUri);
-  const blob = await response.blob();
+    const response = await fetch(fileUri);
+    if (!response.ok) throw new Error("Không thể tải ảnh từ URI");
 
-  const { data, error } = await supabase.storage
-    .from("avatars")
-    .upload(fileName, blob, {
-      contentType: "image/jpeg",
-      upsert: true,
-    });
+    const blob = await response.blob();
 
-  if (error) {
-    console.error("Upload failed:", error);
+    if (blob.size > 4 * 1024 * 1024) {
+      throw new Error("Ảnh vượt quá 4MB");
+    }
+    console.log("userId:", userId);
+    console.log("fileName:", fileName);
+    console.log("blob.type:", blob.type);
+    console.log("blob.size:", blob.size);
+
+    const { error } = await supabase.storage
+      .from("avatar")
+      .upload(fileName, blob, {
+        contentType: blob.type || "image/jpeg",
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("Lỗi khi upload lên Supabase:", error.message);
+      return null;
+    }
+
+    const url = supabase.storage.from("avatar").getPublicUrl(fileName)
+      .data.publicUrl;
+
+    return url;
+  } catch (err) {
+    console.error("Upload thất bại:", err);
     return null;
   }
-
-  const url = supabase.storage.from("avatars").getPublicUrl(fileName)
-    .data.publicUrl;
-  return url;
 };
