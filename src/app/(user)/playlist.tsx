@@ -1,8 +1,8 @@
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { Ionicons, Entypo } from "@expo/vector-icons";
-import { APP_COLOR } from "@/utils/constant";
+import React, { useState } from "react";
+import { View, Text, ScrollView, Modal, TextInput, TouchableOpacity, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { APP_COLOR } from "@/utils/constant";
 import { router } from "expo-router";
 
 const playlists = [
@@ -18,38 +18,41 @@ const playlists = [
 ];
 
 const PlaylistScreen = () => {
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [playlistName, setPlaylistName] = useState("");
+
+  const handleCreatePlaylist = () => {
+    if (playlistName.trim()) {
+      console.log("Created playlist:", playlistName);
+
+      setPlaylistName(""); 
+      setModalVisible(false); 
+    }
+  };
+
   return (
     <LinearGradient
-      colors={[APP_COLOR.BLACK, APP_COLOR.BLACK]}
+      colors={[APP_COLOR.LIGHT_PINK, APP_COLOR.BLACK]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
-      locations={[0, 0.5]}
+      locations={[0, 0.4]}
       style={{ flex: 1 }}
     >
       {/* Custom Header */}
       <View
-        className="w-full flex flex-row"
+        className="w-full flex flex-row justify-between items-center"
         style={{
           paddingVertical: 30,
           paddingHorizontal: 20,
           backgroundColor: "transparent",
         }}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.back()}
-          className="w-10 h-10 items-center justify-center rounded-full bg-pink-500/30">
+          className="w-10 h-10 items-center justify-center rounded-full bg-pink-500/30"
+        >
           <Ionicons name="chevron-back-outline" size={25} color={APP_COLOR.WHITE} />
         </TouchableOpacity>
-        <Text className="text-pink-500 text-3xl font-bold ml-4">Playlist</Text>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          className="flex-row items-center justify-center absolute bottom-8 right-6 bg-pink-500 rounded-full px-4 py-2 shadow-lg shadow-pink-500/50"
-          onPress={() => console.log("Add playlist")}
-        >
-          <Entypo name="plus" size={20} color="white" />
-          <Text className="text-white font-bold text-lg ml-2">Add</Text>
-        </TouchableOpacity>
-
       </View>
 
       <ScrollView
@@ -57,13 +60,33 @@ const PlaylistScreen = () => {
           paddingHorizontal: 16,
           paddingBottom: 80,
         }}
-        className="h-full color-transparent"
+        className="flex-1"
       >
-        <View className=" rounded-2xl px-6 py-6 h-[75vh]">
+        <View className="items-center mb-6">
+          <View className="w-48 h-48 bg-gray-400" /> 
+        </View>
+
+        <View className="flex-row justify-between items-center px-4 mb-10">
+          <Text className="text-white text-2xl font-bold">
+            All Playlists
+          </Text>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            className="bg-pink-500 rounded-lg px-6 py-2"
+          >
+            <Text className="text-white font-semibold">Add</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Danh sách playlist */}
+        <View className="px-4">
           {playlists.map((item) => (
-            <View key={item.id} className="flex-row items-center mb-5">
-              <View className="w-24 h-24 bg-gray-400 rounded-lg mr-4" />
-              <View className="justify-center">
+            <View
+              key={item.id}
+              className="flex-row items-center mb-5 border-b border-white/10 pb-4"
+            >
+              <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4" />
+              <View className="flex-1">
                 <Text className="text-white font-bold">{item.name}</Text>
                 <Text className="text-gray-400">
                   Sum of Songs: {item.count}
@@ -73,8 +96,60 @@ const PlaylistScreen = () => {
           ))}
         </View>
       </ScrollView>
+      {/* Modal */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isModalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <Pressable
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            onPress={() => setModalVisible(false)}
+          >
+            <Pressable
+              style={{
+                width: "80%",
+                backgroundColor: "#1E1E1E", 
+                borderRadius: 20,
+                padding: 20,
+              }}
+              onPress={() => {}} 
+            >
+              <Text className="text-white text-xl font-bold mb-4 text-center">
+                Create New Playlist
+              </Text>
 
-      
+              <TextInput
+                placeholder="Enter playlist name"
+                placeholderTextColor="#aaa"
+                className="bg-white/10 text-white p-3 rounded-lg mb-6"
+                value={playlistName}
+                onChangeText={setPlaylistName}
+              />
+
+              <View className="flex-row justify-between">
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  className="bg-gray-500 rounded-lg px-6 py-2"
+                >
+                  <Text className="text-white font-semibold">Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleCreatePlaylist}
+                  className="bg-pink-600 rounded-lg px-6 py-2"
+                >
+                  <Text className="text-white font-semibold">Create</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
     </LinearGradient>
   );
 };

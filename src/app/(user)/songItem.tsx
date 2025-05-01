@@ -8,21 +8,29 @@ import MoreMenu from "@/components/moreMenu";
 
 const song = [
     { id: "1", name: "Name of Song", artist: "Artist"},
+    { id: "2", name: "Name of Song", artist: "Artist"},
+    { id: "3", name: "Name of Song", artist: "Artist"},
+    { id: "4", name: "Name of Song", artist: "Artist"},
+    { id: "5", name: "Name of Song", artist: "Artist"},
+    { id: "6", name: "Name of Song", artist: "Artist"},
+    { id: "7", name: "Name of Song", artist: "Artist"},
+    { id: "8", name: "Name of Song", artist: "Artist"},
 ]
+
 const songItemScreen = () => {
     const [isMoreMenuVisible, setMoreMenuVisible] = useState<boolean>(false);
 
-    const handleAddToQueue = (): void => {
-        console.log("Added to queue");
+    const handleRemoveFromQueue = (): void => {
+        console.log("Removed to queue");
       };
     
-      const handleAddToFavorite = (): void => {
+    const handleAddToFavorite = (): void => {
         console.log("Added to favorite");
-      };
+    };
     
-      const handleAddToPlaylist = (): void => {
+    const handleAddToPlaylist = (): void => {
         console.log("Added to playlist");
-      };
+    };
     
     
     return(
@@ -57,40 +65,60 @@ const songItemScreen = () => {
                     paddingHorizontal: 20, 
                   }} />
             <View className="w-full px-3 py-5">
-                {song.map((item) => (
-                            <View key={item.id} className="flex-row items-center mb-5 ml-3">
-                              <View className="justify-center">
-                                <Text className="text-white font-bold text-2xl">{item.name}</Text>
-                                <Text className="text-gray-400 text-xl">{item.artist}</Text>
-                              </View>
-                              <TouchableOpacity 
-                                className="ml-auto px-4 py-2" 
-                                onPress={() => setMoreMenuVisible(true)}>
-                                <Entypo name="dots-three-vertical" size={24} color="#C0C0C0" />
-                            </TouchableOpacity>
-                            </View>
-                          ))}
+                {song.filter(item => item.id === "1").map((item) => (
+                    <View key={item.id} className="flex-row items-center mb-5 ml-3">
+                    <View className="justify-center">
+                        <Text className="text-white font-bold text-2xl">{item.name}</Text>
+                        <Text className="text-gray-400 text-xl">{item.artist}</Text>
+                    </View>
+                    <TouchableOpacity 
+                        className="ml-auto px-4 py-2" 
+                        onPress={() => setMoreMenuVisible(true)}>
+                        <Entypo name="dots-three-vertical" size={24} color="#C0C0C0" />
+                    </TouchableOpacity>
+                    </View>
+                ))}
             </View>
 
-            <ScrollView
-                contentContainerStyle={{
-                    paddingBottom: 80,
-                }}
-                className="h-full color-transparent"
-            > 
-                <View className=" rounded-2xl px-6 py-6 h-[75vh]">
-                    <Text className="text-white font-bold text-2xl">Queue</Text>
-                    {/* Từ từ code tiếp buồn ngủ quá */}
-                </View>
-            </ScrollView>
 
+            <View className=" rounded-2xl px-6 py-6 h-[75vh]">
+                    <Text className="text-white font-bold text-2xl">Queue</Text>
+                    <ScrollView
+                        contentContainerStyle={{
+                        paddingBottom: 80,
+                        }}
+                        className="h-full color-transparent"
+                    >
+                        <View className=" rounded-2xl py-6 h-[75vh]">
+                        {song.map((item) => (
+                            <View key={item.id} className="flex-row items-center mb-5">
+                                <View className="w-24 h-24 bg-gray-400 rounded-lg mr-4" />
+                                    <View className="justify-center">
+                                        <Text className="text-white font-bold">{item.name}</Text>
+                                        <Text className="text-gray-400">{item.artist}</Text>
+                                    </View>
+                                    <TouchableOpacity 
+                                        className="ml-auto px-4 py-2" 
+                                        onPress={() => setMoreMenuVisible(true)}>
+                                        <Entypo name="dots-three-vertical" size={20} color="#C0C0C0" />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                            </View>
+                    </ScrollView>
+            </View>
+ 
             {/* More Menu Modal */}
             <MoreMenu
                 visible={isMoreMenuVisible}
                 onClose={() => setMoreMenuVisible(false)}
-                onAddToQueue={handleAddToQueue}
+                onAddToQueue={() => {}} 
+                onRemoveFromQueue={handleRemoveFromQueue} 
                 onAddToFavorite={handleAddToFavorite}
+                onRemoveFromFavorite={() => {}} 
                 onAddToPlaylist={handleAddToPlaylist}
+                isFavoriteTab={false}
+                isQueueTab={true} 
             />
 
         </LinearGradient>
