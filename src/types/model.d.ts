@@ -67,4 +67,16 @@ declare global {
     items: IPlaylist[];
     meta: IPaginationMeta;
   }
+  interface IYoutubeResult {
+    title: string;
+    videoId: string;
+    embedUrl: string;
+    thumbnailUrl: string;
+  }
+
+  interface IYoutubeSearchResponse {
+    results: IYoutubeResult[];
+    nextPageToken: string;
+    prevPageToken: string;
+  }
 }

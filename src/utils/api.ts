@@ -100,3 +100,12 @@ export const uploadAvatar = async (fileUri: string, userId: string) => {
     return null;
   }
 };
+export const searchYoutubeAPI = (query: string, pageToken: string) => {
+  const url = `/youtube/search`;
+  return axios.get<IYoutubeSearchResponse>(url, {
+    params: {
+      query,
+      pageToken,
+    },
+  });
+};
