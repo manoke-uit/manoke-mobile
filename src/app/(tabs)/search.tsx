@@ -1,10 +1,18 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import { Entypo, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import AnimatedWrapper from "@/components/animation/animate";
 import MoreMenu from "@/components/moreMenu";
+import { searchYoutubeAPI } from "@/utils/api";
 
 type FilterType = "SONGS" | "ARTISTS" | "PLAYLISTS";
 
@@ -21,40 +29,51 @@ interface PlaylistItem {
   name: string;
 }
 
-interface SearchResults {
-  SONGS: SongItem[];
-  ARTISTS: ArtistItem[];
-  PLAYLISTS: PlaylistItem[];
+interface IYoutubeResult {
+  title: string;
+  videoId: string;
+  embedUrl: string;
+  thumbnailUrl: string;
 }
 
 const SearchTab = () => {
   const [searchText, setSearchText] = useState("");
-  const [isMoreMenuVisible, setMoreMenuVisible] = useState<boolean>(false);
+  const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("SONGS");
+  const [youtubeResults, setYoutubeResults] = useState<IYoutubeResult[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleAddToQueue = (): void => {
-    console.log("Added to queue");
-  };
-
-  const handleAddToFavorite = (): void => {
-    console.log("Added to favorite");
-  };
-
-  const handleAddToPlaylist = (): void => {
-    console.log("Added to playlist");
-  };
-
-  const searchResults: SearchResults = {
-    SONGS: [
-      { name: "Name of Song", artist: "Artist" },
-      { name: "Name of Song", artist: "Artist" },
-      { name: "Name of Song", artist: "Artist" },
-    ],
+  const searchResults = {
     ARTISTS: [{ name: "Artist" }],
     PLAYLISTS: [{ name: "Playlist" }],
   };
 
   const filters: FilterType[] = ["SONGS", "ARTISTS", "PLAYLISTS"];
+
+  const handleAddToQueue = () => {};
+  const handleAddToFavorite = () => {};
+  const handleAddToPlaylist = () => {};
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchText.length > 0 && selectedFilter === "SONGS") {
+        fetchYoutube(searchText);
+      }
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchText, selectedFilter]);
+
+  const fetchYoutube = async (text: string) => {
+    try {
+      setLoading(true);
+      const res = await searchYoutubeAPI(text, "");
+      setYoutubeResults(res.results);
+    } catch (error) {
+      console.log("Youtube search error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <LinearGradient
@@ -68,22 +87,16 @@ const SearchTab = () => {
         <ScrollView className="flex-1 px-4">
           <View className="pt-8">
             <View className="flex-row items-center bg-white/20 px-4 py-2 rounded-xl mb-4">
-              <Ionicons
-                name="search"
-                size={20}
-                color="white"
-                className="mr-2"
-              />
+              <Ionicons name="search" size={20} color="white" />
               <TextInput
                 placeholder="Songs, Artists, Playlists..."
                 placeholderTextColor="#eee"
-                className="flex-1 text-white"
+                className="flex-1 text-white ml-2"
                 value={searchText}
                 onChangeText={(text) => setSearchText(text)}
               />
             </View>
 
-            {/* Bộ lọc */}
             {searchText.length > 0 && (
               <View className="flex-row justify-between mb-7">
                 {filters.map((filter) => (
@@ -95,16 +108,10 @@ const SearchTab = () => {
                       backgroundColor:
                         selectedFilter === filter
                           ? APP_COLOR.LIGHT_ORANGE
-                          : 'transparent',
+                          : "transparent",
                     }}
                   >
-                    <Text
-                      className={`text-base font-semibold ${
-                        selectedFilter === filter ? "text-white" : "text-white"
-                      }`}
-                    >
-                      {filter}
-                    </Text>
+                    <Text className="text-white font-semibold">{filter}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -112,33 +119,52 @@ const SearchTab = () => {
 
             {searchText.length > 0 ? (
               <View>
-                {searchResults[selectedFilter].map((item, i) => (
-                  <View key={i} className="flex-row items-center mb-4">
-                    <TouchableOpacity className="flex-1 flex-row items-center">
-                      <View className="w-[80px] h-[80px] bg-neutral-300 rounded-lg mr-4" />
-                      <View>
-                        <Text className="text-white">{item.name}</Text>
-                        {selectedFilter === "SONGS" && (
-                          <Text className="text-gray-400 text-sm">
-                            {(item as SongItem).artist}
-                          </Text>
-                        )}
+                {selectedFilter === "SONGS" ? (
+                  loading ? (
+                    <Text className="text-white">Đang tìm kiếm...</Text>
+                  ) : (
+                    youtubeResults.map((item, i) => (
+                      <View key={i} className="flex-row items-center mb-4">
+                        <TouchableOpacity className="flex-1 flex-row items-center">
+                          <Image
+                            source={{ uri: item.thumbnailUrl }}
+                            style={{
+                              width: 80,
+                              height: 80,
+                              borderRadius: 10,
+                              marginRight: 12,
+                            }}
+                          />
+                          <View>
+                            <Text className="text-white">{item.title}</Text>
+                            <Text className="text-gray-400 text-sm">
+                              youtube.com/watch?v={item.videoId}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => setMoreMenuVisible(true)}
+                          className="ml-2"
+                        >
+                          <Entypo
+                            name="dots-three-vertical"
+                            size={20}
+                            color="#C0C0C0"
+                          />
+                        </TouchableOpacity>
                       </View>
-                    </TouchableOpacity>
-                    {selectedFilter === "SONGS" && (
-                      <TouchableOpacity
-                        onPress={() => setMoreMenuVisible(true)}
-                        className="ml-2"
-                      >
-                        <Entypo
-                          name="dots-three-vertical"
-                          size={20}
-                          color="#C0C0C0"
-                        />
+                    ))
+                  )
+                ) : (
+                  searchResults[selectedFilter].map((item, i) => (
+                    <View key={i} className="flex-row items-center mb-4">
+                      <TouchableOpacity className="flex-1 flex-row items-center">
+                        <View className="w-[80px] h-[80px] bg-neutral-300 rounded-lg mr-4" />
+                        <Text className="text-white">{item.name}</Text>
                       </TouchableOpacity>
-                    )}
-                  </View>
-                ))}
+                    </View>
+                  ))
+                )}
               </View>
             ) : (
               <View className="flex-row flex-wrap justify-between">
