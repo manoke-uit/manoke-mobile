@@ -62,6 +62,19 @@ export const getPlaylistsAPI = () => {
   const url = `/playlists`;
   return axios.get<IPaginatedPlaylists>(url);
 };
+export const updatePlaylistAPI = (
+  playlistId: string,
+  payload: Partial<{
+    title: string;
+    imageUrl: string;
+    description: string;
+    songIds: string[];
+  }>
+) => {
+  const url = `/playlists/${playlistId}`;
+  return axios.patch<IPlaylist>(url, payload);
+};
+
 export const uploadAvatar = async (fileUri: string, userId: string) => {
   try {
     const fileName = `${userId}_${Date.now()}.jpg`;
