@@ -13,8 +13,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import AnimatedWrapper from "@/components/animation/animate";
 import tw from "twrnc";
-import { useNavigation } from "expo-router";
+import { useNavigation, router } from "expo-router";
 import { getAllSongs } from "@/utils/api";
+
 const HomeTab = () => {
   const [songs, setSongs] = useState<ISong[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,7 @@ const HomeTab = () => {
 
     currentOffset.current = offsetY;
   };
+
   useEffect(() => {
     const getSongs = async () => {
       try {
@@ -77,10 +79,10 @@ const HomeTab = () => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text className="flex text-white font-bold text-2xl absolute left-5 top-5">
+              <Text className="text-white font-bold text-2xl absolute left-5 top-5">
                 Sing without limits
               </Text>
-              <Text className="flex text-white pt-7 mx-5 text-[18px]">
+              <Text className="text-white pt-7 mx-5 text-[18px] text-center">
                 Subscribes to unlock full versions of the songs and premium
                 features!
               </Text>
@@ -102,7 +104,11 @@ const HomeTab = () => {
                 className="flex-row pt-3"
               >
                 {songs.slice(0, 10).map((song, i) => (
-                  <View key={i} className="w-[120px] mr-3">
+                  <TouchableOpacity
+                    key={i}
+                    className="w-[120px] mr-3"
+                    onPress={() => router.push("/(user)/songItem")}
+                  >
                     <Image
                       source={{ uri: song.imageUrl }}
                       className="w-full h-[120px] rounded-xl mb-2"
@@ -114,7 +120,7 @@ const HomeTab = () => {
                     >
                       {song.albumTitle}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
@@ -134,7 +140,11 @@ const HomeTab = () => {
               ) : (
                 <View className="flex-row flex-wrap justify-between pt-3">
                   {songs.slice(0, 6).map((song, i) => (
-                    <View key={i} className="w-[48%] mb-4">
+                    <TouchableOpacity
+                      key={i}
+                      className="w-[48%] mb-4"
+                      onPress={() => router.push("/(user)/songItem")}
+                    >
                       <Image
                         source={{ uri: song.imageUrl }}
                         className="w-full h-[100px] rounded-xl mb-2"
@@ -146,7 +156,7 @@ const HomeTab = () => {
                       <Text className="text-gray-400 text-sm" numberOfLines={1}>
                         {song.albumTitle}
                       </Text>
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 </View>
               )}
