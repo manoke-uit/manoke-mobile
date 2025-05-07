@@ -17,7 +17,7 @@ import {
   searchYoutubeAPI,
   updatePlaylistAPI,
 } from "@/utils/api";
-import SelectPlaylistModal from "@/components/SelectPlaylistModal";
+import SelectPlaylistModal from "@/components/selectPlaylistModal";
 
 interface IYoutubeResult {
   title: string;

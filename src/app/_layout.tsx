@@ -65,6 +65,13 @@ const RootLayout = () => {
           }}
         />
         <Stack.Screen
+          name="(user)/songItem"
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
           name="(setting)/setting"
           options={{
             animation: "slide_from_right",

@@ -71,6 +71,7 @@ declare global {
     title: string;
     videoId: string;
     embedUrl: string;
+    isEmbedded: boolean;
     thumbnailUrl: string;
   }
 
