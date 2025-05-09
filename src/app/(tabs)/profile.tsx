@@ -116,6 +116,36 @@ const ProfileTab = () => {
               </View>
               <Feather name="chevron-right" size={20} color="white" />
             </MotiPressable>
+
+            <MotiPressable
+              from={{ scale: 1 }}
+              animate={({ pressed }) => ({
+                scale: pressed ? 0.95 : 1,
+              })}
+              transition={{ type: "timing", duration: 150 }}
+              // onPress={() => router.push("/playlist")}
+              style={{
+                backgroundColor: "#171717",
+                paddingHorizontal: 16,
+                paddingVertical: 16,
+                borderRadius: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons
+                  name="add-circle-outline"
+                  size={20}
+                  color="white"
+                />
+                <Text style={{ color: "white", marginLeft: 12 }}>
+                  Add a song
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="white" />
+            </MotiPressable>
           </View>
 
           <View className="mt-auto mb-10">

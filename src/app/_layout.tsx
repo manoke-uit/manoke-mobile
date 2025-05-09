@@ -107,6 +107,20 @@ const RootLayout = () => {
             gestureEnabled: true,
           }}
         />
+        <Stack.Screen
+          name="(user)/yourSong"
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="(user)/addSong"
+          options={{
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
       </Stack>
       <Toast />
     </AppProvider>
