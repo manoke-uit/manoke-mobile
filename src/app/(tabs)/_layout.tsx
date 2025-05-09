@@ -1,4 +1,5 @@
 import { router, Tabs } from "expo-router";
+import { Ionicons} from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { APP_COLOR } from "@/utils/constant";
@@ -103,15 +104,15 @@ const TabLayout = () => {
         }}
       />
       <Tabs.Screen
-        name="favorites"
+        name="community"
         options={{
-          tabBarLabel: "Favorites",
+          tabBarLabel: "Community",
           headerTitle: () => (
             <Text 
               style={{ paddingTop: 70, marginBottom: 40 }}
               className="text-white text-3xl font-bold"
             >
-              Favorites
+              Community
             </Text>
           ),
           headerRight: () => (
@@ -131,8 +132,8 @@ const TabLayout = () => {
             borderBottomWidth: 0,
           },
           tabBarIcon: ({ color, size, focused }) => (
-            <MaterialCommunityIcons
-              name={focused ? "heart" : "heart-outline"}
+            <Ionicons
+              name={focused ? "globe" : "globe"}
               color={color}
               size={size + 2}
             />
