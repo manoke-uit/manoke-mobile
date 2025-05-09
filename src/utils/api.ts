@@ -122,3 +122,35 @@ export const searchYoutubeAPI = (query: string, pageToken: string) => {
     },
   });
 };
+export const uploadScoreAudioAPI = async (
+  fileUri: string,
+  songId: string,
+  userId: string
+) => {
+  const url = `/scores/score`;
+
+  const formData = new FormData();
+  const filename = fileUri.split("/").pop()!;
+  const fileType = filename.split(".").pop();
+
+  formData.append("file", {
+    uri: fileUri,
+    name: filename,
+    type: `audio/${fileType}`,
+  } as any);
+
+  formData.append("songId", songId);
+  formData.append("userId", userId);
+
+  try {
+    const response = await axios.post(url, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Upload audio failed:", error);
+    throw error;
+  }
+};

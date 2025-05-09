@@ -13,7 +13,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import MoreMenu from "@/components/moreMenu";
 import { WebView } from "react-native-webview";
-import { searchYoutubeAPI } from "@/utils/api";
+import {
+  getAccountAPI,
+  searchYoutubeAPI,
+  uploadScoreAudioAPI,
+} from "@/utils/api";
+import { Audio } from "expo-av";
 
 const song = [
   { id: "1", name: "Lạc Trôi", artist: "Sơn Tùng M-TP" },
@@ -29,6 +34,10 @@ const song = [
 const SongItemScreen = () => {
   const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [userId, setUserId] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
 
   const handlePlaySong = async (name: string, artist: string) => {
     try {
@@ -43,19 +52,53 @@ const SongItemScreen = () => {
   };
 
   useEffect(() => {
+    const getUserId = async () => {
+      const res = await getAccountAPI();
+      if (res?.userId) {
+        setUserId(res.userId);
+      }
+    };
     handlePlaySong(song[0].name, song[0].artist);
+    getUserId();
   }, []);
 
-  const handleRemoveFromQueue = () => {
-    console.log("Removed from queue");
+  const startRecording = async () => {
+    try {
+      await Audio.requestPermissionsAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+
+      setRecording(recording);
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Không thể bắt đầu ghi âm", err);
+      Alert.alert("Lỗi", "Không thể bắt đầu ghi âm");
+    }
   };
 
-  const handleAddToFavorite = () => {
-    console.log("Added to favorite");
-  };
+  const stopRecordingAndUpload = async () => {
+    try {
+      await recording?.stopAndUnloadAsync();
+      const uri = recording?.getURI();
+      setRecording(null);
+      setIsRecording(false);
 
-  const handleAddToPlaylist = () => {
-    console.log("Added to playlist");
+      if (!uri) return;
+      setIsUploading(true);
+      const score = await uploadScoreAudioAPI(uri, song[0].id, userId);
+      setIsUploading(false);
+      Alert.alert("Chấm điểm", `Điểm số: ${score?.finalScore ?? "?"}`);
+    } catch (err) {
+      console.error("Lỗi khi ghi âm hoặc upload", err);
+      setIsUploading(false);
+      Alert.alert("Lỗi", "Không thể chấm điểm");
+    }
   };
 
   return (
@@ -136,7 +179,33 @@ const SongItemScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <Text className="text-white font-bold text-2xl mb-3">Queue</Text>
+            <View className="flex-row justify-around mt-2">
+              {!isRecording ? (
+                <TouchableOpacity
+                  onPress={startRecording}
+                  className="bg-green-600 px-4 py-2 rounded"
+                >
+                  <Text className="text-white font-bold">🎤 Ghi âm</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={stopRecordingAndUpload}
+                  className="bg-red-600 px-4 py-2 rounded"
+                >
+                  <Text className="text-white font-bold">
+                    ⏹ Dừng & Chấm điểm
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {isUploading && (
+              <Text className="text-yellow-400 mt-2 text-center">
+                Đang chấm điểm...
+              </Text>
+            )}
+
+            <Text className="text-white font-bold text-2xl my-4">Queue</Text>
             {song.map((item) => (
               <TouchableOpacity
                 key={item.id}
@@ -168,10 +237,10 @@ const SongItemScreen = () => {
         visible={isMoreMenuVisible}
         onClose={() => setMoreMenuVisible(false)}
         onAddToQueue={() => {}}
-        onRemoveFromQueue={handleRemoveFromQueue}
-        onAddToFavorite={handleAddToFavorite}
+        onRemoveFromQueue={() => console.log("Removed from queue")}
+        onAddToFavorite={() => console.log("Added to favorite")}
         onRemoveFromFavorite={() => {}}
-        onAddToPlaylist={handleAddToPlaylist}
+        onAddToPlaylist={() => console.log("Added to playlist")}
         isFavoriteTab={false}
         isQueueTab={true}
       />
