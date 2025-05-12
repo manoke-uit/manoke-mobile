@@ -2,14 +2,40 @@ import axios from "@/utils/api.customize";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "./supabase";
 import * as FileSystem from "expo-file-system";
-export const registerAPI = (email: string, password: string, name: string) => {
-  const url = `/auth/signup`;
-  return axios.post<IRegister>(url, { email, password, name });
+
+// export const getAllSongs = async () => {
+//   const token = await AsyncStorage.getItem("accessToken");
+//   if (!token) {
+//     throw new Error("Chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.");
+//   }
+//   const url = `/songs`;
+//   return axios.get<IPaginatedSongs>(url);
+// };
+
+// export const getAccountAPI = async () => {
+//   const token = await AsyncStorage.getItem("accessToken");
+//   if (!token) {
+//     throw new Error("Chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.");
+//   }
+//   const url = `/profile`;
+//   return axios.get<IFetchUser>(url);
+// };
+
+export const confirmEmailAPI = (token: string) => {
+  const url = `/auth/confirm-email`;
+  return axios.post<{ email: string; message: string }>(url, { token });
 };
+
+export const registerAPI = (email: string, password: string, displayName: string) => {
+  const url = `/auth/signup`;
+  return axios.post<{ message: string }>(url, { email, password, displayName });
+};
+
 export const loginAPI = (email: string, password: string) => {
   const url = `/auth/login`;
   return axios.post<ILogin>(url, { email, password });
 };
+
 export const printAsyncStorage = () => {
   AsyncStorage.getAllKeys((err, keys) => {
     AsyncStorage.multiGet(keys!, (error, stores) => {
@@ -21,10 +47,10 @@ export const printAsyncStorage = () => {
     });
   });
 };
-export const getAccountAPI = () => {
-  const url = `/profile`;
-  return axios.get<IFetchUser>(url);
-};
+// export const getAccountAPI = () => {
+//   const url = `/profile`;
+//   return axios.get<IFetchUser>(url);
+// };
 export const getAllSongs = () => {
   const url = `/songs`;
   return axios.get<IPaginatedSongs>(url);

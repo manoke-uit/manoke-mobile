@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "Manoke",
+    "slug": "manoke",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "././src/assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "manoke",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -15,6 +15,31 @@
       }
     },
     "android": {
+      "package": "com.manoke.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "manoke",
+              "host": "auth",
+              "pathPrefix": "/confirm-email"
+            },
+            {
+              "scheme": "http",
+              "host": "localhost",
+              "port": "3000",
+              "pathPrefix": "/auth/confirm-email"
+            },
+            {
+              "scheme": "https",
+              "host": "your-production-domain.com",
+              "pathPrefix": "/auth/confirm-email"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "adaptiveIcon": {
         "foregroundImage": "././src/assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"

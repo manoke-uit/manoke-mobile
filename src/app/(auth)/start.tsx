@@ -96,7 +96,7 @@ const LoginPage = () => {
           </MotiView>
         </View>
 
-        <View
+        {/* <View
           style={tw`absolute top-[270px] left-[20px] p-[50px] justify-center items-center w-[90%]`}
         >
           <Text
@@ -110,7 +110,7 @@ const LoginPage = () => {
             Explore a vast catalog of songs, with new tracks added daily to
             update your playlist with the latest hits.
           </Text>
-        </View>
+        </View> */}
 
         <View
           style={tw`absolute bottom-[170px] left-[20px] w-[90%] items-center`}

@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_COLOR } from "@/utils/constant";
 import { useRouter } from "expo-router";
 import tw from "twrnc";
-import { loginAPI } from "@/utils/api";
+import { loginAPI, printAsyncStorage } from "@/utils/api";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -22,8 +22,8 @@ const modalHeight = screenHeight * 0.9;
 const avatar = require("@/assets/auth/Icon/avatar.png");
 
 const SignIn = () => {
-  const slideAnim = useRef(new Animated.Value(-modalHeight)).current;
-  const [username, setUsername] = useState("");
+  const slideAnim = useRef(new Animated.Value(modalHeight)).current;
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
@@ -35,35 +35,40 @@ const SignIn = () => {
     }).start();
   }, []);
 
-  const isButtonActive = username.length > 0 && password.length > 0;
+  const isButtonActive = email.length > 0 && password.length > 0;
 
   const handleSignIn = async () => {
     try {
-      const response = await loginAPI(username, password);
-      if (response) {
+      const response = await loginAPI(email, password);
+      if (response && response.accessToken) {
         await AsyncStorage.setItem("accessToken", response.accessToken);
-
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Logged in successfully!",
-        });
-        setTimeout(() => {
-          router.replace("/(tabs)/home");
-        }, 1000);
+        const storedToken = await AsyncStorage.getItem("accessToken");
+        if (storedToken) {
+          console.log("Token stored successfully:", storedToken);
+          Toast.show({
+            type: "success",
+            text1: "success",
+            text2: "Logged in successfully!",
+          });
+          setTimeout(() => {
+            router.replace("/(tabs)/home");
+          }, 1000);
+        } else {
+          throw new Error("Failed to store token in AsyncStorage");
+        }
       } else {
         Toast.show({
           type: "error",
-          text1: "Failed",
-          text2: "Login Failed!",
+          text1: "error",
+          text2: "Email or password is incorrect!",
         });
       }
     } catch (error) {
       console.error("Login error:", error);
       Toast.show({
         type: "error",
-        text1: "Failed",
-        text2: "Login Failed!",
+        text1: "error",
+        text2: "Failed to login!",
       });
     }
   };
@@ -81,11 +86,11 @@ const SignIn = () => {
           style={[
             {
               position: "absolute",
+              bottom: 0,
               width: "100%",
               height: modalHeight,
               backgroundColor: "#F3F2F8",
-              bottom: slideAnim,
-              left: 0,
+              transform: [{ translateY: slideAnim }],
             },
             tw`rounded-t-3xl items-center justify-start`,
           ]}
@@ -110,8 +115,8 @@ const SignIn = () => {
               placeholder="Email"
               style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
               placeholderTextColor={"#66339980"}
-              value={username}
-              onChangeText={setUsername}
+              value={email}
+              onChangeText={setEmail}
             />
             <TextInput
               placeholder="Password"
@@ -121,11 +126,11 @@ const SignIn = () => {
               value={password}
               onChangeText={setPassword}
             />
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/forgotpassword")}>
               <Text
                 style={tw`text-sm text-center mt-2 text-[${APP_COLOR.TEXT_PURPLE}]`}
               >
-                Password Lost?
+                Forgot Password?
               </Text>
             </TouchableOpacity>
           </View>
@@ -144,11 +149,11 @@ const SignIn = () => {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => router.push("/signup")}>
+            <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
               <Text
                 style={tw`text-sm text-center mt-2 text-[${APP_COLOR.TEXT_PURPLE}]`}
               >
-                No Manoke Account?
+                Don't have an account?
               </Text>
             </TouchableOpacity>
           </View>
