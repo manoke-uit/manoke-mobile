@@ -15,6 +15,7 @@ import AnimatedWrapper from "@/components/animation/animate";
 import tw from "twrnc";
 import { useNavigation, router } from "expo-router";
 import { getAllSongs } from "@/utils/api";
+import Toast from "react-native-toast-message";
 
 const HomeTab = () => {
   const [songs, setSongs] = useState<ISong[]>([]);
@@ -47,10 +48,46 @@ const HomeTab = () => {
   useEffect(() => {
     const getSongs = async () => {
       try {
-        const res = await getAllSongs();
-        setSongs(res.items);
-      } catch (error) {
-        console.error("Error loading songs", error);
+        let allSongs: ISong[] = [];
+        let currentPage = 1;
+        let totalPages = 1;
+
+        do {
+          const res = await getAllSongs(currentPage);
+          console.log("API Response:", JSON.stringify(res, null, 2));
+          if (!res.data) {
+            throw new Error("No data returned from songs API");
+          }
+          // Handle case where data is an empty array
+          if (Array.isArray(res.data)) {
+            if (res.data.length === 0) {
+              Toast.show({
+                type: "info",
+                text1: "No Songs",
+                text2: "No songs available. Try adding songs to the database.",
+              });
+              break;
+            }
+            throw new Error("Unexpected array response from songs API");
+          }
+          // Expect data to be IPaginatedSongs
+          allSongs = [...allSongs, ...res.data.items];
+          totalPages = res.data.meta.totalPages;
+          currentPage += 1;
+        } while (currentPage <= totalPages);
+
+        setSongs(allSongs);
+      } catch (error: any) {
+        console.error("Error loading songs:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to load songs. Please try again later.",
+        });
       } finally {
         setLoading(false);
       }
@@ -103,25 +140,29 @@ const HomeTab = () => {
                 showsHorizontalScrollIndicator={false}
                 className="flex-row pt-3"
               >
-                {songs.slice(0, 10).map((song, i) => (
-                  <TouchableOpacity
-                    key={i}
-                    className="w-[120px] mr-3"
-                    onPress={() => router.push("/(user)/songItem")}
-                  >
-                    <Image
-                      source={{ uri: song.imageUrl }}
-                      className="w-full h-[120px] rounded-xl mb-2"
-                      resizeMode="cover"
-                    />
-                    <Text
-                      className="text-white font-semibold text-sm"
-                      numberOfLines={1}
+                {songs.length === 0 ? (
+                  <Text style={tw`text-white text-lg`}>No playlists available</Text>
+                ) : (
+                  songs.map((song, i) => (
+                    <TouchableOpacity
+                      key={i}
+                      className="w-[120px] mr-3"
+                      onPress={() => router.push("/(user)/songItem")}
                     >
-                      {song.albumTitle}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Image
+                        source={{ uri: song.imageUrl }}
+                        className="w-full h-[120px] rounded-xl mb-2"
+                        resizeMode="cover"
+                      />
+                      <Text
+                        className="text-white font-semibold text-sm"
+                        numberOfLines={1}
+                      >
+                        {song.albumTitle}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                )}
               </ScrollView>
             </View>
 
@@ -137,9 +178,11 @@ const HomeTab = () => {
 
               {loading ? (
                 <ActivityIndicator size="large" color="#fff" />
+              ) : songs.length === 0 ? (
+                <Text style={tw`text-white text-lg`}>No songs available</Text>
               ) : (
                 <View className="flex-row flex-wrap justify-between pt-3">
-                  {songs.slice(0, 6).map((song, i) => (
+                  {songs.map((song, i) => (
                     <TouchableOpacity
                       key={i}
                       className="w-[48%] mb-4"

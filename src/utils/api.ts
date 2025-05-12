@@ -3,24 +3,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "./supabase";
 import * as FileSystem from "expo-file-system";
 
-// export const getAllSongs = async () => {
-//   const token = await AsyncStorage.getItem("accessToken");
-//   if (!token) {
-//     throw new Error("Chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.");
-//   }
-//   const url = `/songs`;
-//   return axios.get<IPaginatedSongs>(url);
-// };
-
-// export const getAccountAPI = async () => {
-//   const token = await AsyncStorage.getItem("accessToken");
-//   if (!token) {
-//     throw new Error("Chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.");
-//   }
-//   const url = `/profile`;
-//   return axios.get<IFetchUser>(url);
-// };
-
 export const confirmEmailAPI = (token: string) => {
   const url = `/auth/confirm-email`;
   return axios.post<{ email: string; message: string }>(url, { token });
@@ -47,13 +29,24 @@ export const printAsyncStorage = () => {
     });
   });
 };
-// export const getAccountAPI = () => {
-//   const url = `/profile`;
-//   return axios.get<IFetchUser>(url);
-// };
-export const getAllSongs = () => {
+
+export const getAccountAPI = () => {
+  const url = `/profile`;
+  return axios.get<IFetchUser>(url);
+};
+
+export const getAllSongs = async (page: number = 1, limit: number = 10) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
   const url = `/songs`;
-  return axios.get<IPaginatedSongs>(url);
+  return axios.get<IBackendRes<IPaginatedSongs>>(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    params: { page, limit },
+  });
 };
 
 export const changePasswordAPI = (userId: string, newPassword: string) => {
