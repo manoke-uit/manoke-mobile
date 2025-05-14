@@ -3,6 +3,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "./supabase";
 import * as FileSystem from "expo-file-system";
 
+// Định nghĩa interface Pagination để khớp với nestjs-typeorm-paginate
+interface Pagination<T> {
+  items: T[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
 export const confirmEmailAPI = (token: string) => {
   const url = `/auth/confirm-email`;
   return axios.post<{ success: boolean; message: string }>(url, { token });
@@ -18,6 +30,16 @@ export const loginAPI = (email: string, password: string) => {
   return axios.post<ILogin>(url, { email, password });
 };
 
+export const forgotPasswordAPI = (email: string) => {
+  const url = `/auth/forgot-password`;
+  return axios.post<{ message: string }>(url, { email });
+};
+
+export const resetPasswordAPI = (token: string, newPassword: string, verifyNewPassword: string) => {
+  const url = `/auth/reset-password`;
+  return axios.post<{ message: string }>(url, { token, newPassword, verifyNewPassword });
+};
+
 export const printAsyncStorage = () => {
   AsyncStorage.getAllKeys((err, keys) => {
     AsyncStorage.multiGet(keys!, (error, stores) => {
@@ -25,14 +47,14 @@ export const printAsyncStorage = () => {
       stores?.map((result, i, store) => {
         asyncStorage[store[i][0]] = store[i][1];
       });
-      console.log(JSON.stringify(asyncStorage, null, 2));
+      console.log("AsyncStorage content:", JSON.stringify(asyncStorage, null, 2));
     });
   });
 };
 
 export const getAccountAPI = () => {
-  const url = `/(tabs)/home`;
-  return axios.get<IFetchUser>(url);
+  const url = `/profile`;
+  return axios.get<IFetchUser>(url); 
 };
 
 export const getAllSongs = async (page: number = 1, limit: number = 10) => {
@@ -102,12 +124,9 @@ export const updatePlaylistAPI = (
 export const uploadAvatar = async (fileUri: string, userId: string) => {
   try {
     const fileName = `${userId}_${Date.now()}.jpg`;
-
     const response = await fetch(fileUri);
     if (!response.ok) throw new Error("Không thể tải ảnh từ URI");
-
     const blob = await response.blob();
-
     if (blob.size > 4 * 1024 * 1024) {
       throw new Error("Ảnh vượt quá 4MB");
     }
@@ -115,22 +134,18 @@ export const uploadAvatar = async (fileUri: string, userId: string) => {
     console.log("fileName:", fileName);
     console.log("blob.type:", blob.type);
     console.log("blob.size:", blob.size);
-
     const { error } = await supabase.storage
       .from("avatar")
       .upload(fileName, blob, {
         contentType: blob.type || "image/jpeg",
         upsert: true,
       });
-
     if (error) {
       console.error("Lỗi khi upload lên Supabase:", error.message);
       return null;
     }
-
     const url = supabase.storage.from("avatar").getPublicUrl(fileName)
       .data.publicUrl;
-
     return url;
   } catch (err) {
     console.error("Upload thất bại:", err);
@@ -154,20 +169,16 @@ export const uploadScoreAudioAPI = async (
   userId: string
 ) => {
   const url = `/scores/score`;
-
   const formData = new FormData();
   const filename = fileUri.split("/").pop()!;
   const fileType = filename.split(".").pop();
-
   formData.append("file", {
     uri: fileUri,
     name: filename,
     type: `audio/${fileType}`,
   } as any);
-
   formData.append("songId", songId);
   formData.append("userId", userId);
-
   try {
     const response = await axios.post(url, formData, {
       headers: {
@@ -181,12 +192,140 @@ export const uploadScoreAudioAPI = async (
   }
 };
 
-export const forgotPasswordAPI = (email: string) => {
-  const url = `/auth/forgot-password`;
-  return axios.post<{ message: string }>(url, { email });
+export const createPostAPI = async (payload: {
+  description: string;
+  scoreId: string;
+}) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/posts`;
+  return axios.post<IPost>(url, payload, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
 
-export const resetPasswordAPI = (token: string, newPassword: string, verifyNewPassword: string) => {
-  const url = `/auth/reset-password`;
-  return axios.post<{ message: string }>(url, { token, newPassword, verifyNewPassword });
+export const getPostsAPI = async (page: number = 1, limit: number = 10) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/posts`;
+  return axios.get<IPost[]>(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    params: { page, limit },
+  });
+};
+
+export const deletePostAPI = async (postId: string) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/posts/${postId}`;
+  return axios.delete(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const createCommentAPI = async (payload: {
+  comment: string;
+  postId: string;
+}) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/comments`;
+  return axios.post<IComment>(url, payload, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const searchUsersAPI = async (query: string) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/users`;
+  return axios.get<Pagination<IUser>>(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    params: { page: 1, limit: 50 },
+  });
+};
+
+export const createFriendRequestAPI = async (receiverId: string) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/friends`;
+  return axios.post<IFriend>(url, { receiverId }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const updateFriendRequestAPI = async (receiverId: string, status: 'accepted' | 'rejected') => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/friends`;
+  return axios.patch<IFriend>(url, { receiverId, status }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const getFriendsAPI = async () => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/friends`;
+  return axios.get<IFriend[]>(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const getFriendRequestsAPI = async () => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/friends/requests`;
+  return axios.get<IFriend[]>(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const removeFriendAPI = async (idToRemove: string) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/friends/${idToRemove}`;
+  return axios.delete(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };

@@ -6,6 +6,16 @@ declare global {
     statusCode: number | string;
     data?: T;
   }
+  interface Pagination<T> {
+    items: T[];
+    meta: {
+      totalItems: number;
+      itemCount: number;
+      itemsPerPage: number;
+      totalPages: number;
+      currentPage: number;
+    };
+  }
   export interface IPaginationMeta {
     totalItems: number;
     itemCount: number;
@@ -23,10 +33,18 @@ declare global {
   }
   export interface IFetchUser {
     userId: string;
+    displayName: string;
     email: string;
     adminSecret?: string;
+    password?: string;
+    imageUrl?: string;
+    createdAt: string;
+    playlistIds: string[];
+    scoreIds: string[];
+    karaokeIds: string[];
+    postIds: string[];
+    commentIds: string[];
   }
-
   export interface ISong {
     title: string;
     albumTitle: string;
@@ -62,7 +80,6 @@ declare global {
     description: string;
     songIds: string[];
   }
-
   export interface IPaginatedPlaylists {
     items: IPlaylist[];
     meta: IPaginationMeta;
@@ -74,10 +91,69 @@ declare global {
     isEmbedded: boolean;
     thumbnailUrl: string;
   }
-
   interface IYoutubeSearchResponse {
     results: IYoutubeResult[];
     nextPageToken: string;
     prevPageToken: string;
+  }
+  export interface IPost {
+    id: string;
+    description: string;
+    createdAt: string;
+    scoreId: string;
+    userId: string;
+    user: {
+      id: string;
+      displayName: string;
+    };
+    score: {
+      id: string;
+      audioUrl: string;
+      finalScore: number;
+      song: {
+        id: string;
+        title: string;
+        artistIds: string[];
+      };
+    };
+    comments: IComment[];
+  }
+  export interface IPaginatedPosts {
+    items: IPost[];
+    meta: IPaginationMeta;
+  }
+  export interface IComment {
+    id: string;
+    comment: string;
+    createdAt: string;
+    userId: string;
+    user: {
+      id: string;
+      displayName: string;
+    };
+    postId: string;
+  }
+  export interface IFriend {
+    userId_1: string;
+    userId_2: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    createdAt: string;
+    user_1: {
+      id: string;
+      displayName: string;
+    };
+    user_2: {
+      id: string;
+      displayName: string;
+    };
+  }
+  export interface IPaginatedFriends {
+    items: IFriend[];
+    meta: IPaginationMeta;
+  }
+  export interface IUser {
+    id: string;
+    displayName: string;
+    email: string;
   }
 }

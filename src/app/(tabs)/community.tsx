@@ -1,52 +1,55 @@
-import React, { useState, useRef } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, Animated, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  Animated,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AnimatedWrapper from "@/components/animation/animate";
 import { APP_COLOR } from "@/utils/constant";
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  createPostAPI,
+  getPostsAPI,
+  deletePostAPI,
+  createCommentAPI,
+  getFriendsAPI,
+} from "@/utils/api";
 
-// Define a type for valid Ionicons names
-type IoniconsName = 
-  | "person-circle-outline"
-  | "musical-notes-outline"
-  | "chatbubble-outline"
-  | "star-outline";
-
-// Define the avatar type
-interface Avatar {
-  type: "Ionicons";
-  name: IoniconsName;
-}
-
-// Define the comment type
-interface Comment {
-  text: string;
-  user: string;
-  avatar: Avatar;
-}
-
-// Define the post type
 interface Post {
   id: string;
-  songName: string;
-  artist: string;
-  user: string;
-  content: string;
-  avatar: Avatar;
+  description: string;
+  createdAt: string;
+  user: { id: string; displayName: string };
+  score: {
+    id: string;
+    audioUrl: string;
+    finalScore: number;
+    song: { id: string; title: string };
+  };
+  comments: { id: string; comment: string; user: { id: string; displayName: string } }[];
 }
 
 const CommunityTab = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [friends, setFriends] = useState<string[]>([]);
   const [isMoreMenuVisible, setMoreMenuVisible] = useState<string | null>(null);
-  const [comments, setComments] = useState<{ [key: string]: Comment[] }>({});
-  const [newComments, setNewComments] = useState<{ [key: string]: string }>({}); // Per-post comment input state
-  const [activeCommentInput, setActiveCommentInput] = useState<string | null>(null); // Track active input
-  const [newPostContent, setNewPostContent] = useState<string>("");
-  const [uploadRecording, setUploadRecording] = useState<string>("");
+  const [newComment, setNewComment] = useState<{ [key: string]: string }>({});
+  const [newPostContent, setNewPostContent] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [displayName, setDisplayName] = useState<string>("You"); // Default to "You"
   const navigation = useNavigation();
+  const router = useRouter();
   const currentOffset = useRef(0);
   const [visible, setVisible] = useState(true);
-
   const scrollY = useRef(new Animated.Value(0)).current;
   const headerHeight = 150;
   const gradientHeight = scrollY.interpolate({
@@ -55,139 +58,157 @@ const CommunityTab = () => {
     extrapolate: "clamp",
   });
 
-  const posts: Post[] = [
-    {
-      id: "1",
-      songName: "Still Into You",
-      artist: "Paramore",
-      user: "musiclover",
-      content: "This song never gets old! 🎸 #Paramore",
-      avatar: { type: "Ionicons", name: "person-circle-outline" },
-    },
-    {
-      id: "2",
-      songName: "Die For You",
-      artist: "The Weeknd",
-      user: "nightvibes",
-      content: "Perfect for late-night drives 🌌 #TheWeeknd",
-      avatar: { type: "Ionicons", name: "musical-notes-outline" },
-    },
-    {
-      id: "3",
-      songName: "Easy On Me",
-      artist: "Adele",
-      user: "soulfulsounds",
-      content: "Adele’s voice is pure magic 😭 #EasyOnMe",
-      avatar: { type: "Ionicons", name: "star-outline" },
-    },
-    {
-      id: "4",
-      songName: "Easy On Me",
-      artist: "Adele",
-      user: "soulfulsounds",
-      content: "Adele’s voice is pure magic 😭 #EasyOnMe",
-      avatar: { type: "Ionicons", name: "person-circle-outline" },
-    },
-    {
-      id: "5",
-      songName: "Easy On Me",
-      artist: "Adele",
-      user: "soulfulsounds",
-      content: "Adele’s voice is pure magic 😭 #EasyOnMe",
-      avatar: { type: "Ionicons", name: "musical-notes-outline" },
-    },
-    {
-      id: "6",
-      songName: "Easy On Me",
-      artist: "Adele",
-      user: "soulfulsounds",
-      content: "Adele’s voice is pure magic 😭 #EasyOnMe",
-      avatar: { type: "Ionicons", name: "star-outline" },
-    },
-    {
-      id: "7",
-      songName: "Blinding Lights",
-      artist: "The Weeknd",
-      user: "nightvibes",
-      content: "Can’t stop dancing to this! 🕺 #BlindingLights",
-      avatar: { type: "Ionicons", name: "musical-notes-outline" },
-    },
-    {
-      id: "8",
-      songName: "Rolling in the Deep",
-      artist: "Adele",
-      user: "soulfulsounds",
-      content: "Such a powerful track! 🔥 #Adele",
-      avatar: { type: "Ionicons", name: "star-outline" },
-    },
-    {
-      id: "9",
-      songName: "Misery Business",
-      artist: "Paramore",
-      user: "musiclover",
-      content: "Brings back all the feels! 🤘 #Paramore",
-      avatar: { type: "Ionicons", name: "person-circle-outline" },
-    },
-    {
-      id: "10",
-      songName: "Save Your Tears",
-      artist: "The Weeknd",
-      user: "nightvibes",
-      content: "Perfect vibe for tonight 🌃 #TheWeeknd",
-      avatar: { type: "Ionicons", name: "musical-notes-outline" },
-    },
-  ];
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setIsLoading(true);
+        const token = await AsyncStorage.getItem("accessToken");
+        const userId = await AsyncStorage.getItem("userId");
+        if (!token || !userId) {
+          Toast.show({
+            type: "error",
+            text1: "Error",
+            text2: "Invalid session. Please log in again.",
+          });
+          router.replace("/signin");
+          return;
+        }
 
-  const handleDeletePost = (postId: string): void => {
-    console.log(`Deleted post ${postId}`);
-    setMoreMenuVisible(null);
-  };
+        // Fetch user profile from AsyncStorage
+        const storedProfile = await AsyncStorage.getItem("userProfile");
+        if (storedProfile) {
+          const profile = JSON.parse(storedProfile);
+          setDisplayName(profile.displayName || "You");
+        }
 
-  const handleAddComment = (postId: string): void => {
-    const commentText = newComments[postId]?.trim();
-    if (commentText) {
-      setComments((prev) => ({
-        ...prev,
-        [postId]: [
-          ...(prev[postId] || []),
-          {
-            text: commentText,
-            user: "admin",
-            avatar: { type: "Ionicons", name: "person-circle-outline" },
-          },
-        ],
-      }));
-      setNewComments((prev) => ({ ...prev, [postId]: "" }));
-      setActiveCommentInput(null);
+        const friendResponse = await getFriendsAPI();
+        const friendIds = friendResponse.map((f: any) =>
+          f.userId_1 === userId ? f.userId_2 : f.userId_1
+        );
+        setFriends(friendIds);
+        const postResponse = await getPostsAPI();
+        setPosts(postResponse.filter((post: Post) => friendIds.includes(post.user.id)));
+      } catch (error: any) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to load data. Please try again.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadInitialData();
+  }, []);
+
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim()) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Post content cannot be empty.",
+      });
+      return;
     }
-  };
-
-  const handleCreatePost = (): void => {
-    if (newPostContent.trim()) {
-      console.log("New post created:", newPostContent);
+    try {
+      setIsLoading(true);
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Invalid session. Please log in again.",
+        });
+        router.replace("/signin");
+        return;
+      }
+      const scoreId = "temp-score-id"; // Needs integration with uploadScoreAudioAPI
+      await createPostAPI({ description: newPostContent, scoreId });
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Post created successfully.",
+      });
       setNewPostContent("");
+      const postResponse = await getPostsAPI();
+      setPosts(postResponse.filter((post: Post) => friends.includes(post.user.id)));
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to create post. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleUploadRecording = (): void => {
-    if (uploadRecording.trim()) {
-      console.log("Recording uploaded:", uploadRecording);
-      setUploadRecording("");
+  const handleDeletePost = async (postId: string) => {
+    try {
+      await deletePostAPI(postId);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Post deleted successfully.",
+      });
+      setPosts(posts.filter((post) => post.id !== postId));
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to delete post.",
+      });
+    } finally {
+      setMoreMenuVisible(null);
+    }
+  };
+
+  const handleAddComment = async (postId: string) => {
+    const commentText = newComment[postId]?.trim();
+    if (!commentText) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Comment cannot be empty.",
+      });
+      return;
+    }
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Invalid session. Please log in again.",
+        });
+        router.replace("/signin");
+        return;
+      }
+      await createCommentAPI({ comment: commentText, postId });
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Comment added successfully.",
+      });
+      setNewComment((prev) => ({ ...prev, [postId]: "" }));
+      const postResponse = await getPostsAPI();
+      setPosts(postResponse.filter((post: Post) => friends.includes(post.user.id)));
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to add comment.",
+      });
     }
   };
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     const diff = offsetY - currentOffset.current;
-
-    console.log(`OffsetY: ${offsetY}, Diff: ${diff}, Visible: ${visible}`);
-
     if (diff > 10 && visible) {
-      console.log("Hiding tab bar");
       setVisible(false);
       navigation.setOptions({ tabBarStyle: { display: "none" } });
     } else if (diff < -10 && !visible) {
-      console.log("Showing tab bar");
       setVisible(true);
       navigation.setOptions({
         tabBarStyle: {
@@ -197,7 +218,6 @@ const CommunityTab = () => {
         },
       });
     }
-
     currentOffset.current = offsetY;
   };
 
@@ -241,7 +261,7 @@ const CommunityTab = () => {
                 color="#eee"
                 className="mr-3"
               />
-              <Text className="text-white font-semibold text-base">Admin</Text>
+              <Text className="text-white font-semibold text-base">{displayName}</Text>
             </View>
             <TextInput
               placeholder="Share a song..."
@@ -253,19 +273,19 @@ const CommunityTab = () => {
             />
             <View className="flex-row justify-between">
               <TouchableOpacity
-                onPress={() => {handleUploadRecording(); setUploadRecording("");}}
+                onPress={() => router.push("/friends")}
                 className="mr-3"
-              > 
+              >
                 <Ionicons
-                  name="document"
+                  name="people-outline"
                   size={28}
                   color={APP_COLOR.PINK}
                 />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleCreatePost}
-                disabled={!newPostContent.trim()}
-                className={`bg-pink-500 rounded-full px-5 py-2 ${!newPostContent.trim() ? "opacity-50" : ""}`}
+                disabled={!newPostContent.trim() || isLoading}
+                className={`bg-pink-500 rounded-full px-5 py-2 ${!newPostContent.trim() || isLoading ? "opacity-50" : ""}`}
               >
                 <Text className="text-white font-semibold">Share</Text>
               </TouchableOpacity>
@@ -273,117 +293,108 @@ const CommunityTab = () => {
           </View>
 
           {/* Posts List */}
-          {posts.map((post) => (
-            <View key={post.id} className="border-b border-white/10 p-10">
-              {/* Post Header */}
-              <View className="flex-row items-center mb-2">
-                {post.avatar.type === "Ionicons" ? (
+          {isLoading ? (
+            <Text className="text-white text-center">Loading...</Text>
+          ) : posts.length === 0 ? (
+            <Text className="text-gray-400 text-center">No posts from friends yet.</Text>
+          ) : (
+            posts.map((post) => (
+              <View key={post.id} className="border-b border-white/10 p-4">
+                {/* Post Header */}
+                <View className="flex-row items-center mb-2">
                   <Ionicons
-                    name={post.avatar.name}
+                    name="person-circle-outline"
                     size={40}
                     color="#eee"
                     className="mr-3"
                   />
-                ) : (
-                  <View className="w-10 h-10 rounded-full mr-3 bg-gray-400" />
-                )}
-                <View className="flex-1">
-                  <View className="flex-row items-center">
-                    <Text className="text-white font-semibold">{post.user}</Text>
+                  <View className="flex-1">
+                    <Text className="text-white font-semibold">{post.user.displayName}</Text>
+                    <Text className="text-gray-400 text-sm">{post.score.song.title}</Text>
                   </View>
-                  <Text className="text-gray-400 text-sm">
-                    {post.songName} by {post.artist}
-                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setMoreMenuVisible(post.id)}
+                    className="p-2"
+                  >
+                    <MaterialCommunityIcons
+                      name="dots-horizontal"
+                      size={20}
+                      color="#eee"
+                    />
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                  onPress={() => setMoreMenuVisible(post.id)}
-                  className="p-2"
-                >
-                  <MaterialCommunityIcons
-                    name="dots-horizontal"
-                    size={20}
-                    color="#eee"
-                  />
-                </TouchableOpacity>
-              </View>
 
-              {/* Post Content */}
-              <Text className="text-white text-base mb-3">{post.content}</Text>
+                {/* Post Content */}
+                <Text className="text-white text-base mb-3">{post.description}</Text>
 
-              {/* Post Actions */}
-              <View className="flex-row items-center mb-3">
-                <TouchableOpacity className="flex-row items-center">
-                  <Ionicons
-                    name="chatbubble-outline"
-                    size={20}
-                    color="#eee"
-                    className="mr-1"
-                  />
-                  <Text className="text-gray-400">{(comments[post.id] || []).length}</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Comments Section */}
-              {(comments[post.id] || []).map((comment, index) => (
-                <View key={index} className="ml-2 mb-4 flex-row items-center">
-                  {comment.avatar.type === "Ionicons" && (
+                {/* Post Actions */}
+                <View className="flex-row items-center mb-3">
+                  <TouchableOpacity className="flex-row items-center">
                     <Ionicons
-                      name={comment.avatar.name}
+                      name="chatbubble-outline"
+                      size={20}
+                      color="#eee"
+                      className="mr-1"
+                    />
+                    <Text className="text-gray-400">{post.comments.length}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Comments Section */}
+                {post.comments.map((comment) => (
+                  <View key={comment.id} className="ml-2 mb-2 flex-row items-center">
+                    <Ionicons
+                      name="person-circle-outline"
                       size={24}
                       color="#eee"
                       className="mr-2"
                     />
-                  )}
-                  <View>
-                    <Text className="text-white font-semibold text-sm">{comment.user}</Text>
-                    <Text className="text-gray-400 text-sm">{comment.text}</Text>
+                    <View>
+                      <Text className="text-white font-semibold text-sm">{comment.user.displayName}</Text>
+                      <Text className="text-gray-400 text-sm">{comment.comment}</Text>
+                    </View>
                   </View>
-                </View>
-              ))}
+                ))}
 
-              {/* Comment Input */}
-              <View className="flex-row items-center mt-2 py-3">
-                <TextInput
-                  placeholder="Reply..."
-                  placeholderTextColor="#eee"
-                  value={newComments[post.id] || ""}
-                  onChangeText={(text) =>
-                    setNewComments((prev) => ({ ...prev, [post.id]: text }))
-                  }
-                  onFocus={() => setActiveCommentInput(post.id)}
-                  onBlur={() => setActiveCommentInput(null)}
-                  editable={activeCommentInput === null || activeCommentInput === post.id}
-                  className={`flex-1 text-white text-sm bg-white/10 rounded-lg px-3 py-1 mr-2 ${
-                    activeCommentInput !== null && activeCommentInput !== post.id ? "opacity-50" : ""
-                  }`}
-                />
-                <TouchableOpacity
-                  onPress={() => handleAddComment(post.id)}
-                  disabled={!newComments[post.id]?.trim()}
-                  className="ml-2"
-                >
-                  <Ionicons
-                    name="send-sharp"
-                    size={24}
-                    color={newComments[post.id]?.trim() ? "#f9a8d4" : "#9ca3af"} 
-                    style={{ transform: [{ rotate: "-45deg" }] }}
+                {/* Comment Input */}
+                <View className="flex-row items-center mt-2">
+                  <TextInput
+                    placeholder="Write a comment..."
+                    placeholderTextColor="#eee"
+                    value={newComment[post.id] || ""}
+                    onChangeText={(text) =>
+                      setNewComment((prev) => ({ ...prev, [post.id]: text }))
+                    }
+                    className="flex-1 text-white text-sm bg-white/10 rounded-lg px-3 py-1 mr-2"
                   />
-                </TouchableOpacity>
-              </View>
-
-              {/* More Menu */}
-              {isMoreMenuVisible === post.id && (
-                <View className="absolute right-4 top-10 bg-white/20 rounded-lg border border-white/10">
                   <TouchableOpacity
-                    onPress={() => handleDeletePost(post.id)}
-                    className="px-4 py-2"
+                    onPress={() => handleAddComment(post.id)}
+                    disabled={!newComment[post.id]?.trim()}
+                    className="ml-2"
                   >
-                    <Text className="text-pink-300">Delete Post</Text>
+                    <Ionicons
+                      name="send-sharp"
+                      size={24}
+                      color={newComment[post.id]?.trim() ? "#f9a8d4" : "#9ca3af"}
+                      style={{ transform: [{ rotate: "-45deg" }] }}
+                    />
                   </TouchableOpacity>
                 </View>
-              )}
-            </View>
-          ))}
+
+                {/* More Menu */}
+                {isMoreMenuVisible === post.id && (
+                  <View className="absolute right-4 top-10 bg-white/20 rounded-lg border border-white/10">
+                    <TouchableOpacity
+                      onPress={() => handleDeletePost(post.id)}
+                      className="px-4 py-2"
+                    >
+                      <Text className="text-pink-300">Delete Post</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ))
+          )}
         </Animated.ScrollView>
       </AnimatedWrapper>
     </View>

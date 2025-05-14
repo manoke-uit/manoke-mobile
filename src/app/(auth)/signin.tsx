@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_COLOR } from "@/utils/constant";
 import { useRouter } from "expo-router";
 import tw from "twrnc";
-import { loginAPI, printAsyncStorage } from "@/utils/api";
+import { loginAPI, getAccountAPI, printAsyncStorage } from "@/utils/api";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -42,33 +42,42 @@ const SignIn = () => {
       const response = await loginAPI(email, password);
       if (response && response.accessToken) {
         await AsyncStorage.setItem("accessToken", response.accessToken);
+        const profile = await getAccountAPI();
+        const { userId, displayName, email: userEmail } = profile;
+        if (!userId) {
+          throw new Error("Cannot get userId from profile");
+        }
+        const userProfile = JSON.stringify({ userId, displayName, email: userEmail });
+        await AsyncStorage.setItem("userProfile", userProfile);
         const storedToken = await AsyncStorage.getItem("accessToken");
-        if (storedToken) {
-          console.log("Token stored successfully:", storedToken);
+        const storedProfile = await AsyncStorage.getItem("userProfile");
+        if (storedToken && storedProfile) {
+          console.log("Stored in AsyncStorage:", { accessToken: storedToken, userProfile: JSON.parse(storedProfile) });
+          printAsyncStorage();
           Toast.show({
             type: "success",
-            text1: "success",
-            text2: "Logged in successfully!",
+            text1: "Success",
+            text2: "Successfully logged in!",
           });
           setTimeout(() => {
             router.replace("/(tabs)/home");
           }, 1000);
         } else {
-          throw new Error("Failed to store token in AsyncStorage");
+          throw new Error("Cannot get accessToken or userProfile from AsyncStorage");
         }
       } else {
         Toast.show({
           type: "error",
-          text1: "error",
+          text1: "Error",
           text2: "Email or password is incorrect!",
         });
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Login error: ", error);
       Toast.show({
         type: "error",
-        text1: "error",
-        text2: "Failed to login!",
+        text1: "Error",
+        text2: "Login failed!",
       });
     }
   };
@@ -126,7 +135,7 @@ const SignIn = () => {
               value={password}
               onChangeText={setPassword}
             />
-            <TouchableOpacity onPress={() => router.push("/forgotpassword")}>
+            <TouchableOpacity onPress={() => router.push("/(auth)/forgotpassword")}>
               <Text
                 style={tw`text-sm text-center mt-2 text-[${APP_COLOR.TEXT_PURPLE}]`}
               >
