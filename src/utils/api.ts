@@ -5,7 +5,7 @@ import * as FileSystem from "expo-file-system";
 
 export const confirmEmailAPI = (token: string) => {
   const url = `/auth/confirm-email`;
-  return axios.post<{ email: string; message: string }>(url, { token });
+  return axios.post<{ success: boolean; message: string }>(url, { token });
 };
 
 export const registerAPI = (email: string, password: string, displayName: string) => {
@@ -31,7 +31,7 @@ export const printAsyncStorage = () => {
 };
 
 export const getAccountAPI = () => {
-  const url = `/profile`;
+  const url = `/(tabs)/home`;
   return axios.get<IFetchUser>(url);
 };
 
@@ -53,10 +53,12 @@ export const changePasswordAPI = (userId: string, newPassword: string) => {
   const url = `/users/${userId}`;
   return axios.patch(url, { password: newPassword });
 };
+
 export const getScoresAPI = () => {
   const url = `/scores`;
   return axios.get<IPaginatedScores>(url);
 };
+
 export const createScoreAPI = (payload: {
   audioUrl: string;
   finalScore: number;
@@ -67,6 +69,7 @@ export const createScoreAPI = (payload: {
   const url = `/scores`;
   return axios.post<IScore>(url, payload);
 };
+
 export const createPlaylistAPI = (payload: {
   title: string;
   userId: string;
@@ -77,10 +80,12 @@ export const createPlaylistAPI = (payload: {
   const url = `/playlists`;
   return axios.post<IPlaylist>(url, payload);
 };
+
 export const getPlaylistsAPI = () => {
   const url = `/playlists`;
   return axios.get<IPaginatedPlaylists>(url);
 };
+
 export const updatePlaylistAPI = (
   playlistId: string,
   payload: Partial<{
@@ -132,6 +137,7 @@ export const uploadAvatar = async (fileUri: string, userId: string) => {
     return null;
   }
 };
+
 export const searchYoutubeAPI = (query: string, pageToken: string) => {
   const url = `/youtube/search`;
   return axios.get<IYoutubeSearchResponse>(url, {
@@ -141,6 +147,7 @@ export const searchYoutubeAPI = (query: string, pageToken: string) => {
     },
   });
 };
+
 export const uploadScoreAudioAPI = async (
   fileUri: string,
   songId: string,
@@ -172,4 +179,14 @@ export const uploadScoreAudioAPI = async (
     console.error("Upload audio failed:", error);
     throw error;
   }
+};
+
+export const forgotPasswordAPI = (email: string) => {
+  const url = `/auth/forgot-password`;
+  return axios.post<{ message: string }>(url, { email });
+};
+
+export const resetPasswordAPI = (token: string, newPassword: string, verifyNewPassword: string) => {
+  const url = `/auth/reset-password`;
+  return axios.post<{ message: string }>(url, { token, newPassword, verifyNewPassword });
 };

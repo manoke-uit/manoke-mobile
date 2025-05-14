@@ -61,25 +61,30 @@ const SignUp = () => {
       if (token && typeof token === "string") {
         try {
           const response = await confirmEmailAPI(token);
-          Toast.show({
-            type: "success",
-            text1: "Success",
-            text2: response.message || "Email confirmed successfully!",
-          });
-          router.replace("/(auth)/signin");
+          if (response.success) {
+            Toast.show({
+              type: "success",
+              text1: "success",
+              text2: response.message || "Confirm email success, please login.",
+            });
+            router.replace("/(auth)/signin"); 
+          } else {
+            throw new Error(response.message || "Xác nhận email thất bại");
+          }
         } catch (error: any) {
-          console.error("Email confirmation error:", {
+          console.error("Error", {
             message: error.message,
             response: error.response?.data,
             status: error.response?.status,
           });
           Toast.show({
             type: "error",
-            text1: "Error",
+            text1: "error",
             text2:
               error.response?.data?.message ||
-              "Failed to confirm email. Please try again.",
+              "Confirm email failed, please try again.",
           });
+          setCountdown(60); 
         }
       }
     };
@@ -92,8 +97,8 @@ const SignUp = () => {
     if (password !== confirmPassword) {
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: "Passwords do not match!",
+        text1: "error",
+        text2: "Password does not match!",
       });
       return;
     }
@@ -101,8 +106,8 @@ const SignUp = () => {
     if (!email || !username || !password || !confirmPassword) {
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: "Please fill in all fields!",
+        text1: "Lỗi",
+        text2: "Please fill in all fields.",
       });
       return;
     }
@@ -111,43 +116,45 @@ const SignUp = () => {
     setIsLoading(true);
 
     try {
-      const payload = { email, password, displayName: username };
-      console.log("Sending payload:", JSON.stringify(payload));
-      const response = await registerAPI(email, password, username);
-      if (response && response.message) {
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Please check your email to confirm your account.",
-        });
-        setCountdown(3);
-      } else {
-        throw new Error("Failed to send confirmation email.");
-      }
-    } catch (error: any) {
-      console.error("Signup error details:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        headers: error.response?.headers,
-      });
-      let errorMessage = "An error occurred. Please try again later.";
-      if (error.response?.status === 403) {
-        errorMessage =
-          error.response?.data?.message ||
-          "Signup failed: Email may already be registered or request is forbidden.";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: errorMessage,
-      });
-    } finally {
-      setIsLoading(false);
-      isSubmitting.current = false;
-    }
+  const payload = { email, password, displayName: username };
+  console.log("Sending payload:", JSON.stringify(payload));
+  const response = await registerAPI(email, password, username);
+  if (response && response.message) {
+    Toast.show({
+      type: "success",
+      text1: "success",
+      text2: "Please check your email to confirm your account.",
+    });
+    setCountdown(60); 
+  } else {
+    throw new Error("Repspone not define.");
+  }
+} catch (error: any) {
+  console.error("Error detail", {
+    message: error.message,
+    status: error.response?.status,
+    data: error.response?.data,
+    headers: error.response?.headers,
+  });
+  let errorMessage = "Error occurred. Please try again.";
+  if (error.response?.status === 500) {
+    errorMessage = "Error: Server error. Please try again later.";
+  } else if (error.response?.status === 403) {
+    errorMessage =
+      error.response?.data?.message ||
+      "Fail to register. Please try again.";
+  } else if (error.response?.data?.message) {
+    errorMessage = error.response.data.message;
+  }
+  Toast.show({
+    type: "error",
+    text1: "error",
+    text2: errorMessage,
+  });
+} finally {
+  setIsLoading(false);
+  isSubmitting.current = false;
+}
   };
 
   const isButtonActive =

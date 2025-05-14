@@ -12,17 +12,22 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_COLOR } from "@/utils/constant";
 import tw from "twrnc";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import Toast from "react-native-toast-message";
+import { resetPasswordAPI } from "@/utils/api";
 
-const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
+const { height: screenHeight } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
 const avatar = require("@/assets/auth/Icon/avatar.png");
 
 const NewPassword = () => {
-  const slideAnim = useRef(new Animated.Value(-modalHeight)).current;
+  const slideAnim = useRef(new Animated.Value(modalHeight)).current;
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { token } = useLocalSearchParams();
+  const isSubmitting = useRef(false);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -32,7 +37,77 @@ const NewPassword = () => {
     }).start();
   }, []);
 
-  const isButtonActive = password.length && confirmPassword.length > 0;
+  const handleResetPassword = async () => {
+    if (isLoading || isSubmitting.current) return;
+
+    if (!password || !confirmPassword) {
+      Toast.show({
+        type: "error",
+        text1: "error",
+        text2: "Please fill in all fields!",
+      });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Toast.show({
+        type: "error",
+        text1: "error",
+        text2: "Passwords do not match!",
+      });
+      return;
+    }
+
+    if (!token || typeof token !== "string") {
+      Toast.show({
+        type: "error",
+        text1: "error",
+        text2: "Token does not exist or is invalid!",
+      });
+      return;
+    }
+
+    isSubmitting.current = true;
+    setIsLoading(true);
+
+    try {
+      const response = await resetPasswordAPI(token, password, confirmPassword);
+      if (response && response.message) {
+        Toast.show({
+          type: "success",
+          text1: "success",
+          text2: "Password reset successfully. Please log in again.",
+        });
+        router.replace("/(auth)/signin");
+      } else {
+        throw new Error("No response message from server.");
+      }
+    } catch (error: any) {
+      console.error("Error detail ", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      let errorMessage = "Error occurred. Please try again.";
+      if (error.response?.status === 400) {
+        errorMessage = "Token is invalid or has expired.";
+      } else if (error.response?.status === 500) {
+        errorMessage = "Error occurred on the server. Please try again later.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      Toast.show({
+        type: "error",
+        text1: "error",
+        text2: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+      isSubmitting.current = false;
+    }
+  };
+
+  const isButtonActive = password.length > 0 && confirmPassword.length > 0 && !isLoading;
 
   return (
     <SafeAreaView style={tw`flex-1`}>
@@ -47,11 +122,11 @@ const NewPassword = () => {
           style={[
             {
               position: "absolute",
+              bottom: 0,
               width: "100%",
               height: modalHeight,
               backgroundColor: "#F3F2F8",
-              bottom: slideAnim,
-              left: 0,
+              transform: [{ translateY: slideAnim }],
             },
             tw`rounded-t-3xl items-center justify-start`,
           ]}
@@ -78,8 +153,8 @@ const NewPassword = () => {
               placeholderTextColor={"#66339980"}
               value={password}
               onChangeText={setPassword}
+              editable={!isLoading}
             />
-
             <TextInput
               placeholder="Confirm password"
               secureTextEntry={true}
@@ -87,12 +162,14 @@ const NewPassword = () => {
               placeholderTextColor={"#66339980"}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
+              editable={!isLoading}
             />
           </View>
 
           <View style={tw`w-full items-center mt-5`}>
             <TouchableOpacity
-              onPress={() => router.push("./start")} // chưa viết hàm xử lý tạo tk
+              onPress={handleResetPassword}
+              disabled={!isButtonActive}
               style={tw`w-[80%] h-[50px] rounded-lg items-center justify-center ${
                 isButtonActive
                   ? `bg-[${APP_COLOR.PURPLE}]`
@@ -100,7 +177,7 @@ const NewPassword = () => {
               }`}
             >
               <Text style={tw`text-white text-lg font-roboto font-bold`}>
-                Confirm
+                {isLoading ? "Processing..." : "Confirm"}
               </Text>
             </TouchableOpacity>
           </View>
