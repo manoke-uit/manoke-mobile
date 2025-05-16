@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   Pressable,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -32,51 +33,48 @@ const PlaylistScreen = () => {
         const userRes = await getAccountAPI();
         setUserId(userRes.userId || null);
 
-        const playlistRes = await getPlaylistsAPI();
-        const fetched =
-          playlistRes.items.map((p) => ({
-            id: p.title,
+        const res = await getPlaylistsAPI();
+        if (res) {
+          const fetched = res.map((p: any) => ({
+            id: p.id,
             name: p.title,
-            count: p.songIds?.length || 0,
-          })) || [];
-
-        setPlaylists(fetched);
+            count: p.songs?.length || 0,
+          }));
+          setPlaylists(fetched);
+        }
       } catch (err) {
         console.error("Init failed:", err);
       }
     };
 
     fetchUserAndPlaylists();
-  }, []);
+  }, [playlists]);
 
   const handleCreatePlaylist = async () => {
     if (!playlistName.trim() || !userId) return;
 
+    const isDuplicate = playlists.some(
+      (p) => p.name.toLowerCase().trim() === playlistName.toLowerCase().trim()
+    );
+    if (isDuplicate) {
+      Alert.alert("Playlist đã tồn tại!");
+      return;
+    }
+
     try {
-      const payload = {
+      await createPlaylistAPI({
         title: playlistName,
         userId,
-        imageUrl:
-          "https://th.bing.com/th/id/OIP.uehPD8NZotJntHCtC3-V9wHaE8?rs=1&pid=ImgDetMain",
-        description: "ahihi",
-        songIds: ["0c36ab27-182c-45dc-8736-c254712f5497"],
-      };
+      });
 
-      await createPlaylistAPI(payload);
-
-      const playlistRes = await getPlaylistsAPI();
-      const updated =
-        playlistRes.items.map((p) => ({
-          id: p.title,
-          name: p.title,
-          count: p.songIds?.length || 0,
-        })) || [];
-
-      setPlaylists(updated);
       setPlaylistName("");
       setModalVisible(false);
-    } catch (error) {
-      console.error("Failed to create playlist:", error);
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        Alert.alert("Tên playlist đã tồn tại!");
+      } else {
+        console.error("Failed to create playlist:", error);
+      }
     }
   };
 
@@ -113,7 +111,7 @@ const PlaylistScreen = () => {
         className="flex-1"
       >
         <View className="items-center mb-6">
-          <View className="w-48 h-48 bg-gray-400" />
+          <View className="w-48 h-48 bg-gray-400 rounded-xl" />
         </View>
 
         <View className="flex-row justify-between items-center px-4 mb-10">

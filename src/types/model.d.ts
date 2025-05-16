@@ -33,17 +33,8 @@ declare global {
   }
   export interface IFetchUser {
     userId: string;
-    displayName: string;
     email: string;
     adminSecret?: string;
-    password?: string;
-    imageUrl?: string;
-    createdAt: string;
-    playlistIds: string[];
-    scoreIds: string[];
-    karaokeIds: string[];
-    postIds: string[];
-    commentIds: string[];
   }
   export interface ISong {
     title: string;
@@ -74,8 +65,8 @@ declare global {
     meta: IPaginationMeta;
   }
   export interface IPlaylist {
+    id: string;
     title: string;
-    userId: string;
     imageUrl: string;
     description: string;
     songIds: string[];
@@ -136,7 +127,7 @@ declare global {
   export interface IFriend {
     userId_1: string;
     userId_2: string;
-    status: 'pending' | 'accepted' | 'rejected';
+    status: "pending" | "accepted" | "rejected";
     createdAt: string;
     user_1: {
       id: string;

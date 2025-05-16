@@ -53,7 +53,7 @@ const HomeTab = () => {
         let totalPages = 1;
 
         do {
-          const res = await getAllSongs(currentPage);
+          const res = await getAllSongs();
           console.log("API Response:", JSON.stringify(res, null, 2));
           if (!res.data) {
             throw new Error("No data returned from songs API");
@@ -86,7 +86,8 @@ const HomeTab = () => {
         Toast.show({
           type: "error",
           text1: "Error",
-          text2: error.message || "Failed to load songs. Please try again later.",
+          text2:
+            error.message || "Failed to load songs. Please try again later.",
         });
       } finally {
         setLoading(false);
@@ -141,7 +142,9 @@ const HomeTab = () => {
                 className="flex-row pt-3"
               >
                 {songs.length === 0 ? (
-                  <Text style={tw`text-white text-lg`}>No playlists available</Text>
+                  <Text style={tw`text-white text-lg`}>
+                    No playlists available
+                  </Text>
                 ) : (
                   songs.map((song, i) => (
                     <TouchableOpacity
