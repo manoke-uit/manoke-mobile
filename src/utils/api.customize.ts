@@ -39,7 +39,7 @@ instance.interceptors.response.use(
     return response;
   },
   async function (error) {
-    console.error("Response Error:", error);
+    // console.error("Response Error:", error);
     if (error?.response?.status === 401) {
       await AsyncStorage.removeItem("accessToken");
       router.replace("/(auth)/start");

@@ -83,11 +83,11 @@ const NewPassword = () => {
         throw new Error("No response message from server.");
       }
     } catch (error: any) {
-      console.error("Error detail ", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
+      // console.error("Error detail ", {
+      //   message: error.message,
+      //   status: error.response?.status,
+      //   data: error.response?.data,
+      // });
       let errorMessage = "Error occurred. Please try again.";
       if (error.response?.status === 400) {
         errorMessage = "Token is invalid or has expired.";
