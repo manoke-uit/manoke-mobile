@@ -39,38 +39,30 @@ const SignIn = () => {
 
   const handleSignIn = async () => {
     try {
-      const response = await loginAPI(email, password);
-      if (response && response.accessToken) {
-        await AsyncStorage.setItem("accessToken", response.accessToken);
+      const res = await loginAPI(email, password);
+      if (res?.accessToken) {
+        await AsyncStorage.setItem("accessToken", res.accessToken);
         const profile = await getAccountAPI();
-        const { userId, displayName, email: userEmail } = profile;
-        if (!userId) {
-          throw new Error("Cannot get userId from profile");
+        if (profile?.userId) {
+          await AsyncStorage.setItem("userId", profile.userId);
+          await AsyncStorage.setItem("userProfile", JSON.stringify(profile));
         }
-        const userProfile = JSON.stringify({ userId, displayName, email: userEmail });
-        await AsyncStorage.setItem("userProfile", userProfile);
-        const storedToken = await AsyncStorage.getItem("accessToken");
-        const storedProfile = await AsyncStorage.getItem("userProfile");
-        if (storedToken && storedProfile) {
-          console.log("Stored in AsyncStorage:", { accessToken: storedToken, userProfile: JSON.parse(storedProfile) });
-          printAsyncStorage();
-          Toast.show({
-            type: "success",
-            text1: "Success",
-            text2: "Successfully logged in!",
-          });
-          setTimeout(() => {
-            router.replace("/(tabs)/home");
-          }, 1000);
-        } else {
-          throw new Error("Cannot get accessToken or userProfile from AsyncStorage");
-        }
-      } else {
+      }
+      const storedToken = await AsyncStorage.getItem("accessToken");
+      const storedProfile = await AsyncStorage.getItem("userProfile");
+      if (storedToken && storedProfile) {
+        console.log("Stored in AsyncStorage:", { accessToken: storedToken, userProfile: JSON.parse(storedProfile) });
+        printAsyncStorage();
         Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: "Email or password is incorrect!",
+          type: "success",
+          text1: "Success",
+          text2: "Successfully logged in!",
         });
+        setTimeout(() => {
+          router.replace("/(tabs)/home");
+        }, 1000);
+      } else {
+        throw new Error("Cannot get accessToken or userProfile from AsyncStorage");
       }
     } catch (error) {
       console.error("Login error: ", error);

@@ -20,6 +20,11 @@ export const confirmEmailAPI = (token: string) => {
   return axios.post<{ success: boolean; message: string }>(url, { token });
 };
 
+export const confirmVerificationAPI = (payload: { email: string; otp: string; type: string }) => {
+  const url = `/auth/confirm-verification`;
+  return axios.post<{ success: boolean; message: string }>(url, payload);
+};
+
 export const registerAPI = (email: string, password: string, displayName: string) => {
   const url = `/auth/signup`;
   return axios.post<{ message: string }>(url, { email, password, displayName });
