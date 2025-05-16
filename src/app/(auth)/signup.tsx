@@ -14,7 +14,7 @@ import { APP_COLOR } from "@/utils/constant";
 import tw from "twrnc";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Toast from "react-native-toast-message";
-import { registerAPI, confirmEmailAPI } from "@/utils/api";
+import { registerAPI } from "@/utils/api";
 
 const { height: screenHeight } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
@@ -26,10 +26,8 @@ const SignUp = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [countdown, setCountdown] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { token } = useLocalSearchParams();
   const isSubmitting = useRef(false);
 
   useEffect(() => {
@@ -40,59 +38,8 @@ const SignUp = () => {
     }).start();
   }, []);
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [countdown]);
-
-  useEffect(() => {
-    const confirmEmail = async () => {
-      if (token && typeof token === "string") {
-        try {
-          const response = await confirmEmailAPI(token);
-          if (response.success) {
-            Toast.show({
-              type: "success",
-              text1: "Success",
-              text2: response.message || "Email confirmed successfully, please log in.",
-            });
-            router.replace("/(auth)/signin");
-          } else {
-            throw new Error(response.message || "Email confirmation failed");
-          }
-        } catch (error: any) {
-          console.error("Error", {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-          });
-          Toast.show({
-            type: "error",
-            text1: "Error",
-            text2:
-              error.response?.data?.message ||
-              "Email confirmation failed, please try again.",
-          });
-          setCountdown(60);
-        }
-      }
-    };
-    confirmEmail();
-  }, [token, router]);
-
   const handleSignUp = async () => {
-    if (isLoading || countdown > 0 || isSubmitting.current) return;
+    if (isLoading || isSubmitting.current) return;
 
     if (password !== confirmPassword) {
       Toast.show({
@@ -117,21 +64,21 @@ const SignUp = () => {
 
     try {
       const payload = { email, password, displayName: username };
-      console.log("Sending payload:", JSON.stringify(payload));
       const response = await registerAPI(email, password, username);
-      if (response && response.message) {
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Please check your email to confirm your account.",
-        });
-        setCountdown(60);
-        setTimeout(() => {
-          router.replace("/(auth)/signin");
-        }, 1000); 
-      } else {
-        throw new Error("Response not defined.");
+
+      if (response?.message && response.message.toLowerCase().includes('exist')) {
+        throw { response: { status: 500, data: { message: response.message } } };
       }
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Please check your email for the OTP.",
+      });
+      router.push({
+        pathname: "/(auth)/otpverify",
+        params: { email, type: "signup" },
+      });
     } catch (error: any) {
       console.error("Error detail", {
         message: error.message,
@@ -139,9 +86,13 @@ const SignUp = () => {
         data: error.response?.data,
         headers: error.response?.headers,
       });
-      let errorMessage = "An error occurred. Please try again.";
+      let errorMessage = "Email already exists. Please try again.";
       if (error.response?.status === 500) {
-        errorMessage = "Error: Server error. Please try again later.";
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: errorMessage,
+        });
       } else if (error.response?.status === 403) {
         errorMessage =
           error.response?.data?.message ||
@@ -166,7 +117,6 @@ const SignUp = () => {
     password.length > 0 &&
     confirmPassword.length > 0 &&
     password === confirmPassword &&
-    countdown === 0 &&
     !isLoading;
 
   return (
@@ -244,11 +194,7 @@ const SignUp = () => {
               }`}
             >
               <Text style={tw`text-white text-lg font-roboto font-bold`}>
-                {isLoading
-                  ? "Sending..."
-                  : countdown > 0
-                  ? `Resend after ${countdown}s`
-                  : "Send Email"}
+                {isLoading ? "Sending..." : "Send OTP"}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push("/(auth)/signin")}>
