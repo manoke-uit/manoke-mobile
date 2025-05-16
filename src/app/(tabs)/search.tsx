@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,11 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import AnimatedWrapper from "@/components/animation/animate";
 import MoreMenu from "@/components/moreMenu";
-import {
-  getPlaylistsAPI,
-  searchYoutubeAPI,
-  updatePlaylistAPI,
-} from "@/utils/api";
+import { getPlaylistsAPI, updatePlaylistAPI } from "@/utils/api";
 import SelectPlaylistModal from "@/components/selectPlaylistModal";
 
 interface IYoutubeResult {
@@ -30,41 +26,19 @@ interface Playlist {
   name: string;
   count: number;
 }
+
 const SearchTab = () => {
   const [searchText, setSearchText] = useState("");
   const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
-  const [youtubeResults, setYoutubeResults] = useState<IYoutubeResult[]>([]);
-  const [loading, setLoading] = useState(false);
   const [selectedSong, setSelectedSong] = useState<IYoutubeResult | null>(null);
   const [isPlaylistPickerVisible, setPlaylistPickerVisible] = useState(false);
   const [availablePlaylists, setAvailablePlaylists] = useState<Playlist[]>([]);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchText.length > 0) {
-        fetchYoutube(searchText);
-      }
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [searchText]);
-
-  const fetchYoutube = async (text: string) => {
-    try {
-      setLoading(true);
-      const res = await searchYoutubeAPI(text, "");
-      setYoutubeResults(res.results);
-    } catch (error) {
-      console.log("Youtube search error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddToPlaylist = async () => {
     try {
       const res = await getPlaylistsAPI();
       const fetched = res.items.map((p) => ({
-        id: p.title,
+        id: p.id,
         name: p.title,
         count: p.songIds?.length || 0,
       }));
@@ -99,46 +73,9 @@ const SearchTab = () => {
               </View>
 
               {searchText.length > 0 ? (
-                <View>
-                  {loading ? (
-                    <Text className="text-white">Đang tìm kiếm...</Text>
-                  ) : (
-                    youtubeResults.map((item, i) => (
-                      <View key={i} className="flex-row items-center mb-4">
-                        <TouchableOpacity className="flex-1 flex-row items-center">
-                          <Image
-                            source={{ uri: item.thumbnailUrl }}
-                            style={{
-                              width: 80,
-                              height: 80,
-                              borderRadius: 10,
-                              marginRight: 12,
-                            }}
-                          />
-                          <View>
-                            <Text className="text-white">{item.title}</Text>
-                            <Text className="text-gray-400 text-sm">
-                              youtube.com/watch?v={item.videoId}
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setSelectedSong(item);
-                            setMoreMenuVisible(true);
-                          }}
-                          className="ml-2"
-                        >
-                          <Entypo
-                            name="dots-three-vertical"
-                            size={20}
-                            color="#C0C0C0"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    ))
-                  )}
-                </View>
+                <Text className="text-white italic mb-4">
+                  🔍 Bạn đang tìm kiếm: {searchText}
+                </Text>
               ) : (
                 <View className="mt-10 px-4">
                   <Text className="text-white font-semibold mb-3">
@@ -201,6 +138,7 @@ const SearchTab = () => {
           onAddToPlaylist={handleAddToPlaylist}
         />
       </LinearGradient>
+
       <SelectPlaylistModal
         visible={isPlaylistPickerVisible}
         playlists={availablePlaylists}
