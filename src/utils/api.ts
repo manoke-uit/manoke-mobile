@@ -212,6 +212,7 @@ export const uploadScoreAudioAPI = async (
 export const createPostAPI = async (payload: {
   description: string;
   scoreId: string;
+  createdAt: string;
 }) => {
   const token = await AsyncStorage.getItem("accessToken");
   if (!token) {
@@ -268,17 +269,17 @@ export const createCommentAPI = async (payload: {
   });
 };
 
-export const searchUsersAPI = async (query: string) => {
+export const searchUsersAPI = async (email: string) => {
   const token = await AsyncStorage.getItem("accessToken");
   if (!token) {
     throw new Error("Token not found");
   }
-  const url = `/users`;
-  return axios.get<Pagination<IUser>>(url, {
+  const url = `/users/email`;
+  return axios.get(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    params: { page: 1, limit: 50 },
+    params: { email },
   });
 };
 
@@ -307,10 +308,10 @@ export const updateFriendRequestAPI = async (
   if (!token) {
     throw new Error("Token not found");
   }
-  const url = `/friends`;
+  const url = `/friends/${receiverId}`;
   return axios.patch<IFriend>(
     url,
-    { receiverId, status },
+    { status },
     {
       headers: {
         Authorization: `Bearer ${token}`,

@@ -8,6 +8,8 @@ import {
   Animated,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Modal,
+  TouchableHighlight,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -24,28 +26,14 @@ import {
   getFriendsAPI,
 } from "@/utils/api";
 
-interface Post {
-  id: string;
-  description: string;
-  createdAt: string;
-  user: { id: string; displayName: string };
-  score: {
-    id: string;
-    audioUrl: string;
-    finalScore: number;
-    song: { id: string; title: string };
-  };
-  comments: { id: string; comment: string; user: { id: string; displayName: string } }[];
-}
-
 const CommunityTab = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<IPost[]>([]);
   const [friends, setFriends] = useState<string[]>([]);
   const [isMoreMenuVisible, setMoreMenuVisible] = useState<string | null>(null);
   const [newComment, setNewComment] = useState<{ [key: string]: string }>({});
   const [newPostContent, setNewPostContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [displayName, setDisplayName] = useState<string>("You"); // Default to "You"
+  const [displayName, setDisplayName] = useState<string>("");
   const navigation = useNavigation();
   const router = useRouter();
   const currentOffset = useRef(0);
@@ -57,6 +45,14 @@ const CommunityTab = () => {
     outputRange: [headerHeight + 100, 10],
     extrapolate: "clamp",
   });
+  const userIdRef = useRef<string | null>(null);
+  const [audioModalVisible, setAudioModalVisible] = useState(false);
+
+  // Placeholder for audio files from historyTab
+  const audioFiles = [
+    { id: "1", name: "Audio 1" },
+    { id: "2", name: "Audio 2" },
+  ];
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -64,6 +60,7 @@ const CommunityTab = () => {
         setIsLoading(true);
         const token = await AsyncStorage.getItem("accessToken");
         const userId = await AsyncStorage.getItem("userId");
+        userIdRef.current = userId;
         if (!token || !userId) {
           Toast.show({
             type: "error",
@@ -78,7 +75,12 @@ const CommunityTab = () => {
         const storedProfile = await AsyncStorage.getItem("userProfile");
         if (storedProfile) {
           const profile = JSON.parse(storedProfile);
-          setDisplayName(profile.displayName || "You");
+          setDisplayName(profile.displayName || "");
+        }
+
+        // Fallback if not found
+        if (!storedProfile) {
+          setDisplayName("");
         }
 
         const friendResponse = await getFriendsAPI();
@@ -87,7 +89,11 @@ const CommunityTab = () => {
         );
         setFriends(friendIds);
         const postResponse = await getPostsAPI();
-        setPosts(postResponse.filter((post: Post) => friendIds.includes(post.user.id)));
+
+        postResponse.forEach((post: any) => console.log("post.user.id:", post.user?.id));
+        const filteredPosts = postResponse.filter((post: IPost) => friendIds.includes(post.user.id) || post.user.id === userId);
+        console.log("Filtered posts (friends + self):", filteredPosts);
+        setPosts(filteredPosts);
       } catch (error: any) {
         Toast.show({
           type: "error",
@@ -113,7 +119,8 @@ const CommunityTab = () => {
     try {
       setIsLoading(true);
       const token = await AsyncStorage.getItem("accessToken");
-      if (!token) {
+      const userId = await AsyncStorage.getItem("userId");
+      if (!token || !userId) {
         Toast.show({
           type: "error",
           text1: "Error",
@@ -122,8 +129,8 @@ const CommunityTab = () => {
         router.replace("/signin");
         return;
       }
-      const scoreId = "temp-score-id"; // Needs integration with uploadScoreAudioAPI
-      await createPostAPI({ description: newPostContent, scoreId });
+      const scoreId = "temp-score-id"; 
+      await createPostAPI({ description: newPostContent, scoreId, createdAt: new Date().toISOString() });
       Toast.show({
         type: "success",
         text1: "Success",
@@ -131,7 +138,13 @@ const CommunityTab = () => {
       });
       setNewPostContent("");
       const postResponse = await getPostsAPI();
-      setPosts(postResponse.filter((post: Post) => friends.includes(post.user.id)));
+      console.log("All posts from API after create:", postResponse);
+      console.log("Current userId:", userId);
+      // Log all post.user.id for debug
+      postResponse.forEach((post: any) => console.log("post.user.id:", post.user?.id));
+      const filteredPosts = postResponse.filter((post: IPost) => friends.includes(post.user.id) || post.user.id === userId);
+      console.log("Filtered posts after create (friends + self):", filteredPosts);
+      setPosts(filteredPosts);
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -192,7 +205,13 @@ const CommunityTab = () => {
       });
       setNewComment((prev) => ({ ...prev, [postId]: "" }));
       const postResponse = await getPostsAPI();
-      setPosts(postResponse.filter((post: Post) => friends.includes(post.user.id)));
+      console.log("All posts from API after comment:", postResponse);
+      console.log("Current userId:", userIdRef.current);
+      // Log all post.user.id for debug
+      postResponse.forEach((post: any) => console.log("post.user.id:", post.user?.id));
+      const filteredPosts = postResponse.filter((post: IPost) => friends.includes(post.user.id) || post.user.id === userIdRef.current);
+      console.log("Filtered posts after comment (friends + self):", filteredPosts);
+      setPosts(filteredPosts);
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -219,6 +238,10 @@ const CommunityTab = () => {
       });
     }
     currentOffset.current = offsetY;
+  };
+
+  const handleAttachAudio = () => {
+    setAudioModalVisible(true);
   };
 
   return (
@@ -254,14 +277,25 @@ const CommunityTab = () => {
         >
           {/* New Post Input */}
           <View className="px-4 py-4 bg-white/10 rounded-xl mx-4 mt-8 mb-6">
-            <View className="flex-row items-center mb-3">
-              <Ionicons
-                name="person-circle-outline"
-                size={40}
-                color="#eee"
-                className="mr-3"
-              />
-              <Text className="text-white font-semibold text-base">{displayName}</Text>
+            <View className="flex-row items-center mb-3 justify-between">
+              <View className="flex-row items-center">
+                <Ionicons
+                  name="person-circle-outline"
+                  size={40}
+                  color="#eee"
+                  className="mr-3"
+                />
+                <Text className="text-white font-semibold text-base">{displayName || "You"}</Text>
+              </View>
+              {/* Move friends button to right */}
+              <TouchableOpacity onPress={() => router.push("/friends")}
+                style={{ marginLeft: 8 }}>
+                <Ionicons
+                  name="people-outline"
+                  size={28}
+                  color={APP_COLOR.WHITE}
+                />
+              </TouchableOpacity>
             </View>
             <TextInput
               placeholder="Share a song..."
@@ -272,14 +306,15 @@ const CommunityTab = () => {
               multiline
             />
             <View className="flex-row justify-between">
+              {/* Attach audio button (replace old friends button position) */}
               <TouchableOpacity
-                onPress={() => router.push("/friends")}
+                onPress={handleAttachAudio}
                 className="mr-3"
               >
                 <Ionicons
-                  name="people-outline"
+                  name="musical-notes-outline"
                   size={28}
-                  color={APP_COLOR.PINK}
+                  color={APP_COLOR.PURPLE}
                 />
               </TouchableOpacity>
               <TouchableOpacity
@@ -291,6 +326,37 @@ const CommunityTab = () => {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Audio Modal */}
+          <Modal
+            visible={audioModalVisible}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setAudioModalVisible(false)}
+          >
+            <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
+              <View style={{ backgroundColor: "white", borderRadius: 10, padding: 20, width: 300 }}>
+                <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>Select Audio from History</Text>
+                {audioFiles.map((audio) => (
+                  <TouchableHighlight
+                    key={audio.id}
+                    underlayColor={APP_COLOR.LIGHT_PURPLE}
+                    onPress={() => {
+                      setAudioModalVisible(false);
+                      // TODO: handle attach audio logic
+                      console.log("Selected audio:", audio);
+                    }}
+                    style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: "#eee" }}
+                  >
+                    <Text>{audio.name}</Text>
+                  </TouchableHighlight>
+                ))}
+                <TouchableOpacity onPress={() => setAudioModalVisible(false)} style={{ marginTop: 10 }}>
+                  <Text style={{ color: APP_COLOR.PINK, textAlign: "center" }}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
 
           {/* Posts List */}
           {isLoading ? (
