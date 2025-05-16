@@ -24,27 +24,14 @@ import {
 } from "@/utils/api";
 import { LinearGradient } from "expo-linear-gradient";
 
-interface User {
-  id: string;
-  displayName: string;
-  email: string;
-}
-
-interface Friend {
-  userId_1: string;
-  userId_2: string;
-  status: "pending" | "accepted" | "rejected";
-  user_1: { id: string; displayName: string };
-  user_2: { id: string; displayName: string };
-}
-
 const FriendsTab = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<User[]>([]);
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
+  const [searchResults, setSearchResults] = useState<IUser[]>([]);
+  const [friends, setFriends] = useState<IFriend[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<IFriend[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -103,24 +90,21 @@ const FriendsTab = () => {
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
+      setHasSearched(false);
       return;
     }
     try {
       setIsLoading(true);
-      const token = await AsyncStorage.getItem("accessToken");
-      console.log("Token for searchUsersAPI:", token);
-      const response = await searchUsersAPI(searchQuery);
-      const users = response.items.filter((user: User) =>
-        user.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setSearchResults(users);
+      setHasSearched(true);
+      const response = await searchUsersAPI(searchQuery.trim());
+      if (response.data.data) {
+        setSearchResults([response.data.data]);
+      } else {
+        setSearchResults([]);
+      }
     } catch (error: any) {
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: error.message || "Failed to search users. Please try again.",
-      });
+      setSearchResults([]);
+      setHasSearched(true);
     } finally {
       setIsLoading(false);
     }
@@ -193,9 +177,19 @@ const FriendsTab = () => {
     >
       <SafeAreaView style={tw`flex-1 bg-transparent`}>
         <View style={{ paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16 }}>
-          <Text style={{ color: "white", fontSize: 32, fontWeight: "bold", marginBottom: 24 }}>
-            Friends
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ marginRight: 12, padding: 4 }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="chevron-back-outline" size={28} color="white" />
+            </TouchableOpacity>
+            <Text style={{ color: "white", fontSize: 32, fontWeight: "bold", flex: 1, textAlign: 'center' }}>
+              Friends
+            </Text>
+            <View style={{ width: 28, marginLeft: 12 }} />
+          </View>
 
           {/* Search Bar */}
           <View className="flex-row items-center bg-white/20 rounded-xl px-4 py-2 mb-4">
@@ -259,6 +253,16 @@ const FriendsTab = () => {
                   )}
                 </View>
               ))}
+            </View>
+          )}
+
+          {/* Empty State khi không tìm thấy user */}
+          {hasSearched && searchResults.length === 0 && !isLoading && (
+            <View className="mb-4 items-center">
+              <Ionicons name="person-outline" size={48} color="#aaa" style={{ marginBottom: 8 }} />
+              <Text style={{ color: "#aaa", fontSize: 16 }}>
+                Can't find user with this email.
+              </Text>
             </View>
           )}
 
