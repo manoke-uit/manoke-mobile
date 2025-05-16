@@ -71,10 +71,7 @@ declare global {
     description: string;
     songIds: string[];
   }
-  export interface IPaginatedPlaylists {
-    items: IPlaylist[];
-    meta: IPaginationMeta;
-  }
+
   interface IYoutubeResult {
     title: string;
     videoId: string;
@@ -91,14 +88,23 @@ declare global {
     id: string;
     description: string;
     createdAt: string;
-    user: { id: string; displayName: string };
+    scoreId: string;
+    userId: string;
+    user: {
+      id: string;
+      displayName: string;
+    };
     score: {
       id: string;
       audioUrl: string;
       finalScore: number;
-      song: { id: string; title: string };
+      song: {
+        id: string;
+        title: string;
+        artistIds: string[];
+      };
     };
-    comments: { id: string; comment: string; user: { id: string; displayName: string } }[];
+    comments: IComment[];
   }
   export interface IPaginatedPosts {
     items: IPost[];
