@@ -100,23 +100,14 @@ declare global {
     id: string;
     description: string;
     createdAt: string;
-    scoreId: string;
-    userId: string;
-    user: {
-      id: string;
-      displayName: string;
-    };
+    user: { id: string; displayName: string };
     score: {
       id: string;
       audioUrl: string;
       finalScore: number;
-      song: {
-        id: string;
-        title: string;
-        artistIds: string[];
-      };
+      song: { id: string; title: string };
     };
-    comments: IComment[];
+    comments: { id: string; comment: string; user: { id: string; displayName: string } }[];
   }
   export interface IPaginatedPosts {
     items: IPost[];

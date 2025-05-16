@@ -200,6 +200,7 @@ export const uploadScoreAudioAPI = async (
 export const createPostAPI = async (payload: {
   description: string;
   scoreId: string;
+  createdAt: string;
 }) => {
   const token = await AsyncStorage.getItem("accessToken");
   if (!token) {
@@ -288,8 +289,8 @@ export const updateFriendRequestAPI = async (receiverId: string, status: 'accept
   if (!token) {
     throw new Error("Token not found");
   }
-  const url = `/friends`;
-  return axios.patch<IFriend>(url, { receiverId, status }, {
+  const url = `/friends/${receiverId}`;
+  return axios.patch<IFriend>(url, { status }, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -319,7 +320,7 @@ export const getFriendRequestsAPI = async () => {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  });
+ });
 };
 
 export const removeFriendAPI = async (idToRemove: string) => {
