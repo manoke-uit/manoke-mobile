@@ -279,12 +279,12 @@ const CommunityTab = () => {
           <View className="px-4 py-4 bg-white/10 rounded-xl mx-4 mt-8 mb-6">
             <View className="flex-row items-center mb-3 justify-between">
               <View className="flex-row items-center">
-                <Ionicons
-                  name="person-circle-outline"
-                  size={40}
-                  color="#eee"
-                  className="mr-3"
-                />
+              <Ionicons
+                name="person-circle-outline"
+                size={40}
+                color="#eee"
+                className="mr-3"
+              />
                 <Text className="text-white font-semibold text-base">{displayName || "You"}</Text>
               </View>
               {/* Move friends button to right */}

@@ -56,7 +56,14 @@ const OtpVerify = () => {
         text2: res.message || "Registration successful!",
       });
       setTimeout(() => {
-        router.replace("/(auth)/signin");
+        if (type === "forgot-password") {
+          router.replace({
+            pathname: "/(auth)/newpassword",
+            params: { email },
+          });
+        } else {
+          router.replace("/(auth)/signin");
+        }
       }, 1000);
     } catch (error: any) {
       let errorMessage = "OTP verification failed. Please try again.";

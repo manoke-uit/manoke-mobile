@@ -167,47 +167,47 @@ const FriendsTab = () => {
     }
   };
 
-  return (
+    return (
     <LinearGradient
       colors={[APP_COLOR.LIGHT_PINK, APP_COLOR.BLACK]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       locations={[0, 0.3]}
       style={{ flex: 1 }}
-    >
+          >
       <SafeAreaView style={tw`flex-1 bg-transparent`}>
         <View style={{ paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
-            <TouchableOpacity
+        <TouchableOpacity
               onPress={() => router.back()}
               style={{ marginRight: 12, padding: 4 }}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
+        >
               <Ionicons name="chevron-back-outline" size={28} color="white" />
-            </TouchableOpacity>
+        </TouchableOpacity>
             <Text style={{ color: "white", fontSize: 32, fontWeight: "bold", flex: 1, textAlign: 'center' }}>
               Friends
             </Text>
             <View style={{ width: 28, marginLeft: 12 }} />
-          </View>
+      </View>
 
-          {/* Search Bar */}
+        {/* Search Bar */}
           <View className="flex-row items-center bg-white/20 rounded-xl px-4 py-2 mb-4">
-            <Ionicons name="search" size={20} color="#eee" />
-            <TextInput
-              placeholder="Search users..."
-              placeholderTextColor="#eee"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onSubmitEditing={handleSearch}
-              className="flex-1 text-white ml-2"
-            />
-          </View>
+          <Ionicons name="search" size={20} color="#eee" />
+          <TextInput
+            placeholder="Search users..."
+            placeholderTextColor="#eee"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            className="flex-1 text-white ml-2"
+          />
+        </View>
 
-          {/* Search Results */}
-          {searchResults.length > 0 && (
-            <View className="mb-4">
-              <Text className="text-white text-lg font-semibold mb-2">Search Results</Text>
+        {/* Search Results */}
+        {searchResults.length > 0 && (
+          <View className="mb-4">
+            <Text className="text-white text-lg font-semibold mb-2">Search Results</Text>
               {searchResults.map((item) => (
                 <View
                   key={item.id}
@@ -263,13 +263,13 @@ const FriendsTab = () => {
               <Text style={{ color: "#aaa", fontSize: 16 }}>
                 Can't find user with this email.
               </Text>
-            </View>
-          )}
+          </View>
+        )}
 
-          {/* Pending Requests */}
-          {pendingRequests.length > 0 && (
-            <View className="mb-4">
-              <Text className="text-white text-lg font-semibold mb-2">Friend Requests</Text>
+        {/* Pending Requests */}
+        {pendingRequests.length > 0 && (
+          <View className="mb-4">
+            <Text className="text-white text-lg font-semibold mb-2">Friend Requests</Text>
               {pendingRequests.map((item) => (
                 <View
                   key={`${item.userId_1}-${item.userId_2}`}
@@ -315,16 +315,16 @@ const FriendsTab = () => {
                   </View>
                 </View>
               ))}
-            </View>
-          )}
+          </View>
+        )}
 
-          {/* Friends List */}
-          <Text className="text-white text-lg font-semibold mb-2">Friends List</Text>
-          {isLoading ? (
-            <ActivityIndicator size="large" color={APP_COLOR.PINK} />
-          ) : friends.length === 0 ? (
-            <Text className="text-gray-400">No friends yet.</Text>
-          ) : (
+        {/* Friends List */}
+        <Text className="text-white text-lg font-semibold mb-2">Friends List</Text>
+        {isLoading ? (
+          <ActivityIndicator size="large" color={APP_COLOR.PINK} />
+        ) : friends.length === 0 ? (
+          <Text className="text-gray-400">No friends yet.</Text>
+        ) : (
             friends.map((item) => {
               const friend = item.userId_1 === currentUserId ? item.user_2 : item.user_1;
               return (
@@ -359,9 +359,9 @@ const FriendsTab = () => {
                 </View>
               );
             })
-          )}
-        </View>
-      </SafeAreaView>
+        )}
+      </View>
+    </SafeAreaView>
     </LinearGradient>
   );
 };

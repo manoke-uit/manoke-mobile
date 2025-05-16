@@ -51,7 +51,7 @@ const SignIn = () => {
       const storedToken = await AsyncStorage.getItem("accessToken");
       const storedProfile = await AsyncStorage.getItem("userProfile");
       if (storedToken && storedProfile) {
-        // console.log("Stored in AsyncStorage:", { accessToken: storedToken, userProfile: JSON.parse(storedProfile) });
+        console.log("Stored in AsyncStorage:", { accessToken: storedToken, userProfile: JSON.parse(storedProfile) });
         printAsyncStorage();
         Toast.show({
           type: "success",

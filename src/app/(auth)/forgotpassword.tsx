@@ -76,15 +76,19 @@ const ForgotPassword = () => {
           text2: "Plase check your email to reset your password.",
         });
         setCountdown(60);
+        router.replace({
+          pathname: "/(auth)/otpverify",
+          params: { email, type: "forgot-password" },
+        });
       } else {
         throw new Error("Failed to send forgot password email.");
       }
     } catch (error: any) {
-      // console.error("Error detail ", {
-      //   message: error.message,
-      //   status: error.response?.status,
-      //   data: error.response?.data,
-      // });
+      console.error("Error detail ", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
       let errorMessage = "Error occurred. Please try again.";
       if (error.response?.status === 404) {
         errorMessage = "Email not found. Please check and try again.";

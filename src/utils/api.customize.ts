@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 
 const backend =
   Platform.OS === "android"
@@ -39,11 +39,17 @@ instance.interceptors.response.use(
     return response;
   },
   async function (error) {
-    // console.error("Response Error:", error);
+    console.error("Response Error:", error);
+    // Lấy pathname hiện tại
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+    // Nếu lỗi 401 và KHÔNG phải đang ở trang start thì mới chuyển hướng
     if (error?.response?.status === 401) {
       await AsyncStorage.removeItem("accessToken");
-      router.replace("/(auth)/start");
-      return Promise.reject(new Error("Unauthorized"));
+      if (!currentPath.includes("/start")) {
+        router.replace("/(auth)/start");
+      }
+      // KHÔNG trả về lỗi Unauthorized nếu đang ở start
+      return Promise.reject();
     }
     if (error?.response?.data) return error?.response?.data;
     return Promise.reject(error);

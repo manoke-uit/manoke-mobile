@@ -26,7 +26,8 @@ const NewPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { token } = useLocalSearchParams();
+  const { email: rawEmail } = useLocalSearchParams();
+  const email = Array.isArray(rawEmail) ? rawEmail[0] : rawEmail || "";
   const isSubmitting = useRef(false);
 
   useEffect(() => {
@@ -58,11 +59,11 @@ const NewPassword = () => {
       return;
     }
 
-    if (!token || typeof token !== "string") {
+    if (!email || typeof email !== "string") {
       Toast.show({
         type: "error",
         text1: "error",
-        text2: "Token does not exist or is invalid!",
+        text2: "Email does not exist or is invalid!",
       });
       return;
     }
@@ -71,7 +72,7 @@ const NewPassword = () => {
     setIsLoading(true);
 
     try {
-      const response = await resetPasswordAPI(token, password, confirmPassword);
+      const response = await resetPasswordAPI(email, password, confirmPassword);
       if (response && response.message) {
         Toast.show({
           type: "success",
@@ -83,11 +84,11 @@ const NewPassword = () => {
         throw new Error("No response message from server.");
       }
     } catch (error: any) {
-      // console.error("Error detail ", {
-      //   message: error.message,
-      //   status: error.response?.status,
-      //   data: error.response?.data,
-      // });
+      console.error("Error detail ", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
       let errorMessage = "Error occurred. Please try again.";
       if (error.response?.status === 400) {
         errorMessage = "Token is invalid or has expired.";
