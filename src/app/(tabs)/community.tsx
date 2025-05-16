@@ -10,6 +10,7 @@ import {
   NativeScrollEvent,
   Modal,
   TouchableHighlight,
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -24,6 +25,7 @@ import {
   deletePostAPI,
   createCommentAPI,
   getFriendsAPI,
+  getUserByIdAPI,
 } from "@/utils/api";
 
 const CommunityTab = () => {
@@ -34,6 +36,7 @@ const CommunityTab = () => {
   const [newPostContent, setNewPostContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const navigation = useNavigation();
   const router = useRouter();
   const currentOffset = useRef(0);
@@ -71,16 +74,14 @@ const CommunityTab = () => {
           return;
         }
 
-        // Fetch user profile from AsyncStorage
-        const storedProfile = await AsyncStorage.getItem("userProfile");
-        if (storedProfile) {
-          const profile = JSON.parse(storedProfile);
-          setDisplayName(profile.displayName || "");
-        }
-
-        // Fallback if not found
-        if (!storedProfile) {
+        // Lấy displayName từ API /users/{userId}
+        try {
+          const res = await getUserByIdAPI(userId);
+          setDisplayName(res.displayName || res.data?.displayName || "");
+          setImageUrl(res.imageUrl || res.data?.imageUrl || null);
+        } catch (e) {
           setDisplayName("");
+          setImageUrl(null);
         }
 
         const friendResponse = await getFriendsAPI();
@@ -279,12 +280,16 @@ const CommunityTab = () => {
           <View className="px-4 py-4 bg-white/10 rounded-xl mx-4 mt-8 mb-6">
             <View className="flex-row items-center mb-3 justify-between">
               <View className="flex-row items-center">
-              <Ionicons
-                name="person-circle-outline"
-                size={40}
-                color="#eee"
-                className="mr-3"
-              />
+                {imageUrl ? (
+                  <Image source={{ uri: imageUrl }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }} />
+                ) : (
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={40}
+                    color="#eee"
+                    style={{ marginRight: 12 }}
+                  />
+                )}
                 <Text className="text-white font-semibold text-base">{displayName || "You"}</Text>
               </View>
               {/* Move friends button to right */}

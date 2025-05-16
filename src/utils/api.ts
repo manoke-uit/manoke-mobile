@@ -64,10 +64,10 @@ export const getAllSongs = async (page: number = 1, limit: number = 10) => {
   });
 };
 
-export const changePasswordAPI = (userId: string, newPassword: string) => {
-  const url = `/users/${userId}`;
-  return axios.patch(url, { password: newPassword });
-};
+// export const changePasswordAPI = (userId: string, newPassword: string) => {
+//   const url = `/users/${userId}`;
+//   return axios.patch(url, { password: newPassword });
+// };
 
 export const getScoresAPI = () => {
   const url = `/scores`;
@@ -322,4 +322,22 @@ export const removeFriendAPI = async (idToRemove: string) => {
       Authorization: `Bearer ${token}`,
     },
   });
+};
+
+export const getUserByIdAPI = async (userId: string) => {
+  const url = `/users/${userId}`;
+  return axios.get(url);
+};
+
+export const updateUserAPI = async (userId: string, payload: {
+  id: string;
+  adminSecret?: string | null;
+  displayName: string;
+  email: string;
+  password: string;
+  imageUrl?: string;
+  createdAt?: string;
+}) => {
+  const url = `/users/${userId}`;
+  return axios.patch(url, payload);
 };

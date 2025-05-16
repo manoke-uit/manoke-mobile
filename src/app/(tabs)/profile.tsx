@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { Text, View, Image } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
@@ -7,26 +7,29 @@ import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import { MotiPressable } from "moti/interactions";
 import AnimatedWrapper from "@/components/animation/animate";
-import { getAccountAPI } from "@/utils/api";
+import { getAccountAPI, getUserByIdAPI } from "@/utils/api";
 import { useCurrentApp } from "../context/appContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ProfileTab = () => {
   const navigation = useNavigation();
   const { setAppState } = useCurrentApp();
-  const [email, setEmail] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchEmail = async () => {
+    const fetchUsername = async () => {
       try {
-        const res = await getAccountAPI();
-        setEmail(res.email);
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) return;
+        const res = await getUserByIdAPI(userId);
+        setUsername(res.displayName || res.data?.displayName);
+        setImageUrl(res.imageUrl || res.data?.imageUrl || null);
       } catch (error) {
-        console.log("Lỗi load profile:", error);
+        // handle error
       }
     };
-
-    fetchEmail();
+    fetchUsername();
   }, []);
 
   const handleLogout = async () => {
@@ -36,7 +39,7 @@ const ProfileTab = () => {
       setAppState(null);
       router.replace("/(auth)/start");
     } catch (err) {
-      console.log("Lỗi khi logout:", err);
+      // console.log("An error occured", err);
     }
   };
 
@@ -49,22 +52,24 @@ const ProfileTab = () => {
       style={{ flex: 1 }}
     >
       <AnimatedWrapper fade scale slideUp style={{ flex: 1 }}>
-        <View className="px-6 pt-12 flex-1 mb-8">
-          <View className="items-center mb-10">
-            <View className="w-20 h-20 bg-pink-200 rounded-full items-center justify-center">
-              <Ionicons name="person" size={40} color="#000" />
+        <View style={{ flex: 1, paddingHorizontal: 24, marginTop: 30}}>
+          {/* Profile Info */}
+          <View style={{ alignItems: 'center'}}>
+            <View style={{ width: 80, height: 80, backgroundColor: '#fbcfe8', borderRadius: 40, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              {imageUrl ? (
+                <Image source={{ uri: imageUrl }} style={{ width: 80, height: 80, borderRadius: 40 }} />
+              ) : (
+                <Ionicons name="person" size={40} color="#000" />
+              )}
             </View>
-            <Text className="text-white font-bold text-xl mt-3">
-              {email || "Loading..."}
-            </Text>
+            <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 20, marginTop: 12 }}>{username || "Loading..."}</Text>
           </View>
 
-          <View className="space-y-3">
+          {/* Tabs */}
+          <View style={{ gap: 8, marginTop: 45  }}>
             <MotiPressable
               from={{ scale: 1 }}
-              animate={({ pressed }) => ({
-                scale: pressed ? 0.95 : 1,
-              })}
+              animate={({ pressed }) => ({ scale: pressed ? 0.95 : 1 })}
               transition={{ type: "timing", duration: 150 }}
               onPress={() => router.push("/record")}
               style={{
@@ -75,23 +80,18 @@ const ProfileTab = () => {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
-                marginBottom: 5,
               }}
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Ionicons name="mic-outline" size={20} color="white" />
-                <Text style={{ color: "white", marginLeft: 12 }}>
-                  Your Recordings
-                </Text>
+                <Text style={{ color: "white", marginLeft: 12 }}>Your Recordings</Text>
               </View>
               <Feather name="chevron-right" size={20} color="white" />
             </MotiPressable>
 
             <MotiPressable
               from={{ scale: 1 }}
-              animate={({ pressed }) => ({
-                scale: pressed ? 0.95 : 1,
-              })}
+              animate={({ pressed }) => ({ scale: pressed ? 0.95 : 1 })}
               transition={{ type: "timing", duration: 150 }}
               onPress={() => router.push("/playlist")}
               style={{
@@ -105,25 +105,17 @@ const ProfileTab = () => {
               }}
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons
-                  name="musical-notes-outline"
-                  size={20}
-                  color="white"
-                />
-                <Text style={{ color: "white", marginLeft: 12 }}>
-                  Your Playlists
-                </Text>
+                <Ionicons name="musical-notes-outline" size={20} color="white" />
+                <Text style={{ color: "white", marginLeft: 12 }}>Your Playlists</Text>
               </View>
               <Feather name="chevron-right" size={20} color="white" />
             </MotiPressable>
 
             <MotiPressable
               from={{ scale: 1 }}
-              animate={({ pressed }) => ({
-                scale: pressed ? 0.95 : 1,
-              })}
+              animate={({ pressed }) => ({ scale: pressed ? 0.95 : 1 })}
               transition={{ type: "timing", duration: 150 }}
-              // onPress={() => router.push("/playlist")}
+              onPress={() => router.push("/addSong")}
               style={{
                 backgroundColor: "#171717",
                 paddingHorizontal: 16,
@@ -135,37 +127,27 @@ const ProfileTab = () => {
               }}
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons
-                  name="add-circle-outline"
-                  size={20}
-                  color="white"
-                />
-                <Text style={{ color: "white", marginLeft: 12 }}>
-                  Add a song
-                </Text>
+                <Ionicons name="add-circle-outline" size={20} color="white" />
+                <Text style={{ color: "white", marginLeft: 12 }}>Add a song</Text>
               </View>
               <Feather name="chevron-right" size={20} color="white" />
             </MotiPressable>
           </View>
 
-          <View className="mt-auto mb-10">
+          <View style={{ alignContent: 'flex-end', marginTop: 100}}>
             <MotiPressable
               from={{ scale: 1 }}
-              animate={({ pressed }) => ({
-                scale: pressed ? 0.95 : 1,
-              })}
+              animate={({ pressed }) => ({ scale: pressed ? 0.95 : 1 })}
               transition={{ type: "timing", duration: 150 }}
               onPress={handleLogout}
               style={{
                 backgroundColor: "#171717",
-                paddingVertical: 12,
+                paddingVertical: 14,
                 borderRadius: 16,
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: "#f87171", fontWeight: "bold" }}>
-                Log out
-              </Text>
+              <Text style={{ color: "#f87171", fontWeight: "bold", fontSize: 16 }}>Log out</Text>
             </MotiPressable>
           </View>
         </View>

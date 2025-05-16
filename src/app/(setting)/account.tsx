@@ -14,8 +14,9 @@ import { APP_COLOR } from "@/utils/constant";
 import { useRouter } from "expo-router";
 import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons";
-import { getAccountAPI } from "@/utils/api"; // 👈 Import API get profile
+import { getAccountAPI, getUserByIdAPI } from "@/utils/api";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
@@ -26,6 +27,7 @@ const AccountPage = () => {
   const router = useRouter();
 
   const [userInfo, setUserInfo] = useState<{ email: string } | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -38,7 +40,10 @@ const AccountPage = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await getAccountAPI();
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) return;
+        const res = await getUserByIdAPI(userId);
+        setDisplayName(res.displayName || res.data?.displayName || null);
         setUserInfo(res);
       } catch (error) {
         console.log("Error loading user info:", error);
@@ -85,7 +90,7 @@ const AccountPage = () => {
         <View className="pt-10 justify-center items-center">
           <Image source={avatarDefault} />
           <Text className="pt-5 text-white text-[20px]">
-            {userInfo?.email?.split("@")[0] || "Loading..."}
+            {displayName || userInfo?.email?.split("@")[0] || "Loading..."}
           </Text>
         </View>
 

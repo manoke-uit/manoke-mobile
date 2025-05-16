@@ -15,8 +15,9 @@ import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import * as ImagePicker from "expo-image-picker";
-import { uploadAvatar, getAccountAPI } from "@/utils/api";
+import { uploadAvatar, getAccountAPI, updateUserAPI, getUserByIdAPI } from "@/utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from '../../utils/supabase';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
@@ -34,9 +35,6 @@ const ChangeProfile = () => {
       duration: 600,
       useNativeDriver: true,
     }).start();
-    fetch("https://egryflripdibifvtttyl.supabase.co")
-      .then((res) => console.log("Supabase response:", res.status))
-      .catch((err) => console.error("Không kết nối Supabase:", err));
     const getUser = async () => {
       const res = await getAccountAPI();
       setUserId(res?.userId);
@@ -46,7 +44,7 @@ const ChangeProfile = () => {
 
   const pickImageFromLibrary = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: "images",
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
@@ -68,7 +66,7 @@ const ChangeProfile = () => {
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.5,
     });
 
     if (!result.canceled) {
@@ -84,12 +82,35 @@ const ChangeProfile = () => {
     }
 
     try {
-      const uploadedUrl = await uploadAvatar(uri, userId);
-      if (uploadedUrl) {
-        Toast.show({ type: "success", text1: "Avatar updated" });
-      } else {
-        throw new Error("Upload failed");
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const ext = uri.split('.').pop() || 'jpg';
+      const fileName = `1bs1gex_0/${userId}_${Date.now()}.${ext}`;
+
+      const { error } = await supabase
+        .storage
+        .from('avatar')
+        .upload(fileName, blob, {
+          contentType: blob.type || 'image/jpeg',
+          upsert: true,
+        });
+      if (error) {
+        throw new Error(error.message);
       }
+
+      const { data } = supabase
+        .storage
+        .from('avatar')
+        .getPublicUrl(fileName);
+      const uploadedUrl = data.publicUrl;
+
+      const userRes = await getUserByIdAPI(userId);
+      const user = userRes.data || userRes;
+      await updateUserAPI(userId, {
+        ...user,
+        imageUrl: uploadedUrl,
+      });
+      Toast.show({ type: "success", text1: "Avatar updated" });
     } catch (err) {
       Toast.show({ type: "error", text1: "Upload failed" });
     }

@@ -21,7 +21,7 @@ const modalHeight = screenHeight * 0.9;
 const avatar = require("@/assets/auth/Icon/avatar.png");
 
 const SettingTab = () => {
-  const slideAnim = useRef(new Animated.Value(-modalHeight)).current;
+  const slideAnim = useRef(new Animated.Value(modalHeight)).current;
   const router = useRouter();
 
   useEffect(() => {
@@ -42,8 +42,8 @@ const SettingTab = () => {
               width: "100%",
               height: modalHeight,
               backgroundColor: APP_COLOR.GREY_BG,
-              bottom: slideAnim,
-              left: 0,
+              bottom: 0,
+              transform: [{ translateY: slideAnim }],
             },
             tw`rounded-t-2xl items-center justify-start`,
           ]}

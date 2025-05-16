@@ -39,11 +39,11 @@ declare global {
     password?: string;
     imageUrl?: string;
     createdAt: string;
-    playlistIds: string[];
-    scoreIds: string[];
-    karaokeIds: string[];
-    postIds: string[];
-    commentIds: string[];
+    playlistIds?: string[];
+    scoreIds?: string[];
+    karaokeIds?: string[];
+    postIds?: string[];
+    commentIds?: string[];
   }
   export interface ISong {
     title: string;

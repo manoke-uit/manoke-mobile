@@ -40,15 +40,15 @@ instance.interceptors.response.use(
   },
   async function (error) {
     console.error("Response Error:", error);
-    // Lấy pathname hiện tại
+    
     const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
-    // Nếu lỗi 401 và KHÔNG phải đang ở trang start thì mới chuyển hướng
+    
     if (error?.response?.status === 401) {
       await AsyncStorage.removeItem("accessToken");
       if (!currentPath.includes("/start")) {
         router.replace("/(auth)/start");
       }
-      // KHÔNG trả về lỗi Unauthorized nếu đang ở start
+      
       return Promise.reject();
     }
     if (error?.response?.data) return error?.response?.data;
