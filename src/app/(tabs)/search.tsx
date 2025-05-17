@@ -37,7 +37,7 @@ const SearchTab = () => {
   const handleAddToPlaylist = async () => {
     try {
       const res = await getPlaylistsAPI();
-      const fetched = res.items.map((p) => ({
+      const fetched = res.items.map((p: IPlaylist) => ({
         id: p.id,
         name: p.title,
         count: p.songIds?.length || 0,
