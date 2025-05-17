@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
@@ -25,13 +32,10 @@ const AddVideo = () => {
         copyToCacheDirectory: true,
       });
       if (!result.canceled) {
-        console.log("Selected video:", result.assets[0]);
         setUploadSuccess(true);
       } else {
-        console.log("Video selection canceled");
       }
     } catch (error) {
-      console.error("Video upload failed:", error);
     } finally {
       setUploading(false);
     }
@@ -55,7 +59,7 @@ const AddVideo = () => {
       setArtistName("");
       setUploadSuccess(false);
       setStatus("private");
-      router.replace("/yourSong"); 
+      router.replace("/yourSong");
     }
   };
 
@@ -70,25 +74,29 @@ const AddVideo = () => {
       <View style={{ flex: 1 }}>
         {/* Custom Header */}
         <View
-            className="w-full flex-row items-center"
-            style={{
-                paddingVertical: 30,
-                paddingHorizontal: 20,
-                backgroundColor: "transparent",
-            }}
-            >
-            <TouchableOpacity
-                onPress={() => router.back()}
-                className="w-10 h-10 items-center justify-center rounded-full bg-pink-500/30"
-            >
-                <Ionicons name="chevron-back-outline" size={25} color={APP_COLOR.WHITE} />
-            </TouchableOpacity>
+          className="w-full flex-row items-center"
+          style={{
+            paddingVertical: 30,
+            paddingHorizontal: 20,
+            backgroundColor: "transparent",
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 items-center justify-center rounded-full bg-pink-500/30"
+          >
+            <Ionicons
+              name="chevron-back-outline"
+              size={25}
+              color={APP_COLOR.WHITE}
+            />
+          </TouchableOpacity>
 
-            <View className="flex-1 items-center">
-                <Text className="text-white text-2xl font-bold">Add New Song</Text>
-            </View>
+          <View className="flex-1 items-center">
+            <Text className="text-white text-2xl font-bold">Add New Song</Text>
+          </View>
 
-            <View className="w-10" />
+          <View className="w-10" />
         </View>
 
         <ScrollView
@@ -101,8 +109,15 @@ const AddVideo = () => {
           {/* Upload Area */}
           <View className="bg-white/10 rounded-xl p-6 mb-6">
             <View className="flex-row items-center mb-4">
-              <Ionicons name="videocam-outline" size={40} color={APP_COLOR.WHITE} className="mr-3" />
-              <Text className="text-white font-semibold text-lg">Upload Song from Device</Text>
+              <Ionicons
+                name="videocam-outline"
+                size={40}
+                color={APP_COLOR.WHITE}
+                className="mr-3"
+              />
+              <Text className="text-white font-semibold text-lg">
+                Upload Song from Device
+              </Text>
             </View>
             <TouchableOpacity
               onPress={handleUploadVideo}
@@ -112,12 +127,25 @@ const AddVideo = () => {
               }`}
             >
               {uploading ? (
-                <ActivityIndicator size="small" color={APP_COLOR.WHITE} className="mr-2" />
+                <ActivityIndicator
+                  size="small"
+                  color={APP_COLOR.WHITE}
+                  className="mr-2"
+                />
               ) : (
-                <Ionicons name="film-outline" size={20} color={APP_COLOR.WHITE} className="mr-2" />
+                <Ionicons
+                  name="film-outline"
+                  size={20}
+                  color={APP_COLOR.WHITE}
+                  className="mr-2"
+                />
               )}
               <Text className="text-white font-semibold text-base">
-                {uploading ? "Uploading..." : uploadSuccess ? "Uploaded" : "Upload Video"}
+                {uploading
+                  ? "Uploading..."
+                  : uploadSuccess
+                  ? "Uploaded"
+                  : "Upload Video"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -126,8 +154,15 @@ const AddVideo = () => {
           {uploadSuccess && (
             <View className="bg-white/10 rounded-xl p-6 mb-6">
               <View className="flex-row items-center mb-4">
-                <Ionicons name="pencil-outline" size={30} color={APP_COLOR.WHITE} className="mr-3" />
-                <Text className="text-white font-semibold text-lg">Song Details</Text>
+                <Ionicons
+                  name="pencil-outline"
+                  size={30}
+                  color={APP_COLOR.WHITE}
+                  className="mr-3"
+                />
+                <Text className="text-white font-semibold text-lg">
+                  Song Details
+                </Text>
               </View>
               <TextInput
                 placeholder="Song Title"
@@ -150,7 +185,9 @@ const AddVideo = () => {
                     status === "private" ? "bg-pink-500" : "bg-white/10"
                   }`}
                 >
-                  <Text className="text-white text-center font-semibold">Private</Text>
+                  <Text className="text-white text-center font-semibold">
+                    Private
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setStatus("public")}
@@ -158,7 +195,9 @@ const AddVideo = () => {
                     status === "public" ? "bg-pink-500" : "bg-white/10"
                   }`}
                 >
-                  <Text className="text-white text-center font-semibold">Public</Text>
+                  <Text className="text-white text-center font-semibold">
+                    Public
+                  </Text>
                 </TouchableOpacity>
               </View>
               <View className="flex-row justify-end">
@@ -169,7 +208,9 @@ const AddVideo = () => {
                     !songTitle.trim() || !artistName.trim() ? "opacity-50" : ""
                   }`}
                 >
-                  <Text className="text-white font-semibold text-base">Submit</Text>
+                  <Text className="text-white font-semibold text-base">
+                    Submit
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>

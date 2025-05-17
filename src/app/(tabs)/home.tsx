@@ -14,12 +14,14 @@ import { APP_COLOR } from "@/utils/constant";
 import AnimatedWrapper from "@/components/animation/animate";
 import tw from "twrnc";
 import { useNavigation, router } from "expo-router";
-import { getAllSongs } from "@/utils/api";
+import { getAllSongs, getPlaylistsAPI } from "@/utils/api";
 import Toast from "react-native-toast-message";
 
 const HomeTab = () => {
   const [songs, setSongs] = useState<ISong[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [playlists, setPlaylists] = useState<IPlaylist[]>([]);
+  const [loadingSongs, setLoadingSongs] = useState(true);
+  const [loadingPlaylists, setLoadingPlaylists] = useState(true);
   const currentOffset = useRef(0);
   const [visible, setVisible] = useState(true);
   const navigation = useNavigation();
@@ -46,54 +48,38 @@ const HomeTab = () => {
   };
 
   useEffect(() => {
-    const getSongs = async () => {
+    const fetchSongs = async () => {
       try {
-        let allSongs: ISong[] = [];
-        let currentPage = 1;
-        let totalPages = 1;
-
-        do {
-          const res = await getAllSongs();
-          console.log("API Response:", JSON.stringify(res, null, 2));
-          if (!res.data) {
-            throw new Error("No data returned from songs API");
-          }
-          // Handle case where data is an empty array
-          if (Array.isArray(res.data)) {
-            if (res.data.length === 0) {
-              Toast.show({
-                type: "info",
-                text1: "No Songs",
-                text2: "No songs available. Try adding songs to the database.",
-              });
-              break;
-            }
-            throw new Error("Unexpected array response from songs API");
-          }
-          // Expect data to be IPaginatedSongs
-          allSongs = [...allSongs, ...res.data.items];
-          totalPages = res.data.meta.totalPages;
-          currentPage += 1;
-        } while (currentPage <= totalPages);
-
-        setSongs(allSongs);
+        const res = await getAllSongs();
+        setSongs(res.data || []);
       } catch (error: any) {
-        console.error("Error loading songs:", {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
         Toast.show({
           type: "error",
           text1: "Error",
-          text2:
-            error.message || "Failed to load songs. Please try again later.",
+          text2: error.message || "Failed to load songs",
         });
       } finally {
-        setLoading(false);
+        setLoadingSongs(false);
       }
     };
-    getSongs();
+
+    const fetchPlaylists = async () => {
+      try {
+        const res = await getPlaylistsAPI();
+        setPlaylists(res || []);
+      } catch (error: any) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message || "Failed to load playlists",
+        });
+      } finally {
+        setLoadingPlaylists(false);
+      }
+    };
+
+    fetchSongs();
+    fetchPlaylists();
   }, []);
 
   return (
@@ -136,24 +122,26 @@ const HomeTab = () => {
                 </TouchableOpacity>
               </View>
 
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="flex-row pt-3"
-              >
-                {songs.length === 0 ? (
-                  <Text style={tw`text-white text-lg`}>
-                    No playlists available
-                  </Text>
-                ) : (
-                  songs.map((song, i) => (
+              {loadingPlaylists ? (
+                <ActivityIndicator size="large" color="#fff" />
+              ) : playlists.length === 0 ? (
+                <Text style={tw`text-white text-lg`}>
+                  No playlists available
+                </Text>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  className="flex-row pt-3"
+                >
+                  {playlists.map((p) => (
                     <TouchableOpacity
-                      key={i}
+                      key={p.id}
                       className="w-[120px] mr-3"
-                      onPress={() => router.push("/(user)/songItem")}
+                      onPress={() => router.push("/(user)/playlistSong")}
                     >
                       <Image
-                        source={{ uri: song.imageUrl }}
+                        source={{ uri: p.imageUrl }}
                         className="w-full h-[120px] rounded-xl mb-2"
                         resizeMode="cover"
                       />
@@ -161,12 +149,12 @@ const HomeTab = () => {
                         className="text-white font-semibold text-sm"
                         numberOfLines={1}
                       >
-                        {song.albumTitle}
+                        {p.title}
                       </Text>
                     </TouchableOpacity>
-                  ))
-                )}
-              </ScrollView>
+                  ))}
+                </ScrollView>
+              )}
             </View>
 
             <View className="mb-6 mt-7">
@@ -179,28 +167,25 @@ const HomeTab = () => {
                 </TouchableOpacity>
               </View>
 
-              {loading ? (
+              {loadingSongs ? (
                 <ActivityIndicator size="large" color="#fff" />
               ) : songs.length === 0 ? (
                 <Text style={tw`text-white text-lg`}>No songs available</Text>
               ) : (
                 <View className="flex-row flex-wrap justify-between pt-3">
-                  {songs.map((song, i) => (
+                  {songs.map((s) => (
                     <TouchableOpacity
-                      key={i}
+                      key={s.id}
                       className="w-[48%] mb-4"
                       onPress={() => router.push("/(user)/songItem")}
                     >
                       <Image
-                        source={{ uri: song.imageUrl }}
-                        className="w-full h-[100px] rounded-xl mb-2"
+                        source={{ uri: s.imageUrl }}
+                        className="w-full h-[120px] rounded-xl mb-2"
                         resizeMode="cover"
                       />
                       <Text className="text-white font-bold" numberOfLines={1}>
-                        {song.title}
-                      </Text>
-                      <Text className="text-gray-400 text-sm" numberOfLines={1}>
-                        {song.albumTitle}
+                        {s.title}
                       </Text>
                     </TouchableOpacity>
                   ))}

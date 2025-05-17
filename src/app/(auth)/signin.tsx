@@ -51,7 +51,6 @@ const SignIn = () => {
       const storedToken = await AsyncStorage.getItem("accessToken");
       const storedProfile = await AsyncStorage.getItem("userProfile");
       if (storedToken && storedProfile) {
-        console.log("Stored in AsyncStorage:", { accessToken: storedToken, userProfile: JSON.parse(storedProfile) });
         printAsyncStorage();
         Toast.show({
           type: "success",
@@ -62,7 +61,9 @@ const SignIn = () => {
           router.replace("/(tabs)/home");
         }, 1000);
       } else {
-        throw new Error("Cannot get accessToken or userProfile from AsyncStorage");
+        throw new Error(
+          "Cannot get accessToken or userProfile from AsyncStorage"
+        );
       }
     } catch (error) {
       console.error("Login error: ", error);
@@ -127,7 +128,9 @@ const SignIn = () => {
               value={password}
               onChangeText={setPassword}
             />
-            <TouchableOpacity onPress={() => router.push("/(auth)/forgotpassword")}>
+            <TouchableOpacity
+              onPress={() => router.push("/(auth)/forgotpassword")}
+            >
               <Text
                 style={tw`text-sm text-center mt-2 text-[${APP_COLOR.TEXT_PURPLE}]`}
               >
