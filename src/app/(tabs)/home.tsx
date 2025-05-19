@@ -177,7 +177,7 @@ const HomeTab = () => {
                     <TouchableOpacity
                       key={s.id}
                       className="w-[48%] mb-4"
-                      onPress={() => router.push("/(user)/songItem")}
+                      onPress={() => router.push(`/songItem?id=${s.id}`)}
                     >
                       <Image
                         source={{ uri: s.imageUrl }}

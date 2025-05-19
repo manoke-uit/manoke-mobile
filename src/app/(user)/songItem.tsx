@@ -1,24 +1,17 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Linking,
-  Alert,
-} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import { APP_COLOR } from "@/utils/constant";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import MoreMenu from "@/components/moreMenu";
-import { WebView } from "react-native-webview";
 import {
   getAccountAPI,
-  searchYoutubeAPI,
   uploadScoreAudioAPI,
+  getKaraokesBySongId,
+  getSongById,
 } from "@/utils/api";
-import { Audio } from "expo-av";
+import { Audio, Video, ResizeMode } from "expo-av";
 
 const song = [
   { id: "1", name: "Lạc Trôi", artist: "Sơn Tùng M-TP" },
@@ -32,35 +25,46 @@ const song = [
 ];
 
 const SongItemScreen = () => {
+  const { id } = useLocalSearchParams();
   const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
-  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  const [karaokeVideoUrl, setKaraokeVideoUrl] = useState<string | null>(null);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
-
-  const handlePlaySong = async (name: string, artist: string) => {
-    try {
-      const res = await searchYoutubeAPI(`${name} ${artist}`, "");
-      const video = res.results.find((v) => v.isEmbedded !== false);
-      if (video?.videoId) {
-        setSelectedVideoId(video.videoId);
-      }
-    } catch (err) {
-      Alert.alert("Lỗi", "Không thể load video");
-    }
-  };
+  const [songTitle, setSongTitle] = useState<string>("");
+  const videoRef = useRef<Video>(null);
 
   useEffect(() => {
-    const getUserId = async () => {
-      const res = await getAccountAPI();
-      if (res?.userId) {
-        setUserId(res.userId);
+    const fetchData = async () => {
+      try {
+        const res = await getKaraokesBySongId(id as string);
+        const first = res.data?.[0];
+        if (first?.videoUrl) {
+          setKaraokeVideoUrl(first.videoUrl);
+        }
+      } catch {
+        Alert.alert("Lỗi", "Không thể tải karaoke");
       }
+
+      try {
+        const songRes = await getSongById(id as string);
+        console.log(songRes);
+        if (songRes?.data?.title) {
+          setSongTitle(songRes.data.title);
+        }
+      } catch {
+        Alert.alert("Lỗi", "Không thể tải thông tin bài hát");
+      }
+
+      const acc = await getAccountAPI();
+      if (acc?.userId) setUserId(acc.userId);
+
+      await startRecording();
     };
-    handlePlaySong(song[0].name, song[0].artist);
-    getUserId();
-  }, []);
+
+    if (id) fetchData();
+  }, [id]);
 
   const startRecording = async () => {
     try {
@@ -77,7 +81,6 @@ const SongItemScreen = () => {
       setRecording(recording);
       setIsRecording(true);
     } catch (err) {
-      console.error("Không thể bắt đầu ghi âm", err);
       Alert.alert("Lỗi", "Không thể bắt đầu ghi âm");
     }
   };
@@ -95,7 +98,6 @@ const SongItemScreen = () => {
       setIsUploading(false);
       Alert.alert("Chấm điểm", `Điểm số: ${score?.finalScore ?? "?"}`);
     } catch (err) {
-      console.error("Lỗi khi ghi âm hoặc upload", err);
       setIsUploading(false);
       Alert.alert("Lỗi", "Không thể chấm điểm");
     }
@@ -126,30 +128,14 @@ const SongItemScreen = () => {
 
       <View style={{ flex: 1 }}>
         <View style={{ height: 250 }}>
-          {selectedVideoId && (
-            <WebView
-              source={{
-                uri: `https://www.youtube.com/embed/${selectedVideoId}`,
-              }}
-              onError={() => {
-                Alert.alert(
-                  "Không thể phát trong ứng dụng",
-                  "Video này chỉ có thể xem trên YouTube",
-                  [
-                    {
-                      text: "Mở YouTube",
-                      onPress: () =>
-                        Linking.openURL(
-                          `https://www.youtube.com/watch?v=${selectedVideoId}`
-                        ),
-                    },
-                    { text: "Huỷ", style: "cancel" },
-                  ]
-                );
-                setSelectedVideoId(null);
-              }}
-              allowsFullscreenVideo
-              style={{ flex: 1 }}
+          {karaokeVideoUrl && (
+            <Video
+              ref={videoRef}
+              source={{ uri: karaokeVideoUrl }}
+              useNativeControls
+              resizeMode={ResizeMode.CONTAIN}
+              shouldPlay
+              style={{ width: "100%", height: 250 }}
             />
           )}
         </View>
@@ -165,7 +151,7 @@ const SongItemScreen = () => {
             <View className="flex-row items-center mb-5">
               <View className="justify-center">
                 <Text className="text-white font-bold text-xl">
-                  {song[0].name}
+                  {songTitle || "Đang tải..."}
                 </Text>
                 <Text className="text-gray-400 text-base">
                   {song[0].artist}
@@ -209,7 +195,6 @@ const SongItemScreen = () => {
             {song.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                onPress={() => handlePlaySong(item.name, item.artist)}
                 className="flex-row items-center mb-4"
               >
                 <View className="w-20 h-20 bg-gray-400 rounded-lg mr-4" />
