@@ -94,20 +94,30 @@ const SongItemScreen = () => {
     try {
       await recording?.stopAndUnloadAsync();
       const uri = recording?.getURI();
+      console.log("Recording URI:", uri);
       setRecording(null);
       setIsRecording(false);
 
-      if (!uri) return;
+      if (!uri) {
+        Alert.alert("Lỗi", "Không tìm thấy file ghi âm để upload");
+        return;
+      }
+
       setIsUploading(true);
       const score = await uploadScoreAudioAPI(uri, id as string, userId);
       setIsUploading(false);
       Alert.alert("Chấm điểm", `Điểm số: ${score?.finalScore ?? "?"}`);
     } catch (err) {
+      console.error("Upload audio failed:", err);
       setIsUploading(false);
       Alert.alert("Lỗi", "Không thể chấm điểm");
     }
   };
-
+  const handleVideoStatusUpdate = (status: any) => {
+    if (status.didJustFinish && isRecording) {
+      stopRecordingAndUpload();
+    }
+  };
   return (
     <LinearGradient
       colors={[APP_COLOR.BLACK, APP_COLOR.BLACK]}
@@ -140,6 +150,7 @@ const SongItemScreen = () => {
               useNativeControls
               resizeMode={ResizeMode.CONTAIN}
               shouldPlay
+              onPlaybackStatusUpdate={handleVideoStatusUpdate}
               style={{ width: "100%", height: 250 }}
             />
           )}
