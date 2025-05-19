@@ -384,3 +384,7 @@ export const getKaraokesBySongId = async (songId: string) => {
 export const getSongById = async (songId: string) => {
   return await axios.get(`/songs/${songId}`);
 };
+
+export const getPlaylistById = async (playlistId: string) => {
+  return await axios.get(`/playlists/${playlistId}`);
+};

@@ -49,7 +49,6 @@ const AddVideo = () => {
         artist: artistName,
         status,
       };
-      console.log("Submitting video:", newVideo);
       addVideo(newVideo);
       if (status === "public") {
         console.log(`Admin request sent for video: ${newVideo.title}`);

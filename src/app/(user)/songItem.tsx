@@ -33,6 +33,8 @@ const SongItemScreen = () => {
   const [userId, setUserId] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [songTitle, setSongTitle] = useState<string>("");
+  const [artistNames, setArtistNames] = useState<string[]>([]);
+
   const videoRef = useRef<Video>(null);
 
   useEffect(() => {
@@ -49,9 +51,12 @@ const SongItemScreen = () => {
 
       try {
         const songRes = await getSongById(id as string);
-        console.log(songRes);
         if (songRes?.data?.title) {
           setSongTitle(songRes.data.title);
+        }
+        if (Array.isArray(songRes?.data?.artists)) {
+          const names = songRes.data.artists.map((a: any) => a.name);
+          setArtistNames(names);
         }
       } catch {
         Alert.alert("Lỗi", "Không thể tải thông tin bài hát");
@@ -94,7 +99,7 @@ const SongItemScreen = () => {
 
       if (!uri) return;
       setIsUploading(true);
-      const score = await uploadScoreAudioAPI(uri, song[0].id, userId);
+      const score = await uploadScoreAudioAPI(uri, id as string, userId);
       setIsUploading(false);
       Alert.alert("Chấm điểm", `Điểm số: ${score?.finalScore ?? "?"}`);
     } catch (err) {
@@ -154,7 +159,7 @@ const SongItemScreen = () => {
                   {songTitle || "Đang tải..."}
                 </Text>
                 <Text className="text-gray-400 text-base">
-                  {song[0].artist}
+                  {artistNames.join(", ") || "Đang tải nghệ sĩ..."}
                 </Text>
               </View>
               <TouchableOpacity
