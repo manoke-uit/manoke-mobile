@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
-import VideoMoreMenu from "@/components/videoMoreMenu"; 
+import VideoMoreMenu from "@/components/videoMoreMenu";
 import { router, useNavigation } from "expo-router";
 import { useVideos } from "@/app/context/videoContext";
 
@@ -13,14 +13,16 @@ const YourVideos = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
-    console.log("Current videos:", videos);
     const unsubscribe = navigation.addListener("focus", () => {
       console.log("YourVideos focused, videos:", videos);
     });
     return unsubscribe;
   }, [videos, navigation]);
 
-  const handleToggleStatus = (videoId: string, currentStatus: "public" | "private") => {
+  const handleToggleStatus = (
+    videoId: string,
+    currentStatus: "public" | "private"
+  ) => {
     const newStatus = currentStatus === "public" ? "private" : "public";
     updateVideoStatus(videoId, newStatus);
     if (newStatus === "public") {
@@ -47,27 +49,30 @@ const YourVideos = () => {
       <View style={{ flex: 1 }}>
         {/* Custom Header */}
         <View
-            className="w-full flex-row items-center"
-            style={{
-                paddingVertical: 30,
-                paddingHorizontal: 20,
-                backgroundColor: "transparent",
-            }}
-            >
-            <TouchableOpacity
-                onPress={() => router.back()}
-                className="w-10 h-10 items-center justify-center rounded-full bg-pink-500/30"
-            >
-                <Ionicons name="chevron-back-outline" size={25} color={APP_COLOR.WHITE} />
-            </TouchableOpacity>
+          className="w-full flex-row items-center"
+          style={{
+            paddingVertical: 30,
+            paddingHorizontal: 20,
+            backgroundColor: "transparent",
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 items-center justify-center rounded-full bg-pink-500/30"
+          >
+            <Ionicons
+              name="chevron-back-outline"
+              size={25}
+              color={APP_COLOR.WHITE}
+            />
+          </TouchableOpacity>
 
-            <View className="flex-1 items-center">
-                <Text className="text-white text-2xl font-bold">Your Songs</Text>
-            </View>
+          <View className="flex-1 items-center">
+            <Text className="text-white text-2xl font-bold">Your Songs</Text>
+          </View>
 
-            <View className="w-10" />
+          <View className="w-10" />
         </View>
-
 
         <ScrollView
           contentContainerStyle={{
@@ -79,12 +84,16 @@ const YourVideos = () => {
           {/* Video List */}
           {videos.length === 0 ? (
             <View className="items-center mt-10">
-              <Text className="text-white text-lg font-semibold">No song uploaded yet</Text>
+              <Text className="text-white text-lg font-semibold">
+                No song uploaded yet
+              </Text>
               <TouchableOpacity
                 onPress={() => router.push("/addSong")}
                 className="bg-pink-500 rounded-lg px-6 py-3 mt-4"
               >
-                <Text className="text-white font-semibold text-base">Upload a Song</Text>
+                <Text className="text-white font-semibold text-base">
+                  Upload a Song
+                </Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -96,10 +105,16 @@ const YourVideos = () => {
                 >
                   <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4" />
                   <View className="flex-1">
-                    <Text className="text-white font-bold text-base">{video.title}</Text>
-                    <Text className="text-gray-400 text-sm">{video.artist}</Text>
+                    <Text className="text-white font-bold text-base">
+                      {video.title}
+                    </Text>
+                    <Text className="text-gray-400 text-sm">
+                      {video.artist}
+                    </Text>
                     <Text className="text-gray-400 text-xs mt-1">
-                      {video.status === "public" ? "Public (Pending Admin Approval)" : "Private"}
+                      {video.status === "public"
+                        ? "Public (Pending Admin Approval)"
+                        : "Private"}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -126,14 +141,19 @@ const YourVideos = () => {
             actions={
               isMoreMenuVisible === "global"
                 ? [
-                    { label: "Upload New Video", onPress: () => router.push("/addSong") },
+                    {
+                      label: "Upload New Video",
+                      onPress: () => router.push("/addSong"),
+                    },
                     { label: "Cancel", onPress: () => router.back() },
                   ]
                 : [
                     {
-                      label: videos.find((v) => v.id === isMoreMenuVisible)?.status === "public"
-                        ? "Make Private"
-                        : "Make Public",
+                      label:
+                        videos.find((v) => v.id === isMoreMenuVisible)
+                          ?.status === "public"
+                          ? "Make Private"
+                          : "Make Public",
                       onPress: () =>
                         handleToggleStatus(
                           isMoreMenuVisible,
@@ -144,7 +164,10 @@ const YourVideos = () => {
                       label: "Remove Video",
                       onPress: () => handleRemoveVideo(isMoreMenuVisible),
                     },
-                    { label: "Cancel", onPress: () => setMoreMenuVisible(null) },
+                    {
+                      label: "Cancel",
+                      onPress: () => setMoreMenuVisible(null),
+                    },
                   ]
             }
           />

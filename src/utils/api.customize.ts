@@ -15,11 +15,15 @@ const instance = axios.create({
 // Add a request interceptor
 instance.interceptors.request.use(
   async function (config) {
-    const noAuthEndpoints = ["/auth/login", "/auth/signup", "/auth/confirm-email", "/auth/forgot-password", "/auth/reset-password"];
+    const noAuthEndpoints = [
+      "/auth/login",
+      "/auth/signup",
+      "/auth/confirm-email",
+      "/auth/forgot-password",
+      "/auth/reset-password",
+    ];
     if (!noAuthEndpoints.some((endpoint) => config.url?.includes(endpoint))) {
       const access_token = await AsyncStorage.getItem("accessToken");
-      console.log("Request URL:", config.url);
-      console.log("Access Token:", access_token);
       if (access_token) {
         config.headers["Authorization"] = `Bearer ${access_token}`;
       }
@@ -34,21 +38,21 @@ instance.interceptors.request.use(
 // Add a response interceptor
 instance.interceptors.response.use(
   function (response) {
-    console.log("Response:", response.data);
     if (response.data) return response.data;
     return response;
   },
   async function (error) {
     console.error("Response Error:", error);
-    
-    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
-    
+
+    const currentPath =
+      typeof window !== "undefined" ? window.location.pathname : "";
+
     if (error?.response?.status === 401) {
       await AsyncStorage.removeItem("accessToken");
       if (!currentPath.includes("/start")) {
         router.replace("/(auth)/start");
       }
-      
+
       return Promise.reject();
     }
     if (error?.response?.data) return error?.response?.data;

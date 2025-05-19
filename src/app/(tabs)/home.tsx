@@ -138,13 +138,20 @@ const HomeTab = () => {
                     <TouchableOpacity
                       key={p.id}
                       className="w-[120px] mr-3"
-                      onPress={() => router.push("/(user)/playlistSong")}
+                      onPress={() =>
+                        router.push(`/(user)/playlistSong?id=${p.id}`)
+                      }
                     >
-                      <Image
-                        source={{ uri: p.imageUrl }}
-                        className="w-full h-[120px] rounded-xl mb-2"
-                        resizeMode="cover"
-                      />
+                      {p.imageUrl ? (
+                        <Image
+                          source={{ uri: p.imageUrl }}
+                          className="w-full h-[120px] rounded-xl mb-2"
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View className="w-full h-[120px] rounded-xl mb-2 bg-gray-400" />
+                      )}
+
                       <Text
                         className="text-white font-semibold text-sm"
                         numberOfLines={1}
