@@ -377,3 +377,10 @@ export const searchPlaylistsByTitleAPI = (searchTitle: string) => {
 export const getSongsInPlaylistAPI = (playlistId: string) => {
   return axios.get(`/playlists/${playlistId}/songs`);
 };
+export const getKaraokesBySongId = async (songId: string) => {
+  return await axios.get(`/karaokes/song/${songId}`);
+};
+
+export const getSongById = async (songId: string) => {
+  return await axios.get(`/songs/${songId}`);
+};
