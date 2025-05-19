@@ -24,14 +24,28 @@ const VideoContext = createContext<VideoContextType>({
 
 export const VideoProvider = ({ children }: { children: React.ReactNode }) => {
   const [videos, setVideos] = useState<Video[]>([
-    { id: uuidv4(), title: "My First Video", artist: "Admin", status: "private" },
-    { id: uuidv4(), title: "Live Performance", artist: "artistX", status: "public" },
-    { id: uuidv4(), title: "Music Video", artist: "ArtistY", status: "private" },
+    {
+      id: uuidv4(),
+      title: "My First Video",
+      artist: "Admin",
+      status: "private",
+    },
+    {
+      id: uuidv4(),
+      title: "Live Performance",
+      artist: "artistX",
+      status: "public",
+    },
+    {
+      id: uuidv4(),
+      title: "Music Video",
+      artist: "ArtistY",
+      status: "private",
+    },
     { id: uuidv4(), title: "Dance Reel", artist: "Admin", status: "public" },
   ]);
 
   const addVideo = (video: Video) => {
-    console.log("Adding video:", video);
     setVideos((prev) => {
       const newVideos = [...prev, { ...video, id: uuidv4() }];
       console.log("Updated videos:", newVideos);
@@ -42,9 +56,7 @@ export const VideoProvider = ({ children }: { children: React.ReactNode }) => {
   const updateVideoStatus = (id: string, status: "public" | "private") => {
     console.log(`Updating status for video ${id} to ${status}`);
     setVideos((prev) =>
-      prev.map((video) =>
-        video.id === id ? { ...video, status } : video
-      )
+      prev.map((video) => (video.id === id ? { ...video, status } : video))
     );
   };
 
@@ -54,7 +66,9 @@ export const VideoProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <VideoContext.Provider value={{ videos, addVideo, updateVideoStatus, removeVideo }}>
+    <VideoContext.Provider
+      value={{ videos, addVideo, updateVideoStatus, removeVideo }}
+    >
       {children}
     </VideoContext.Provider>
   );
