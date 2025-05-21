@@ -110,8 +110,10 @@ const SongItemScreen = () => {
 
       setIsUploading(true);
       const score = await uploadScoreAudioAPI(uri, id as string, userId);
+      const roundedScore = score ? Math.round(score * 100) / 100 : 81;
+
       setIsUploading(false);
-      Alert.alert("Chấm điểm", `Điểm số: ${score ?? "81"}`);
+      Alert.alert("Chấm điểm", `Điểm số: ${roundedScore}`);
     } catch (err) {
       console.error("Upload audio failed:", err);
       setIsUploading(false);

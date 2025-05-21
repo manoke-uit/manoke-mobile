@@ -72,14 +72,11 @@ declare global {
     id: string;
     audioUrl: string;
     finalScore: number;
-    userId: string;
-    songId: string;
+    user: IUser;
+    song: ISong;
     createdAt: string;
   }
-  export interface IPaginatedScores {
-    items: IScore[];
-    meta: IPaginationMeta;
-  }
+
   export interface IPlaylist {
     id: string;
     title: string;

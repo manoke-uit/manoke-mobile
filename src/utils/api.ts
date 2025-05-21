@@ -78,11 +78,6 @@ export const getAllSongs = (genreId?: string, artistId?: string) => {
 //   return axios.patch(url, { password: newPassword });
 // };
 
-export const getScoresAPI = () => {
-  const url = `/scores`;
-  return axios.get<IPaginatedScores>(url);
-};
-
 export const createScoreAPI = (payload: {
   audioUrl: string;
   finalScore: number;
@@ -387,4 +382,7 @@ export const getSongById = async (songId: string) => {
 
 export const getPlaylistById = async (playlistId: string) => {
   return await axios.get(`/playlists/${playlistId}`);
+};
+export const getAllScores = async () => {
+  return await axios.get("/scores");
 };
