@@ -1,51 +1,112 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Image,
 } from "react-native";
-import { Entypo, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import AnimatedWrapper from "@/components/animation/animate";
 import MoreMenu from "@/components/moreMenu";
-import { getPlaylistsAPI, updatePlaylistAPI } from "@/utils/api";
 import SelectPlaylistModal from "@/components/selectPlaylistModal";
 
-interface IYoutubeResult {
-  title: string;
-  videoId: string;
-  embedUrl: string;
-  thumbnailUrl: string;
-}
-interface Playlist {
-  id: string;
-  name: string;
-  count: number;
-}
+import { getAllSongs, getPlaylistsAPI, updatePlaylistAPI } from "@/utils/api";
+import SongSearchResults from "@/components/songs/SongSearchResults";
+import { router } from "expo-router";
 
 const SearchTab = () => {
   const [searchText, setSearchText] = useState("");
+  const [allSongs, setAllSongs] = useState<ISong[]>([]);
+  const [filteredSongs, setFilteredSongs] = useState<ISong[]>([]);
+  const [selectedSong, setSelectedSong] = useState<ISong | null>(null);
   const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<IYoutubeResult | null>(null);
   const [isPlaylistPickerVisible, setPlaylistPickerVisible] = useState(false);
-  const [availablePlaylists, setAvailablePlaylists] = useState<Playlist[]>([]);
+  const [availablePlaylists, setAvailablePlaylists] = useState<
+    { id: string; name: string; count: number }[]
+  >([]);
+
+  const keywordSuggestions = [
+    "Chill",
+    "Lofi",
+    "Ballad",
+    "Pop",
+    "Acoustic",
+    "Hip Hop",
+    "Indie",
+    "EDM",
+    "US-UK",
+    "Kpop",
+    "Vpop",
+    "Anime",
+    "Workout",
+    "Study",
+    "Relax",
+    "Taylor Swift",
+    "BTS",
+    "BLACKPINK",
+    "Sơn Tùng M-TP",
+    "Adele",
+    "IU",
+    "Bruno Mars",
+  ];
+
+  useEffect(() => {
+    const fetchSongs = async () => {
+      try {
+        const res = await getAllSongs();
+        setAllSongs(res.data ?? []);
+      } catch (err) {
+        console.error("Lỗi tải danh sách bài hát:", err);
+      }
+    };
+    fetchSongs();
+  }, []);
+
+  useEffect(() => {
+    if (searchText.trim() === "") {
+      setFilteredSongs([]);
+      return;
+    }
+
+    const keyword = searchText.toLowerCase();
+    const filtered = allSongs.filter(
+      (song) =>
+        song.title.toLowerCase().includes(keyword) ||
+        song.artists?.some((a) => a.name.toLowerCase().includes(keyword))
+    );
+    setFilteredSongs(filtered);
+  }, [searchText, allSongs]);
 
   const handleAddToPlaylist = async () => {
     try {
       const res = await getPlaylistsAPI();
-      const fetched = res.items.map((p: IPlaylist) => ({
+      const fetched = res.map((p: IPlaylist) => ({
         id: p.id,
         name: p.title,
-        count: p.songIds?.length || 0,
+        count: p.songs?.length || 0,
       }));
       setAvailablePlaylists(fetched);
       setPlaylistPickerVisible(true);
     } catch (err) {
       console.error("Lỗi lấy playlist:", err);
+    }
+  };
+
+  const handleSelectPlaylist = async (playlistId: string) => {
+    try {
+      const playlist = availablePlaylists.find((p) => p.id === playlistId);
+      if (!playlist || !selectedSong) return;
+
+      const newSongIds = [selectedSong.id];
+      await updatePlaylistAPI(playlistId, { songIds: newSongIds });
+
+      setPlaylistPickerVisible(false);
+      setMoreMenuVisible(false);
+    } catch (err) {
+      console.error("Thêm bài hát vào playlist lỗi:", err);
     }
   };
 
@@ -73,48 +134,28 @@ const SearchTab = () => {
               </View>
 
               {searchText.length > 0 ? (
-                <Text className="text-white italic mb-4">
-                  🔍 Bạn đang tìm kiếm: {searchText}
-                </Text>
+                <>
+                  <Text className="text-white italic mb-4">
+                    Bạn đang tìm kiếm: {searchText}
+                  </Text>
+                  <SongSearchResults
+                    results={filteredSongs}
+                    onPress={(song) => {
+                      router.push(`/songItem?id=${song.id}`);
+                    }}
+                    onMorePress={(song) => {
+                      setSelectedSong(song);
+                      setMoreMenuVisible(true);
+                    }}
+                  />
+                </>
               ) : (
                 <View className="mt-10 px-4">
                   <Text className="text-white font-semibold mb-3">
-                    Từ khoá gợi ý:
+                    Khám phá theo thể loại:
                   </Text>
                   <View className="flex-row flex-wrap gap-2">
-                    {[
-                      "Chill",
-                      "Lo-fi",
-                      "Ballad",
-                      "Pop",
-                      "Acoustic",
-                      "Hip Hop",
-                      "Indie",
-                      "EDM",
-                      "US-UK",
-                      "Kpop",
-                      "Vpop",
-                      "Anime",
-                      "Lofi Chill",
-                      "Workout",
-                      "Study",
-                      "Relax",
-                      "Taylor Swift",
-                      "BTS",
-                      "BLACKPINK",
-                      "Adele",
-                      "The Weeknd",
-                      "Charlie Puth",
-                      "Sơn Tùng M-TP",
-                      "Đen Vâu",
-                      "Hoàng Dũng",
-                      "IU",
-                      "Jay Chou",
-                      "Justin Bieber",
-                      "Ariana Grande",
-                      "Billie Eilish",
-                      "Bruno Mars",
-                    ].map((keyword) => (
+                    {keywordSuggestions.map((keyword) => (
                       <TouchableOpacity
                         key={keyword}
                         onPress={() => setSearchText(keyword)}
@@ -143,21 +184,7 @@ const SearchTab = () => {
         visible={isPlaylistPickerVisible}
         playlists={availablePlaylists}
         onClose={() => setPlaylistPickerVisible(false)}
-        onSelect={async (playlistId) => {
-          try {
-            const playlist = availablePlaylists.find(
-              (p) => p.id === playlistId
-            );
-            if (!playlist || !selectedSong) return;
-
-            const newSongIds = [
-              ...new Set([...(playlist.id || []), selectedSong.videoId]),
-            ];
-            await updatePlaylistAPI(playlistId, { songIds: newSongIds });
-          } catch (err) {
-            console.error("Thêm bài hát vào playlist lỗi:", err);
-          }
-        }}
+        onSelect={handleSelectPlaylist}
       />
     </>
   );

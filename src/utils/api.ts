@@ -184,7 +184,7 @@ export const uploadScoreAudioAPI = async (
         "Content-Type": "multipart/form-data",
       },
     });
-    return response.data;
+    return response;
   } catch (error) {
     console.error("Upload audio failed:", error);
     throw error;

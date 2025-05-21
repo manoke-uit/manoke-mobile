@@ -86,7 +86,7 @@ declare global {
     userId: string;
     imageUrl: string;
     description: string;
-    songIds: string[];
+    songs: string[];
   }
   export interface IPaginatedPlaylists {
     items: IPlaylist[];
