@@ -1,10 +1,17 @@
 import AnimatedWrapper from "@/components/animation/animate";
-import { getScoresAPI } from "@/utils/api";
+import { getAllScores } from "@/utils/api";
 import { APP_COLOR } from "@/utils/constant";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
-import { Text, TextInput, View, ScrollView, Image } from "react-native";
+import {
+  Text,
+  TextInput,
+  View,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 
 const HistoryTab = () => {
   const [scores, setScores] = useState<IScore[]>([]);
@@ -15,8 +22,8 @@ const HistoryTab = () => {
 
   const fetchScores = async () => {
     try {
-      const res = await getScoresAPI();
-      setScores(res.items);
+      const res = await getAllScores();
+      setScores(res ?? []);
     } catch (error) {
       console.error("Failed to fetch scores:", error);
     }
@@ -35,28 +42,33 @@ const HistoryTab = () => {
           <View className="flex-row items-center bg-white/20 px-4 py-2 rounded-xl mb-6">
             <Ionicons name="search" size={20} color="white" className="mr-2" />
             <TextInput
-              placeholder="Try typing a song or an artist..."
+              placeholder="Search by song or user..."
               placeholderTextColor="#eee"
               className="flex-1 text-white"
             />
           </View>
 
           <View className="mt-5">
-            {/* {scores.map((item) => (
-              <View
+            {scores.map((item) => (
+              <TouchableOpacity
                 key={item.id}
                 className="flex-row items-center mb-5 border-b border-white/10 pb-4"
               >
                 <Image
-                  source={{ uri: item.img || 'https://via.placeholder.com/150' }}
+                  source={{
+                    uri:
+                      item.song?.imageUrl || "https://via.placeholder.com/100",
+                  }}
                   className="w-16 h-16 rounded-lg mr-4 bg-gray-400"
+                  resizeMode="cover"
                 />
 
                 <View className="flex-1">
                   <Text className="text-white font-bold">
-                    {item.audioUrl ?? "Unknown Song"}
+                    {item.song?.title ?? "Unknown Song"}
                   </Text>
                   <Text className="text-gray-400 text-sm">
+                    {item.user?.displayName ?? "Unknown User"} •{" "}
                     {item.createdAt
                       ? new Date(item.createdAt).toLocaleDateString()
                       : "Unknown Date"}
@@ -64,10 +76,12 @@ const HistoryTab = () => {
                 </View>
 
                 <Text className="text-pink-300 font-bold text-lg">
-                  {item.finalScore ?? 0}
+                  {item.finalScore
+                    ? Math.round(item.finalScore * 100) / 100
+                    : 0}
                 </Text>
-              </View>
-            ))} */}
+              </TouchableOpacity>
+            ))}
           </View>
         </ScrollView>
       </AnimatedWrapper>
