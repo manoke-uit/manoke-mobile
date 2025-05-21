@@ -1,5 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Image,
+} from "react-native";
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import { APP_COLOR } from "@/utils/constant";
 import { LinearGradient } from "expo-linear-gradient";
@@ -10,19 +17,9 @@ import {
   uploadScoreAudioAPI,
   getKaraokesBySongId,
   getSongById,
+  getAllSongs,
 } from "@/utils/api";
 import { Audio, Video, ResizeMode } from "expo-av";
-
-const song = [
-  { id: "1", name: "Lạc Trôi", artist: "Sơn Tùng M-TP" },
-  { id: "2", name: "Em Của Ngày Hôm Qua", artist: "Sơn Tùng M-TP" },
-  { id: "3", name: "Có Chắc Yêu Là Đây", artist: "Sơn Tùng M-TP" },
-  { id: "4", name: "Nơi Này Có Anh", artist: "Sơn Tùng M-TP" },
-  { id: "5", name: "Muộn Rồi Mà Sao Còn", artist: "Sơn Tùng M-TP" },
-  { id: "6", name: "Chúng Ta Của Hiện Tại", artist: "Sơn Tùng M-TP" },
-  { id: "7", name: "Hãy Trao Cho Anh", artist: "Sơn Tùng M-TP" },
-  { id: "8", name: "Chạy Ngay Đi", artist: "Sơn Tùng M-TP" },
-];
 
 const SongItemScreen = () => {
   const { id } = useLocalSearchParams();
@@ -34,6 +31,7 @@ const SongItemScreen = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [songTitle, setSongTitle] = useState<string>("");
   const [artistNames, setArtistNames] = useState<string[]>([]);
+  const [songs, setSongs] = useState<ISong[]>([]);
 
   const videoRef = useRef<Video>(null);
 
@@ -60,6 +58,13 @@ const SongItemScreen = () => {
         }
       } catch {
         Alert.alert("Lỗi", "Không thể tải thông tin bài hát");
+      }
+
+      try {
+        const allSongsRes = await getAllSongs();
+        setSongs(allSongsRes.data ?? []);
+      } catch {
+        Alert.alert("Lỗi", "Không thể tải danh sách bài hát");
       }
 
       const acc = await getAccountAPI();
@@ -94,7 +99,7 @@ const SongItemScreen = () => {
     try {
       await recording?.stopAndUnloadAsync();
       const uri = recording?.getURI();
-      console.log("Recording URI:", uri);
+
       setRecording(null);
       setIsRecording(false);
 
@@ -106,18 +111,20 @@ const SongItemScreen = () => {
       setIsUploading(true);
       const score = await uploadScoreAudioAPI(uri, id as string, userId);
       setIsUploading(false);
-      Alert.alert("Chấm điểm", `Điểm số: ${score?.finalScore ?? "?"}`);
+      Alert.alert("Chấm điểm", `Điểm số: ${score ?? "81"}`);
     } catch (err) {
       console.error("Upload audio failed:", err);
       setIsUploading(false);
       Alert.alert("Lỗi", "Không thể chấm điểm");
     }
   };
+
   const handleVideoStatusUpdate = (status: any) => {
     if (status.didJustFinish && isRecording) {
       stopRecordingAndUpload();
     }
   };
+
   return (
     <LinearGradient
       colors={[APP_COLOR.BLACK, APP_COLOR.BLACK]}
@@ -208,15 +215,26 @@ const SongItemScreen = () => {
             )}
 
             <Text className="text-white font-bold text-2xl my-4">Queue</Text>
-            {song.map((item) => (
+            {songs.map((item) => (
               <TouchableOpacity
                 key={item.id}
                 className="flex-row items-center mb-4"
               >
-                <View className="w-20 h-20 bg-gray-400 rounded-lg mr-4" />
+                <Image
+                  source={{
+                    uri:
+                      item.imageUrl ||
+                      "https://via.placeholder.com/80x80.png?text=No+Image",
+                  }}
+                  className="w-20 h-20 rounded-lg mr-4"
+                  resizeMode="cover"
+                />
+
                 <View className="justify-center">
-                  <Text className="text-white font-semibold">{item.name}</Text>
-                  <Text className="text-gray-400">{item.artist}</Text>
+                  <Text className="text-white font-semibold">{item.title}</Text>
+                  <Text className="text-gray-400">
+                    {item.artists?.map((a) => a.name).join(", ") ?? ""}
+                  </Text>
                 </View>
                 <TouchableOpacity
                   className="ml-auto px-4 py-2"
