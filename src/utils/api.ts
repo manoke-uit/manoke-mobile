@@ -73,10 +73,13 @@ export const getAllSongs = (genreId?: string, artistId?: string) => {
   return axios.get<IBackendRes<ISong[]>>("/songs", { params });
 };
 
-// export const changePasswordAPI = (userId: string, newPassword: string) => {
-//   const url = `/users/${userId}`;
-//   return axios.patch(url, { password: newPassword });
-// };
+export const changePasswordAPI = (payload: {
+  oldPassword: string;
+  newPassword: string;
+}) => {
+  const url = `/auth/change-password`;
+  return axios.post(url, payload);
+};
 
 export const getScoresAPI = () => {
   const url = `/scores`;
@@ -127,10 +130,10 @@ export const uploadAvatar = async (fileUri: string, userId: string) => {
   try {
     const fileName = `${userId}_${Date.now()}.jpg`;
     const response = await fetch(fileUri);
-    if (!response.ok) throw new Error("Không thể tải ảnh từ URI");
+    if (!response.ok) throw new Error("Cannot fetch image from URI.");
     const blob = await response.blob();
     if (blob.size > 4 * 1024 * 1024) {
-      throw new Error("Ảnh vượt quá 4MB");
+      throw new Error("Image size exceeds 4MB");
     }
 
     const { error } = await supabase.storage
@@ -140,14 +143,14 @@ export const uploadAvatar = async (fileUri: string, userId: string) => {
         upsert: true,
       });
     if (error) {
-      console.error("Lỗi khi upload lên Supabase:", error.message);
+      console.error("Failed to upload Supabase ", error.message);
       return null;
     }
     const url = supabase.storage.from("avatar").getPublicUrl(fileName)
       .data.publicUrl;
     return url;
   } catch (err) {
-    console.error("Upload thất bại:", err);
+    console.error("Failed to upload: ", err);
     return null;
   }
 };
@@ -350,12 +353,8 @@ export const updateUserAPI = async (
   userId: string,
   payload: {
     id: string;
-    adminSecret?: string | null;
     displayName: string;
     email: string;
-    password: string;
-    imageUrl?: string;
-    createdAt?: string;
   }
 ) => {
   const url = `/users/${userId}`;

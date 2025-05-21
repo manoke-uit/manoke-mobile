@@ -13,7 +13,7 @@ import { APP_COLOR } from "@/utils/constant";
 import { useRouter } from "expo-router";
 import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons";
-import { getUserByIdAPI, updateUserAPI } from "@/utils/api";
+import { getUserByIdAPI, changePasswordAPI} from "@/utils/api";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -105,13 +105,12 @@ const ChangePassword = () => {
       const user = userRes.data || userRes;
 
       const payload = {
-        id: userId,
-        displayName: user.displayName,
-        email: user.email,
-        password: newpassword,
+        oldpassword: oldpassword,
+        newpassword: newpassword,
       };
 
-      await updateUserAPI(userId, payload);
+      // await updateUserAPI(userId, payload);
+      await changePasswordAPI(payload);
       Toast.show({ type: "success", text1: "Password changed successfully!" });
       router.replace("/account");
     } catch (err) {

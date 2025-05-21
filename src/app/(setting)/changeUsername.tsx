@@ -86,12 +86,12 @@ const ChangeUsername = () => {
 
       const userRes = await getUserByIdAPI(userId);
       const user = userRes.data || userRes;
+      console.log(user);
 
       const payload = {
         id: userId,
         displayName: username,
         email: user.email,
-        password: user.password,
       };
 
       await updateUserAPI(userId, payload);

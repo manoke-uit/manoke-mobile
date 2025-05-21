@@ -3,9 +3,7 @@ import {
   View,
   Animated,
   Dimensions,
-  Image,
   Text,
-  TextInput,
   TouchableOpacity,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,15 +12,18 @@ import { APP_COLOR } from "@/utils/constant";
 import { useRouter } from "expo-router";
 import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons";
-import { loginAPI } from "@/utils/api";
+import { getUserByIdAPI } from "@/utils/api";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
-const avatar = require("@/assets/auth/Icon/avatar.png");
 
 const SettingTab = () => {
   const slideAnim = useRef(new Animated.Value(modalHeight)).current;
   const router = useRouter();
+
+  const [userInfo, setUserInfo] = useState<{ email: string } | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -32,6 +33,25 @@ const SettingTab = () => {
     }).start();
   }, []);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) return;
+        const res = await getUserByIdAPI(userId);
+        setDisplayName(res.displayName || res.data?.displayName || null);
+        setUserInfo(res);
+      } catch (error) {
+        console.log("Error loading user info:", error);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to load profile!",
+        });
+      }
+    };
+    fetchUser();
+  }, []);
 
   return (
     <SafeAreaView style={tw`flex-1 bg-[${APP_COLOR.BLACK}]`}>
@@ -79,8 +99,9 @@ const SettingTab = () => {
                         <View style={tw`flex-row justify-between items-center`}>
                             <Text 
                                 className="text-[15px] p-1"
-                                style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                            >admin</Text>
+                                style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                                {displayName || userInfo?.email?.split("@")[0] || "Loading..."}
+                            </Text>
                             <Ionicons name="chevron-forward-outline" size={24} color="white" />
                         </View>
                     </TouchableOpacity>

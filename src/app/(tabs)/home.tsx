@@ -71,7 +71,7 @@ const HomeTab = () => {
         Toast.show({
           type: "error",
           text1: "Error",
-          text2: error.message || "Failed to load playlists",
+          text2: "Failed to load playlists",
         });
       } finally {
         setLoadingPlaylists(false);

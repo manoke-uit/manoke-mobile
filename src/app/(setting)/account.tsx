@@ -5,16 +5,14 @@ import {
   Dimensions,
   Image,
   Text,
-  TextInput,
   TouchableOpacity,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_COLOR } from "@/utils/constant";
 import { useRouter } from "expo-router";
 import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons";
-import { getAccountAPI, getUserByIdAPI } from "@/utils/api";
+import { getUserByIdAPI } from "@/utils/api";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
