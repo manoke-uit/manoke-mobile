@@ -132,7 +132,7 @@ export const uploadAvatar = async (fileUri: string, userId: string) => {
     }
 
     const { error } = await supabase.storage
-      .from("avatar")
+      .from("avatars")
       .upload(fileName, blob, {
         contentType: blob.type || "image/jpeg",
         upsert: true,
@@ -141,7 +141,7 @@ export const uploadAvatar = async (fileUri: string, userId: string) => {
       console.error("Failed to upload Supabase ", error.message);
       return null;
     }
-    const url = supabase.storage.from("avatar").getPublicUrl(fileName)
+    const url = supabase.storage.from("avatars").getPublicUrl(fileName)
       .data.publicUrl;
     return url;
   } catch (err) {
@@ -348,8 +348,12 @@ export const updateUserAPI = async (
   userId: string,
   payload: {
     id: string;
+    adminSecret: string;
     displayName: string;
     email: string;
+    password: string;
+    imageUrl: string;
+    createdAt: string;
   }
 ) => {
   const url = `/users/${userId}`;

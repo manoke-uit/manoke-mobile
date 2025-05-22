@@ -34,9 +34,9 @@ declare global {
     userId: string;
     displayName: string;
     email: string;
-    adminSecret?: string;
-    password?: string;
-    imageUrl?: string;
+    adminSecret: string;
+    password: string;
+    imageUrl: string;
     createdAt: string;
     playlistIds?: string[];
     scoreIds?: string[];

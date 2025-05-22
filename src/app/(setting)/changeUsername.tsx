@@ -90,8 +90,12 @@ const ChangeUsername = () => {
 
       const payload = {
         id: userId,
+        adminSecret: user.adminSecret,
         displayName: username,
         email: user.email,
+        password: user.password,
+        imageUrl: user.imageUrl,
+        createdAt: user.createdAt,
       };
 
       await updateUserAPI(userId, payload);

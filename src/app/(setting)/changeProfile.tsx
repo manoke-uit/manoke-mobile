@@ -55,15 +55,18 @@ const ChangeProfile = () => {
 
   const pickImageFromLibrary = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"], 
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
     });
 
     if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-      await handleUpload(result.assets[0].uri);
+      const asset = result.assets && result.assets[0];
+      if (asset && asset.uri) {
+        setImageUri(asset.uri);
+        await handleUpload(asset.uri);
+      }
     }
   };
 
@@ -81,8 +84,11 @@ const ChangeProfile = () => {
     });
 
     if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-      await handleUpload(result.assets[0].uri);
+      const asset = result.assets && result.assets[0];
+      if (asset && asset.uri) {
+        setImageUri(asset.uri);
+        await handleUpload(asset.uri);
+      }
     }
   };
 
@@ -103,8 +109,12 @@ const ChangeProfile = () => {
 
       await updateUserAPI(userId, {
         id: userId,
-        displayName: user.displayName,
-        email: user.email,
+        adminSecret: user.adminSecret ?? null,
+        displayName: user.displayName ?? "",
+        email: user.email ?? "",
+        password: user.password ?? "",
+        imageUrl: uploadedUrl,
+        createdAt: user.createdAt ?? new Date().toISOString(),
       });
 
       Toast.show({ type: "success", text1: "Avatar updated successfully" });

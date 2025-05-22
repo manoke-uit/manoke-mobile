@@ -4,8 +4,8 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Image,
+  Alert,
 } from "react-native";
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import { APP_COLOR } from "@/utils/constant";
@@ -20,6 +20,7 @@ import {
   getAllSongs,
 } from "@/utils/api";
 import { Audio, Video, ResizeMode } from "expo-av";
+import ScoreModal from "@/components/score"; 
 
 const SongItemScreen = () => {
   const { id } = useLocalSearchParams();
@@ -32,6 +33,8 @@ const SongItemScreen = () => {
   const [songTitle, setSongTitle] = useState<string>("");
   const [artistNames, setArtistNames] = useState<string[]>([]);
   const [songs, setSongs] = useState<ISong[]>([]);
+  const [isScoreModalVisible, setScoreModalVisible] = useState(false); 
+  const [score, setScore] = useState<number>(0); 
 
   const videoRef = useRef<Video>(null);
 
@@ -44,7 +47,7 @@ const SongItemScreen = () => {
           setKaraokeVideoUrl(first.videoUrl);
         }
       } catch {
-        Alert.alert("Lỗi", "Không thể tải karaoke");
+        Alert.alert("Error", "Unable to load karaoke");
       }
 
       try {
@@ -57,14 +60,14 @@ const SongItemScreen = () => {
           setArtistNames(names);
         }
       } catch {
-        Alert.alert("Lỗi", "Không thể tải thông tin bài hát");
+        Alert.alert("Error", "Unable to load song information");
       }
 
       try {
         const allSongsRes = await getAllSongs();
         setSongs(allSongsRes.data ?? []);
       } catch {
-        Alert.alert("Lỗi", "Không thể tải danh sách bài hát");
+        Alert.alert("Error", "Unable to load song list");
       }
 
       const acc = await getAccountAPI();
@@ -91,7 +94,7 @@ const SongItemScreen = () => {
       setRecording(recording);
       setIsRecording(true);
     } catch (err) {
-      Alert.alert("Lỗi", "Không thể bắt đầu ghi âm");
+      Alert.alert("Error", "Unable to start recording");
     }
   };
 
@@ -104,7 +107,7 @@ const SongItemScreen = () => {
       setIsRecording(false);
 
       if (!uri) {
-        Alert.alert("Lỗi", "Không tìm thấy file ghi âm để upload");
+        Alert.alert("Error", "No recorded file found to upload");
         return;
       }
 
@@ -113,11 +116,12 @@ const SongItemScreen = () => {
       const roundedScore = score ? Math.round(score * 100) / 100 : 81;
 
       setIsUploading(false);
-      Alert.alert("Chấm điểm", `Điểm số: ${roundedScore}`);
+      setScore(roundedScore); 
+      setScoreModalVisible(true); 
     } catch (err) {
       console.error("Upload audio failed:", err);
       setIsUploading(false);
-      Alert.alert("Lỗi", "Không thể chấm điểm");
+      Alert.alert("Error", "Unable to calculate score");
     }
   };
 
@@ -176,10 +180,10 @@ const SongItemScreen = () => {
             <View className="flex-row items-center mb-5">
               <View className="justify-center">
                 <Text className="text-white font-bold text-xl">
-                  {songTitle || "Đang tải..."}
+                  {songTitle || "Loading..."}
                 </Text>
                 <Text className="text-gray-400 text-base">
-                  {artistNames.join(", ") || "Đang tải nghệ sĩ..."}
+                  {artistNames.join(", ") || "Loading artists..."}
                 </Text>
               </View>
               <TouchableOpacity
@@ -196,7 +200,7 @@ const SongItemScreen = () => {
                   onPress={startRecording}
                   className="bg-green-600 px-4 py-2 rounded"
                 >
-                  <Text className="text-white font-bold">🎤 Ghi âm</Text>
+                  <Text className="text-white font-bold">🎤 Record</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -204,7 +208,7 @@ const SongItemScreen = () => {
                   className="bg-red-600 px-4 py-2 rounded"
                 >
                   <Text className="text-white font-bold">
-                    ⏹ Dừng & Chấm điểm
+                    ⏹ Stop & Score
                   </Text>
                 </TouchableOpacity>
               )}
@@ -212,7 +216,7 @@ const SongItemScreen = () => {
 
             {isUploading && (
               <Text className="text-yellow-400 mt-2 text-center">
-                Đang chấm điểm...
+                Calculating score...
               </Text>
             )}
 
@@ -264,6 +268,14 @@ const SongItemScreen = () => {
         onAddToPlaylist={() => console.log("Added to playlist")}
         isFavoriteTab={false}
         isQueueTab={true}
+      />
+
+      {/* Add ScoreModal here */}
+      <ScoreModal
+        visible={isScoreModalVisible}
+        title="Your Score"
+        score={score}
+        onClose={() => setScoreModalVisible(false)}
       />
     </LinearGradient>
   );
