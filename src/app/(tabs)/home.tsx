@@ -14,8 +14,16 @@ import { APP_COLOR } from "@/utils/constant";
 import AnimatedWrapper from "@/components/animation/animate";
 import tw from "twrnc";
 import { useNavigation, router } from "expo-router";
-import { getAllSongs, getPlaylistsAPI } from "@/utils/api";
+import {
+  getAllSongs,
+  getPlaylistsAPI,
+  registerOrUpdateExpoPushTokenAPI,
+} from "@/utils/api";
 import Toast from "react-native-toast-message";
+import * as Notifications from "expo-notifications";
+
+import { registerForPushNotificationsAsync } from "@/utils/registerPushToken";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HomeTab = () => {
   const [songs, setSongs] = useState<ISong[]>([]);
@@ -47,6 +55,32 @@ const HomeTab = () => {
     currentOffset.current = offsetY;
   };
 
+  useEffect(() => {
+    const initPushToken = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        const token = await registerForPushNotificationsAsync();
+        console.log(token);
+
+        if (token && userId) {
+          await registerOrUpdateExpoPushTokenAPI(userId, token);
+        }
+      } catch (error) {
+        console.error("Lỗi lấy hoặc gửi push token:", error);
+      }
+    };
+
+    initPushToken();
+  }, []);
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        console.log("🔔 Thông báo nhận:", notification);
+      }
+    );
+
+    return () => subscription.remove();
+  }, []);
   useEffect(() => {
     const fetchSongs = async () => {
       try {

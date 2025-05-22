@@ -415,3 +415,13 @@ export const getUnreadNotificationCount = async (
   });
   return res;
 };
+export const registerOrUpdateExpoPushTokenAPI = async (
+  userId: string,
+  expoPushToken: string
+) => {
+  const res = await axios.post("/users/registerOrUpdateExpoPushToken", {
+    userId,
+    expoPushToken,
+  });
+  return res;
+};
