@@ -17,6 +17,11 @@
         "NSCameraUsageDescription": "This app uses the camera to allow you to take a profile photo."
       }
     },
+    "extra": {
+      "eas": {
+        "projectId": "a90bff96-6dc5-45d9-9570-157411438314"
+      }
+    },
     "android": {
       "package": "com.manoke.app",
       "intentFilters": [
