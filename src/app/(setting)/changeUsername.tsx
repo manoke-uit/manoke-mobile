@@ -25,23 +25,22 @@ const ChangeUsername = () => {
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const router = useRouter();
   const [username, setUsername] = useState("");
-  const [displayName, setDisplayName] = useState(""); 
+  const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const userId = await AsyncStorage.getItem("userId");
-        if (!userId) {
-          Toast.show({ type: "error", text1: "User ID not found" });
-          return;
-        }
-        const userRes = await getUserByIdAPI(userId);
-        const user = userRes.data || userRes;
-        setDisplayName(user.displayName || ""); 
-        setUsername(user.displayName || ""); 
+        if (!userId) throw new Error("User ID not found");
+
+        const res = await getUserByIdAPI(userId);
+        const user = res.data || res;
+
+        setDisplayName(user.displayName || "");
+        setUsername(user.displayName || "");
       } catch (err) {
-        console.error("Error fetching user:", err);
-        Toast.show({ type: "error", text1: "Failed to load user data" });
+        console.error("Fetch user failed:", err);
+        Toast.show({ type: "error", text1: "Failed to load user" });
       }
     };
 
@@ -55,59 +54,25 @@ const ChangeUsername = () => {
   }, []);
 
   const handleChangeUsername = async () => {
+    if (!username || username.length < 3 || username.length > 20) {
+      Toast.show({ type: "error", text1: "Username must be 3-20 characters" });
+      return;
+    }
+
     try {
       const userId = await AsyncStorage.getItem("userId");
-      if (!userId) {
-        Toast.show({ type: "error", text1: "User ID not found" });
-        return;
-      }
+      if (!userId) throw new Error("User ID not found");
 
-      const token = await AsyncStorage.getItem("accessToken");
-      if (!token) {
-        Toast.show({ type: "error", text1: "Session expired" });
-        return;
-      }
+      const res = await getUserByIdAPI(userId);
+      const user = res.data || res;
 
-      try {
-        const decodedToken = JSON.parse(atob(token.split(".")[1]));
-        if (decodedToken.exp * 1000 < Date.now()) {
-          Toast.show({ type: "error", text1: "Session expired" });
-          return;
-        }
-      } catch (err) {
-        Toast.show({ type: "error", text1: "Invalid token" });
-        return;
-      }
-
-      if (!username || username.length < 3 || username.length > 20) {
-        Toast.show({ type: "error", text1: "Username must be 3-20 characters" });
-        return;
-      }
-
-      const userRes = await getUserByIdAPI(userId);
-      const user = userRes.data || userRes;
-      console.log(user);
-
-      const payload = {
-        id: userId,
-        adminSecret: user.adminSecret,
-        displayName: username,
-        email: user.email,
-        password: user.password,
-        imageUrl: user.imageUrl,
-        createdAt: user.createdAt,
-      };
-
-      await updateUserAPI(userId, payload);
-      setDisplayName(username); 
+      await updateUserAPI(userId, user.email, username);
+      setDisplayName(username);
       Toast.show({ type: "success", text1: "Username updated" });
       router.replace("/account");
     } catch (err) {
       console.error("Update error:", err);
-      Toast.show({
-        type: "error",
-        text1: "Update failed",
-      });
+      Toast.show({ type: "error", text1: "Update failed" });
     }
   };
 
@@ -129,7 +94,11 @@ const ChangeUsername = () => {
       >
         <View className="w-full flex-row justify-between px-4 mt-2">
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="chevron-back-outline" size={20} color={APP_COLOR.PINK} />
+            <Ionicons
+              name="chevron-back-outline"
+              size={20}
+              color={APP_COLOR.PINK}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity onPress={handleChangeUsername}>
@@ -139,17 +108,22 @@ const ChangeUsername = () => {
 
         <View style={tw`pt-10 justify-center items-center`}>
           <Image source={icon} />
-          <Text style={tw`pt-3 text-white text-[27px] font-bold`}>Change Username</Text>
-          <Text style={tw`pt-5 text-white px-12 items-center text-center text-[16px]`}>
+          <Text style={tw`pt-3 text-white text-[27px] font-bold`}>
+            Change Username
+          </Text>
+          <Text
+            style={tw`pt-5 text-white px-12 items-center text-center text-[16px]`}
+          >
             Enter your new username.
           </Text>
         </View>
 
         <View style={tw`w-[80%] pt-10 justify-center items-center`}>
           <TextInput
-            placeholder={displayName || "Loading..."}
+            placeholder="Enter new username"
             style={tw`w-full h-[50px] text-[17px] bg-white/20 rounded-lg px-4 mb-4 text-white`}
             placeholderTextColor={APP_COLOR.WHITE40}
+            value={username}
             onChangeText={setUsername}
           />
         </View>

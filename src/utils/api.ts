@@ -344,21 +344,32 @@ export const getUserByIdAPI = async (userId: string) => {
   return axios.get(url);
 };
 
-export const updateUserAPI = async (
-  userId: string,
-  payload: {
-    id: string;
-    adminSecret: string;
-    displayName: string;
-    email: string;
-    password: string;
-    imageUrl: string;
-    createdAt: string;
-  }
+export const updateUserAPI = (
+  id: string,
+  email: string,
+  displayName: string,
+  avatar?: { uri: string; name: string; type: string }
 ) => {
-  const url = `/users/${userId}`;
-  return axios.patch(url, payload);
+  const formData = new FormData();
+
+  formData.append("email", email);
+  formData.append("displayName", displayName);
+
+  if (avatar) {
+    formData.append("avatar", {
+      uri: avatar.uri,
+      name: avatar.name,
+      type: avatar.type,
+    } as any);
+  }
+
+  return axios.patch(`/users/${id}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 };
+
 export const searchSongsByTitleAPI = (q: string) => {
   return axios.get("/songs/search/title", {
     params: { q },
@@ -424,4 +435,27 @@ export const registerOrUpdateExpoPushTokenAPI = async (
     expoPushToken,
   });
   return res;
+};
+export const updateUserImageAPI = async (
+  userId: string,
+  image: {
+    uri: string;
+    name: string;
+    type: string;
+  }
+) => {
+  const formData = new FormData();
+  formData.append("image", {
+    uri: image.uri,
+    name: image.name,
+    type: image.type,
+  } as any);
+
+  const res = await axios.patch(`/users/${userId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return res.data;
 };

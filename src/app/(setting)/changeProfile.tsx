@@ -14,8 +14,7 @@ import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import * as ImagePicker from "expo-image-picker";
-import { uploadAvatar, getAccountAPI, updateUserAPI, getUserByIdAPI } from "@/utils/api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAccountAPI, getUserByIdAPI, updateUserImageAPI } from "@/utils/api";
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
@@ -55,7 +54,7 @@ const ChangeProfile = () => {
 
   const pickImageFromLibrary = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"], 
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
@@ -63,6 +62,7 @@ const ChangeProfile = () => {
 
     if (!result.canceled) {
       const asset = result.assets && result.assets[0];
+
       if (asset && asset.uri) {
         setImageUri(asset.uri);
         await handleUpload(asset.uri);
@@ -99,22 +99,14 @@ const ChangeProfile = () => {
     }
 
     try {
-      const uploadedUrl = await uploadAvatar(uri, userId);
-      if (!uploadedUrl) {
-        throw new Error("Failed to upload avatar");
-      }
+      const fileName = uri.split("/").pop() || "avatar.jpg";
+      const match = /\.(\w+)$/.exec(fileName);
+      const type = match ? `image/${match[1]}` : `image/jpeg`;
 
-      const userRes = await getUserByIdAPI(userId);
-      const user = userRes.data || userRes;
-
-      await updateUserAPI(userId, {
-        id: userId,
-        adminSecret: user.adminSecret ?? null,
-        displayName: user.displayName ?? "",
-        email: user.email ?? "",
-        password: user.password ?? "",
-        imageUrl: uploadedUrl,
-        createdAt: user.createdAt ?? new Date().toISOString(),
+      await updateUserImageAPI(userId, {
+        uri,
+        name: fileName,
+        type,
       });
 
       Toast.show({ type: "success", text1: "Avatar updated successfully" });
@@ -161,9 +153,11 @@ const ChangeProfile = () => {
           <Text style={tw`pt-3 text-white text-[27px] font-bold`}>
             Update Profile Image
           </Text>
-          <Text style={tw`pt-5 text-white px-12 items-center text-center text-[16px]`}>
-            Take a new photo or choose a picture from your library to update your
-            profile image.
+          <Text
+            style={tw`pt-5 text-white px-12 items-center text-center text-[16px]`}
+          >
+            Take a new photo or choose a picture from your library to update
+            your profile image.
           </Text>
         </View>
 
