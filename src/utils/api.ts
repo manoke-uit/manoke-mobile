@@ -385,3 +385,29 @@ export const getPlaylistById = async (playlistId: string) => {
 export const getAllScores = async () => {
   return await axios.get("/scores");
 };
+export const createNotification = async (data: {
+  title: string;
+  description: string;
+  createdAt: string;
+  isRead: boolean;
+  userId: string;
+  deviceId: string;
+}) => {
+  const res = await axios.post("/notifications", data);
+  return res;
+};
+
+export const getNotifications = async (userId: string) => {
+  const res = await axios.get("/notifications", {
+    params: { userId },
+  });
+  return res;
+};
+export const getUnreadNotificationCount = async (
+  userId: string
+): Promise<number> => {
+  const res = await axios.get("/notifications/unread-count", {
+    params: { userId },
+  });
+  return res;
+};
