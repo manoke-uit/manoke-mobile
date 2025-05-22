@@ -415,3 +415,25 @@ export const getUnreadNotificationCount = async (
   });
   return res;
 };
+export const registerOrUpdateExpoPushTokenAPI = async ({
+  userId,
+  expoPushToken,
+}: {
+  userId: string;
+  expoPushToken: string;
+}): Promise<void> => {
+  try {
+    const response = await axios.post("/registerOrUpdateExpoPushToken", {
+      userId,
+      expoPushToken,
+    });
+
+    if (response.status === 200) {
+      console.log("✅ Token registered/updated:", response.data.message);
+    } else {
+      console.warn("⚠️ Unexpected response:", response);
+    }
+  } catch (error) {
+    console.error("❌ Failed to register/update token:", error);
+  }
+};
