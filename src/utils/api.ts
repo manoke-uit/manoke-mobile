@@ -76,6 +76,7 @@ export const getAllSongs = (genreId?: string, artistId?: string) => {
 export const changePasswordAPI = (payload: {
   oldPassword: string;
   newPassword: string;
+  verifyNewPassword: string;
 }) => {
   const url = `/auth/change-password`;
   return axios.post(url, payload);

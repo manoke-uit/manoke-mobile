@@ -7,7 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import { MotiPressable } from "moti/interactions";
 import AnimatedWrapper from "@/components/animation/animate";
-import { getAccountAPI, getUserByIdAPI } from "@/utils/api";
+import { getUserByIdAPI } from "@/utils/api";
 import { useCurrentApp } from "../context/appContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 

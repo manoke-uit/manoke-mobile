@@ -24,8 +24,9 @@ const icon = require("@/assets/auth/Icon/change.png");
 const ChangePassword = () => {
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const router = useRouter();
-  const [oldpassword, setOldpassword] = useState("");
-  const [newpassword, setNewpassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [verifyNewPassword, setVerifyNewPassword] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ const ChangePassword = () => {
     }).start();
   }, []);
 
-  const isButtonActive = oldpassword.length > 0 && newpassword.length > 0;
+  const isButtonActive = oldPassword.length > 0 && newPassword.length > 0 && verifyNewPassword.length > 0;
 
   const handleChangePassword = async () => {
     try {
@@ -79,21 +80,25 @@ const ChangePassword = () => {
       }
 
       // Validate passwords
-      if (!oldpassword || oldpassword.length < 6) {
+      if (!oldPassword || oldPassword.length < 6) {
         Toast.show({ type: "error", text1: "Old password must be at least 6 characters" });
         return;
       }
-      if (!newpassword || newpassword.length < 6) {
+      if (!newPassword || newPassword.length < 6) {
         Toast.show({ type: "error", text1: "New password must be at least 6 characters" });
         return;
       }
-      if (oldpassword === newpassword) {
+      if (oldPassword === newPassword) {
         Toast.show({ type: "error", text1: "New password must be different from old password" });
+        return;
+      }
+      if (newPassword !== verifyNewPassword) {
+        Toast.show({ type: "error", text1: "New passwords do not match" });
         return;
       }
 
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
-      if (!passwordRegex.test(newpassword)) {
+      if (!passwordRegex.test(newPassword)) {
         Toast.show({
           type: "error",
           text1: "New password must include at least one uppercase letter, one lowercase letter, and one number",
@@ -101,15 +106,12 @@ const ChangePassword = () => {
         return;
       }
 
-      const userRes = await getUserByIdAPI(userId);
-      const user = userRes.data || userRes;
-
       const payload = {
-        oldpassword: oldpassword,
-        newpassword: newpassword,
+        oldPassword,
+        newPassword,
+        verifyNewPassword,
       };
 
-      // await updateUserAPI(userId, payload);
       await changePasswordAPI(payload);
       Toast.show({ type: "success", text1: "Password changed successfully!" });
       router.replace("/account");
@@ -161,16 +163,24 @@ const ChangePassword = () => {
             secureTextEntry
             style={tw`w-full h-[50px] text-[17px] bg-white/20 rounded-lg px-4 mb-4 text-white`}
             placeholderTextColor={APP_COLOR.WHITE40}
-            value={oldpassword}
-            onChangeText={setOldpassword}
+            value={oldPassword}
+            onChangeText={setOldPassword}
           />
           <TextInput
             placeholder="New Password"
             secureTextEntry
             style={tw`w-full h-[50px] text-[17px] bg-white/20 rounded-lg px-4 mb-4 text-white`}
             placeholderTextColor={APP_COLOR.WHITE40}
-            value={newpassword}
-            onChangeText={setNewpassword}
+            value={newPassword}
+            onChangeText={setNewPassword}
+          />
+          <TextInput
+            placeholder="Verify New Password"
+            secureTextEntry
+            style={tw`w-full h-[50px] text-[17px] bg-white/20 rounded-lg px-4 mb-4 text-white`}
+            placeholderTextColor={APP_COLOR.WHITE40}
+            value={verifyNewPassword}
+            onChangeText={setVerifyNewPassword}
           />
         </View>
 
