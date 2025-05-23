@@ -170,6 +170,7 @@ declare global {
     id: string;
     displayName: string;
     email: string;
+    imageUrl?: string;
   }
   export interface IKaraoke {
     id: string;

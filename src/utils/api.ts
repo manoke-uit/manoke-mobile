@@ -273,11 +273,7 @@ export const createFriendRequestAPI = async (receiverId: string) => {
   const url = `/friends`;
   return axios.post<IFriend>(
     url,
-    {
-      receiverId,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-    },
+    { receiverId },
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -286,24 +282,17 @@ export const createFriendRequestAPI = async (receiverId: string) => {
   );
 };
 
-export const updateFriendRequestAPI = async (
-  receiverId: string,
-  status: "accepted" | "rejected"
-) => {
+export const updateFriendRequestAPI = async (receiverId: string, status: "accepted" | "rejected") => {
   const token = await AsyncStorage.getItem("accessToken");
   if (!token) {
     throw new Error("Token not found");
   }
   const url = `/friends/${receiverId}`;
-  return axios.patch<IFriend>(
-    url,
-    { status },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  return axios.patch<IFriend>(url, { status }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
 
 export const getFriendsAPI = async () => {

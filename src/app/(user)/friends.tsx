@@ -77,7 +77,12 @@ const FriendsTab = () => {
   const fetchPendingRequests = async () => {
     try {
       const response = await getFriendRequestsAPI();
-      setPendingRequests(response);
+      const allRequests = response.filter(
+        (request) => 
+          request.userId_1 === currentUserId ||
+          request.userId_2 === currentUserId
+      );
+      setPendingRequests(allRequests);
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -98,7 +103,10 @@ const FriendsTab = () => {
       setHasSearched(true);
       const response = await searchUsersAPI(searchQuery.trim());
       if (response.data) {
-        setSearchResults([response.data]);
+        const filteredResults = [response.data].filter(
+          (user) => user.id !== currentUserId
+        );
+        setSearchResults(filteredResults);
       } else {
         setSearchResults([]);
       }
@@ -195,7 +203,7 @@ const FriendsTab = () => {
           <View className="flex-row items-center bg-white/20 rounded-xl px-4 py-2 mb-4">
           <Ionicons name="search" size={20} color="#eee" />
           <TextInput
-            placeholder="Search users..."
+            placeholder="Search an user by email..."
             placeholderTextColor="#eee"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -235,7 +243,8 @@ const FriendsTab = () => {
                   ) ? (
                     <Text className="text-green-400 font-semibold">Friend</Text>
                   ) : pendingRequests.some(
-                    (f) => f.userId_1 === currentUserId && f.userId_2 === item.id
+                    (f) => (f.userId_1 === currentUserId && f.userId_2 === item.id) ||
+                           (f.userId_2 === currentUserId && f.userId_1 === item.id)
                   ) ? (
                     <Text className="text-yellow-400 font-semibold">Pending</Text>
                   ) : (
@@ -246,7 +255,15 @@ const FriendsTab = () => {
                         borderRadius: 20,
                         paddingVertical: 6,
                         paddingHorizontal: 16,
+                        opacity: pendingRequests.some(
+                          (f) => (f.userId_1 === currentUserId && f.userId_2 === item.id) ||
+                                 (f.userId_2 === currentUserId && f.userId_1 === item.id)
+                        ) ? 0.5 : 1,
                       }}
+                      disabled={pendingRequests.some(
+                        (f) => (f.userId_1 === currentUserId && f.userId_2 === item.id) ||
+                               (f.userId_2 === currentUserId && f.userId_1 === item.id)
+                      )}
                     >
                       <Text className="text-white text-sm font-semibold">Add Friend</Text>
                     </TouchableOpacity>
@@ -270,7 +287,11 @@ const FriendsTab = () => {
         {pendingRequests.length > 0 && (
           <View className="mb-4">
             <Text className="text-white text-lg font-semibold mb-2">Friend Requests</Text>
-              {pendingRequests.map((item) => (
+            {pendingRequests.map((item) => {
+              const isSender = item.userId_1 === currentUserId;
+              const otherUser = isSender ? item.user_2 : item.user_1;
+              
+              return (
                 <View
                   key={`${item.userId_1}-${item.userId_2}`}
                   style={{
@@ -287,34 +308,41 @@ const FriendsTab = () => {
                     shadowOffset: { width: 0, height: 2 },
                   }}
                 >
-                  <Text className="text-white font-semibold text-base">{item.user_1.displayName}</Text>
-                  <View style={{ flexDirection: "row" }}>
-                    <TouchableOpacity
-                      onPress={() => handleRespondToRequest(item.userId_1, "accepted")}
-                      style={{
-                        backgroundColor: APP_COLOR.PURPLE,
-                        borderRadius: 20,
-                        paddingVertical: 6,
-                        paddingHorizontal: 16,
-                        marginRight: 8,
-                      }}
-                    >
-                      <Text className="text-white text-sm font-semibold">Accept</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => handleRespondToRequest(item.userId_1, "rejected")}
-                      style={{
-                        backgroundColor: APP_COLOR.PINK,
-                        borderRadius: 20,
-                        paddingVertical: 6,
-                        paddingHorizontal: 16,
-                      }}
-                    >
-                      <Text className="text-white text-sm font-semibold">Reject</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <Text className="text-white font-semibold text-base">
+                    {otherUser.displayName}
+                  </Text>
+                  {isSender ? (
+                    <Text className="text-yellow-400 font-semibold">Pending</Text>
+                  ) : (
+                    <View style={{ flexDirection: "row" }}>
+                      <TouchableOpacity
+                        onPress={() => handleRespondToRequest(item.userId_1, "accepted")}
+                        style={{
+                          backgroundColor: APP_COLOR.PURPLE,
+                          borderRadius: 20,
+                          paddingVertical: 6,
+                          paddingHorizontal: 16,
+                          marginRight: 8,
+                        }}
+                      >
+                        <Text className="text-white text-sm font-semibold">Accept</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => handleRespondToRequest(item.userId_1, "rejected")}
+                        style={{
+                          backgroundColor: APP_COLOR.PINK,
+                          borderRadius: 20,
+                          paddingVertical: 6,
+                          paddingHorizontal: 16,
+                        }}
+                      >
+                        <Text className="text-white text-sm font-semibold">Reject</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
-              ))}
+              );
+            })}
           </View>
         )}
 
