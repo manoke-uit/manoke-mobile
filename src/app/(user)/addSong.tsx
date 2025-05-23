@@ -253,7 +253,10 @@ const AddVideo = () => {
             {/* Audio Upload */}
             <TouchableOpacity
               onPress={handleUploadAudio}
-              className="bg-pink-500 rounded-lg px-6 py-3 flex-row items-center justify-center mb-4"
+              disabled={selectedAudio !== null}
+              className={`bg-pink-500 rounded-lg px-6 py-3 flex-row items-center justify-center mb-4 ${
+                selectedAudio ? "opacity-50" : ""
+              }`}
             >
               <Ionicons
                 name="musical-notes-outline"
@@ -269,7 +272,10 @@ const AddVideo = () => {
             {/* Image Upload */}
             <TouchableOpacity
               onPress={handleUploadImage}
-              className="bg-pink-500 rounded-lg px-6 py-3 flex-row items-center justify-center"
+              disabled={selectedImage !== null}
+              className={`bg-pink-500 rounded-lg px-6 py-3 flex-row items-center justify-center ${
+                selectedImage ? "opacity-50" : ""
+              }`}
             >
               <Ionicons
                 name="image-outline"
@@ -320,28 +326,6 @@ const AddVideo = () => {
                 numberOfLines={4}
                 className="text-white text-base bg-white/5 rounded-lg px-4 py-3 mb-4"
               />
-              <View className="flex-row mb-4">
-                <TouchableOpacity
-                  onPress={() => setStatus("private")}
-                  className={`flex-1 rounded-lg py-3 mr-2 ${
-                    status === "private" ? "bg-pink-500" : "bg-white/10"
-                  }`}
-                >
-                  <Text className="text-white text-center font-semibold">
-                    Private
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setStatus("public")}
-                  className={`flex-1 rounded-lg py-3 ml-2 ${
-                    status === "public" ? "bg-pink-500" : "bg-white/10"
-                  }`}
-                >
-                  <Text className="text-white text-center font-semibold">
-                    Public
-                  </Text>
-                </TouchableOpacity>
-              </View>
               <View className="flex-row justify-end">
                 <TouchableOpacity
                   onPress={handleSubmitVideo}

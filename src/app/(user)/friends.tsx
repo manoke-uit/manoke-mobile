@@ -97,8 +97,8 @@ const FriendsTab = () => {
       setIsLoading(true);
       setHasSearched(true);
       const response = await searchUsersAPI(searchQuery.trim());
-      if (response.data.data) {
-        setSearchResults([response.data.data]);
+      if (response.data) {
+        setSearchResults([response.data]);
       } else {
         setSearchResults([]);
       }
@@ -149,9 +149,9 @@ const FriendsTab = () => {
     }
   };
 
-  const handleRemoveFriend = async (idToRemove: string) => {
+  const handleRemoveFriend = async (id: string) => {
     try {
-      await removeFriendAPI(idToRemove);
+      await removeFriendAPI(id);
       Toast.show({
         type: "success",
         text1: "Success",

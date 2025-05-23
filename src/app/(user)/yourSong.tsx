@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import VideoMoreMenu from "@/components/videoMoreMenu";
 import { router, useNavigation } from "expo-router";
-import { getAllOwnKaraokesAPI, requestPublicKaraokeAPI } from "@/utils/api";
+import { getAllOwnKaraokesAPI, requestPublicKaraokeAPI, deleteKaraokeAPI } from "@/utils/api";
 
 const YourVideos = () => {
   const [isMoreMenuVisible, setMoreMenuVisible] = useState<string | null>(null);
@@ -71,8 +71,11 @@ const YourVideos = () => {
 
   const handleRemoveKaraoke = async (karaokeId: string) => {
     try {
-      // TODO: Implement delete karaoke API call
-      Alert.alert("Info", "Delete functionality is not implemented yet");
+      const response = await deleteKaraokeAPI(karaokeId);
+      const backendRes = response as IBackendRes<IKaraoke>;
+      if (backendRes?.data) {
+        Alert.alert("Success", "Karaoke has been deleted");
+      }
     } catch (error) {
       console.error('Error removing karaoke:', error);
       Alert.alert("Error", "Failed to remove karaoke");
@@ -145,9 +148,10 @@ const YourVideos = () => {
           ) : (
             <View className="px-4">
               {karaokes.map((karaoke) => (
-                <View
+                <TouchableOpacity
                   key={karaoke.id}
                   className="flex-row items-center mb-5 border-b border-white/10 pb-4"
+                  onPress={() => router.push(`/songItem?id=${karaoke.song.id}`)}
                 >
                   <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4">
                     {karaoke.song.imageUrl && (
@@ -180,7 +184,7 @@ const YourVideos = () => {
                       color={APP_COLOR.WHITE}
                     />
                   </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           )}

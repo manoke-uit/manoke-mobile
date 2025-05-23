@@ -257,7 +257,7 @@ export const searchUsersAPI = async (email: string) => {
     throw new Error("Token not found");
   }
   const url = `/users/email`;
-  return axios.get(url, {
+  return axios.get<IBackendRes<IUser>>(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -273,7 +273,11 @@ export const createFriendRequestAPI = async (receiverId: string) => {
   const url = `/friends`;
   return axios.post<IFriend>(
     url,
-    { receiverId },
+    {
+      receiverId,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    },
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -328,12 +332,12 @@ export const getFriendRequestsAPI = async () => {
   });
 };
 
-export const removeFriendAPI = async (idToRemove: string) => {
+export const removeFriendAPI = async (id: string) => {
   const token = await AsyncStorage.getItem("accessToken");
   if (!token) {
     throw new Error("Token not found");
   }
-  const url = `/friends/${idToRemove}`;
+  const url = `/friends/${id}`;
   return axios.delete(url, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -390,6 +394,10 @@ export const getSongsInPlaylistAPI = (playlistId: string) => {
 };
 export const getKaraokesBySongId = async (songId: string) => {
   return await axios.get(`/karaokes/song/${songId}`);
+};
+
+export const deleteKaraokeAPI = async (karaokeId: string) => {
+  return await axios.delete(`/karaokes/${karaokeId}`);
 };
 
 export const getSongById = async (songId: string) => {

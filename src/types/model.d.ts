@@ -146,6 +146,7 @@ declare global {
     postId: string;
   }
   export interface IFriend {
+    id: string;
     userId_1: string;
     userId_2: string;
     status: "pending" | "accepted" | "rejected";
@@ -153,10 +154,12 @@ declare global {
     user_1: {
       id: string;
       displayName: string;
+      imageUrl?: string;
     };
     user_2: {
       id: string;
       displayName: string;
+      imageUrl?: string;
     };
   }
   export interface IPaginatedFriends {
