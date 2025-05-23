@@ -204,7 +204,7 @@ const HomeTab = () => {
 
             <View className="mb-6 mt-7">
               <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-white text-2xl font-bold">Top Songs</Text>
+                <Text className="text-white text-2xl font-bold">Songs</Text>
                 <TouchableOpacity onPress={() => router.push("/(user)/yourSong")}>
                   <Text style={tw`text-[${APP_COLOR.PINK}] font-bold text-xl`}>
                     See All

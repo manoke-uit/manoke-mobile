@@ -191,6 +191,7 @@ export const uploadScoreAudioAPI = async (
 };
 
 export const createPostAPI = async (payload: {
+  userId: string;
   description: string;
   scoreId: string;
   createdAt: string;
@@ -213,7 +214,7 @@ export const getPostsAPI = async (page: number = 1, limit: number = 10) => {
     throw new Error("Token not found");
   }
   const url = `/posts`;
-  return axios.get<IPost[]>(url, {
+  return axios.get<IPaginatedPosts>(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

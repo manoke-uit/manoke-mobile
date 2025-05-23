@@ -26,6 +26,7 @@ import {
   createCommentAPI,
   getFriendsAPI,
   getUserByIdAPI,
+  getAllScores,
 } from "@/utils/api";
 
 const CommunityTab = () => {
@@ -37,6 +38,8 @@ const CommunityTab = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [selectedScore, setSelectedScore] = useState<IScore | null>(null);
+  const [scores, setScores] = useState<IScore[]>([]);
   const navigation = useNavigation();
   const router = useRouter();
   const currentOffset = useRef(0);
@@ -50,12 +53,6 @@ const CommunityTab = () => {
   });
   const userIdRef = useRef<string | null>(null);
   const [audioModalVisible, setAudioModalVisible] = useState(false);
-
-  // Placeholder for audio files from historyTab
-  const audioFiles = [
-    { id: "1", name: "Audio 1" },
-    { id: "2", name: "Audio 2" },
-  ];
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -74,7 +71,6 @@ const CommunityTab = () => {
           return;
         }
 
-        // Lấy displayName từ API /users/{userId}
         try {
           const res = await getUserByIdAPI(userId);
           setDisplayName(res.displayName || res.data?.displayName || "");
@@ -89,12 +85,12 @@ const CommunityTab = () => {
           f.userId_1 === userId ? f.userId_2 : f.userId_1
         );
         setFriends(friendIds);
-        const postResponse = await getPostsAPI();
 
-        postResponse.forEach((post: any) => console.log("post.user.id:", post.user?.id));
-        const filteredPosts = postResponse.filter((post: IPost) => friendIds.includes(post.user.id) || post.user.id === userId);
-        console.log("Filtered posts (friends + self):", filteredPosts);
-        setPosts(filteredPosts);
+        const postResponse = await getPostsAPI();
+        setPosts(postResponse.items || []);
+
+        const scoresResponse = await getAllScores();
+        setScores(scoresResponse || []);
       } catch (error: any) {
         Toast.show({
           type: "error",
@@ -109,11 +105,11 @@ const CommunityTab = () => {
   }, []);
 
   const handleCreatePost = async () => {
-    if (!newPostContent.trim()) {
+    if (!newPostContent.trim() || !selectedScore) {
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "Post content cannot be empty.",
+        text2: "Please select an audio and write a description.",
       });
       return;
     }
@@ -130,22 +126,25 @@ const CommunityTab = () => {
         router.replace("/signin");
         return;
       }
-      const scoreId = "temp-score-id"; 
-      await createPostAPI({ description: newPostContent, scoreId, createdAt: new Date().toISOString() });
+
+      await createPostAPI({
+        userId,
+        description: newPostContent,
+        scoreId: selectedScore.id,
+        createdAt: new Date().toISOString(),
+      });
+
       Toast.show({
         type: "success",
         text1: "Success",
         text2: "Post created successfully.",
       });
+
       setNewPostContent("");
+      setSelectedScore(null);
+
       const postResponse = await getPostsAPI();
-      console.log("All posts from API after create:", postResponse);
-      console.log("Current userId:", userId);
-      // Log all post.user.id for debug
-      postResponse.forEach((post: any) => console.log("post.user.id:", post.user?.id));
-      const filteredPosts = postResponse.filter((post: IPost) => friends.includes(post.user.id) || post.user.id === userId);
-      console.log("Filtered posts after create (friends + self):", filteredPosts);
-      setPosts(filteredPosts);
+      setPosts(postResponse.items || []);
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -206,13 +205,7 @@ const CommunityTab = () => {
       });
       setNewComment((prev) => ({ ...prev, [postId]: "" }));
       const postResponse = await getPostsAPI();
-      console.log("All posts from API after comment:", postResponse);
-      console.log("Current userId:", userIdRef.current);
-      // Log all post.user.id for debug
-      postResponse.forEach((post: any) => console.log("post.user.id:", post.user?.id));
-      const filteredPosts = postResponse.filter((post: IPost) => friends.includes(post.user.id) || post.user.id === userIdRef.current);
-      console.log("Filtered posts after comment (friends + self):", filteredPosts);
-      setPosts(filteredPosts);
+      setPosts(postResponse.items || []);
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -239,10 +232,6 @@ const CommunityTab = () => {
       });
     }
     currentOffset.current = offsetY;
-  };
-
-  const handleAttachAudio = () => {
-    setAudioModalVisible(true);
   };
 
   return (
@@ -292,7 +281,6 @@ const CommunityTab = () => {
                 )}
                 <Text className="text-white font-semibold text-base">{displayName || "You"}</Text>
               </View>
-              {/* Move friends button to right */}
               <TouchableOpacity onPress={() => router.push("/friends")}
                 style={{ marginLeft: 8 }}>
                 <Ionicons
@@ -302,6 +290,23 @@ const CommunityTab = () => {
                 />
               </TouchableOpacity>
             </View>
+
+            {selectedScore && (
+              <View className="flex-row items-center bg-white/5 rounded-lg p-2 mb-3">
+                <Image
+                  source={{ uri: selectedScore.song.imageUrl }}
+                  style={{ width: 40, height: 40, borderRadius: 8 }}
+                />
+                <View className="flex-1 ml-2">
+                  <Text className="text-white font-medium">{selectedScore.song.title}</Text>
+                  <Text className="text-gray-400 text-sm">Score: {Math.round(selectedScore.finalScore * 100) / 100}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setSelectedScore(null)}>
+                  <Ionicons name="close-circle" size={24} color="#eee" />
+                </TouchableOpacity>
+              </View>
+            )}
+
             <TextInput
               placeholder="Share a song..."
               placeholderTextColor="#eee"
@@ -311,9 +316,8 @@ const CommunityTab = () => {
               multiline
             />
             <View className="flex-row justify-between">
-              {/* Attach audio button (replace old friends button position) */}
               <TouchableOpacity
-                onPress={handleAttachAudio}
+                onPress={() => setAudioModalVisible(true)}
                 className="mr-3"
               >
                 <Ionicons
@@ -324,15 +328,15 @@ const CommunityTab = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleCreatePost}
-                disabled={!newPostContent.trim() || isLoading}
-                className={`bg-pink-500 rounded-full px-5 py-2 ${!newPostContent.trim() || isLoading ? "opacity-50" : ""}`}
+                disabled={!newPostContent.trim() || !selectedScore || isLoading}
+                className={`bg-pink-500 rounded-full px-5 py-2 ${(!newPostContent.trim() || !selectedScore || isLoading) ? "opacity-50" : ""}`}
               >
                 <Text className="text-white font-semibold">Share</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Audio Modal */}
+          {/* Audio Selection Modal */}
           <Modal
             visible={audioModalVisible}
             transparent
@@ -340,24 +344,37 @@ const CommunityTab = () => {
             onRequestClose={() => setAudioModalVisible(false)}
           >
             <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
-              <View style={{ backgroundColor: "white", borderRadius: 10, padding: 20, width: 300 }}>
-                <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>Select Audio from History</Text>
-                {audioFiles.map((audio) => (
-                  <TouchableHighlight
-                    key={audio.id}
-                    underlayColor={APP_COLOR.LIGHT_PURPLE}
-                    onPress={() => {
-                      setAudioModalVisible(false);
-                      // TODO: handle attach audio logic
-                      console.log("Selected audio:", audio);
-                    }}
-                    style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: "#eee" }}
-                  >
-                    <Text>{audio.name}</Text>
-                  </TouchableHighlight>
-                ))}
-                <TouchableOpacity onPress={() => setAudioModalVisible(false)} style={{ marginTop: 10 }}>
-                  <Text style={{ color: APP_COLOR.PINK, textAlign: "center" }}>Close</Text>
+              <View style={{ backgroundColor: APP_COLOR.BLACK, borderRadius: 10, padding: 20, width: "90%", maxHeight: "80%" }}>
+                <Text style={{ color: "white", fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>Select Audio from History</Text>
+                <ScrollView>
+                  {scores.map((score) => (
+                    <TouchableHighlight
+                      key={score.id}
+                      underlayColor={APP_COLOR.LIGHT_PURPLE}
+                      onPress={() => {
+                        setSelectedScore(score);
+                        setAudioModalVisible(false);
+                      }}
+                      style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: "#333" }}
+                    >
+                      <View className="flex-row items-center">
+                        <Image
+                          source={{ uri: score.song.imageUrl }}
+                          style={{ width: 50, height: 50, borderRadius: 8 }}
+                        />
+                        <View className="flex-1 ml-3">
+                          <Text style={{ color: "white", fontWeight: "500" }}>{score.song.title}</Text>
+                          <Text style={{ color: "#999" }}>Score: {Math.round(score.finalScore * 100) / 100}</Text>
+                        </View>
+                      </View>
+                    </TouchableHighlight>
+                  ))}
+                </ScrollView>
+                <TouchableOpacity 
+                  onPress={() => setAudioModalVisible(false)}
+                  style={{ marginTop: 10, padding: 10, backgroundColor: APP_COLOR.PINK, borderRadius: 8 }}
+                >
+                  <Text style={{ color: "white", textAlign: "center", fontWeight: "500" }}>Close</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -367,32 +384,41 @@ const CommunityTab = () => {
           {isLoading ? (
             <Text className="text-white text-center">Loading...</Text>
           ) : posts.length === 0 ? (
-            <Text className="text-gray-400 text-center">No posts from friends yet.</Text>
+            <Text className="text-gray-400 text-center">No posts yet.</Text>
           ) : (
             posts.map((post) => (
               <View key={post.id} className="border-b border-white/10 p-4">
                 {/* Post Header */}
                 <View className="flex-row items-center mb-2">
-                  <Ionicons
-                    name="person-circle-outline"
-                    size={40}
-                    color="#eee"
-                    className="mr-3"
-                  />
+                  {post.user.imageUrl ? (
+                    <Image
+                      source={{ uri: post.user.imageUrl }}
+                      style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
+                    />
+                  ) : (
+                    <Ionicons
+                      name="person-circle-outline"
+                      size={40}
+                      color="#eee"
+                      style={{ marginRight: 12 }}
+                    />
+                  )}
                   <View className="flex-1">
                     <Text className="text-white font-semibold">{post.user.displayName}</Text>
                     <Text className="text-gray-400 text-sm">{post.score.song.title}</Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => setMoreMenuVisible(post.id)}
-                    className="p-2"
-                  >
-                    <MaterialCommunityIcons
-                      name="dots-horizontal"
-                      size={20}
-                      color="#eee"
-                    />
-                  </TouchableOpacity>
+                  {post.userId === userIdRef.current && (
+                    <TouchableOpacity
+                      onPress={() => setMoreMenuVisible(post.id)}
+                      className="p-2"
+                    >
+                      <MaterialCommunityIcons
+                        name="dots-horizontal"
+                        size={20}
+                        color="#eee"
+                      />
+                    </TouchableOpacity>
+                  )}
                 </View>
 
                 {/* Post Content */}

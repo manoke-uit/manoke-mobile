@@ -220,7 +220,7 @@ const SongItemScreen = () => {
               </Text>
             )}
 
-            <Text className="text-white font-bold text-2xl my-4">Queue</Text>
+            <Text className="text-white font-bold text-2xl my-4">Songs</Text>
             {songs.map((item) => (
               <TouchableOpacity
                 key={item.id}
@@ -261,13 +261,7 @@ const SongItemScreen = () => {
       <MoreMenu
         visible={isMoreMenuVisible}
         onClose={() => setMoreMenuVisible(false)}
-        onAddToQueue={() => {}}
-        onRemoveFromQueue={() => console.log("Removed from queue")}
-        onAddToFavorite={() => console.log("Added to favorite")}
-        onRemoveFromFavorite={() => {}}
         onAddToPlaylist={() => console.log("Added to playlist")}
-        isFavoriteTab={false}
-        isQueueTab={true}
       />
 
       {/* Add ScoreModal here */}

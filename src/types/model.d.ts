@@ -108,20 +108,27 @@ declare global {
   }
   export interface IPost {
     id: string;
+    userId: string;
     description: string;
     createdAt: string;
-    user: { id: string; displayName: string };
+    commentIds: string[];
+    scoreId: string;
+    user: {
+      id: string;
+      displayName: string;
+      imageUrl?: string;
+    };
     score: {
       id: string;
       audioUrl: string;
       finalScore: number;
-      song: { id: string; title: string };
+      song: {
+        id: string;
+        title: string;
+        imageUrl: string;
+      };
     };
-    comments: {
-      id: string;
-      comment: string;
-      user: { id: string; displayName: string };
-    }[];
+    comments: IComment[];
   }
   export interface IPaginatedPosts {
     items: IPost[];
