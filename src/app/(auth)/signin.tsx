@@ -16,6 +16,7 @@ import tw from "twrnc";
 import { loginAPI, getAccountAPI, printAsyncStorage } from "@/utils/api";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import GoogleLoginButton from "./loginGoogle";
 
 const { height: screenHeight } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
@@ -71,6 +72,31 @@ const SignIn = () => {
         type: "error",
         text1: "Error",
         text2: "Login failed!",
+      });
+    }
+  };
+  const handleGoogleLogin = async (token: string) => {
+    try {
+      await AsyncStorage.setItem("accessToken", token);
+      const profile = await getAccountAPI();
+      if (profile?.userId) {
+        await AsyncStorage.setItem("userId", profile.userId);
+        await AsyncStorage.setItem("userProfile", JSON.stringify(profile));
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Google login successful!",
+        });
+        router.replace("/(tabs)/home");
+      } else {
+        throw new Error("Profile fetch failed");
+      }
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Google login failed!",
       });
     }
   };
@@ -138,7 +164,9 @@ const SignIn = () => {
               </Text>
             </TouchableOpacity>
           </View>
-
+          <View className="mt-4">
+            <GoogleLoginButton onTokenReceived={handleGoogleLogin} />
+          </View>
           <View style={tw`w-full items-center mt-10`}>
             <TouchableOpacity
               style={tw`w-[80%] h-[50px] rounded-lg items-center justify-center ${
