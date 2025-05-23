@@ -73,10 +73,10 @@ export const getAllSongs = (genreId?: string, artistId?: string) => {
   return axios.get<IBackendRes<ISong[]>>("/songs", { params });
 };
 
+
 export const changePasswordAPI = (payload: {
   oldPassword: string;
   newPassword: string;
-  verifyNewPassword: string;
 }) => {
   const url = `/auth/change-password`;
   return axios.post(url, payload);
@@ -459,4 +459,32 @@ export const updateUserImageAPI = async (
   });
 
   return res.data;
+};
+
+export const createSongAPI = (formData: FormData) => {
+  return axios.post("/songs", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const createKaraokeAPI = (formData: FormData) => {
+  return axios.post("/karaokes", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const getAllOwnKaraokesAPI = () => {
+  return axios.get<IBackendRes<IKaraoke[]>>("/karaokes/own");
+};
+
+export const requestPublicKaraokeAPI = (karaokeId: string) => {
+  return axios.get<IBackendRes<IKaraoke>>(`/karaokes/public/${karaokeId}`);
+};
+
+export const createArtistAPI = (payload: ICreateArtistPayload) => {
+  return axios.post("/artists", payload);
 };

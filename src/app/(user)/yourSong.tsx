@@ -1,41 +1,83 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import VideoMoreMenu from "@/components/videoMoreMenu";
 import { router, useNavigation } from "expo-router";
-import { useVideos } from "@/app/context/videoContext";
+import { getAllOwnKaraokesAPI, requestPublicKaraokeAPI } from "@/utils/api";
 
 const YourVideos = () => {
   const [isMoreMenuVisible, setMoreMenuVisible] = useState<string | null>(null);
-  const { videos, updateVideoStatus, removeVideo } = useVideos();
+  const [karaokes, setKaraokes] = useState<IKaraoke[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
+
+  const fetchKaraokes = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllOwnKaraokesAPI();
+      const backendRes = response as IBackendRes<IKaraoke[]>;
+      if (backendRes?.data) {
+        setKaraokes(backendRes.data);
+      } else {
+        setKaraokes([]);
+      }
+    } catch (error) {
+      console.error('Error fetching karaokes:', error);
+      Alert.alert("Error", "Failed to load your karaokes");
+      setKaraokes([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchKaraokes();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
-      console.log("YourVideos focused, videos:", videos);
+      fetchKaraokes();
     });
     return unsubscribe;
-  }, [videos, navigation]);
+  }, [navigation]);
 
-  const handleToggleStatus = (
-    videoId: string,
-    currentStatus: "public" | "private"
-  ) => {
-    const newStatus = currentStatus === "public" ? "private" : "public";
-    updateVideoStatus(videoId, newStatus);
-    if (newStatus === "public") {
-      console.log(`Admin request sent for video ID: ${videoId}`);
-      // call API
+  const handleToggleStatus = async (karaokeId: string, currentStatus: "public" | "private") => {
+    try {
+      if (currentStatus === "private") {
+        // Request to make public
+        const response = await requestPublicKaraokeAPI(karaokeId);
+        const backendRes = response as IBackendRes<IKaraoke>;
+        if (backendRes?.data) {
+          Alert.alert("Success", "Request to make karaoke public has been sent");
+          // Update local state
+          setKaraokes(prev => prev.map(k => 
+            k.id === karaokeId ? { ...k, status: "public" } : k
+          ));
+        } else {
+          throw new Error("Failed to get response data");
+        }
+      } else {
+        // TODO: Implement private request if needed
+        Alert.alert("Info", "Making karaoke private is not implemented yet");
+      }
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      Alert.alert("Error", "Failed to update karaoke status");
     }
     setMoreMenuVisible(null);
   };
 
-  const handleRemoveVideo = (videoId: string) => {
-    removeVideo(videoId);
+  const handleRemoveKaraoke = async (karaokeId: string) => {
+    try {
+      // TODO: Implement delete karaoke API call
+      Alert.alert("Info", "Delete functionality is not implemented yet");
+    } catch (error) {
+      console.error('Error removing karaoke:', error);
+      Alert.alert("Error", "Failed to remove karaoke");
+    }
     setMoreMenuVisible(null);
-    console.log(`Removed video ${videoId}`);
   };
 
   return (
@@ -81,44 +123,55 @@ const YourVideos = () => {
           }}
           className="flex-1"
         >
-          {/* Video List */}
-          {videos.length === 0 ? (
+          {/* Karaoke List */}
+          {loading ? (
+            <View className="items-center mt-10">
+              <Text className="text-white text-lg">Loading...</Text>
+            </View>
+          ) : karaokes.length === 0 ? (
             <View className="items-center mt-10">
               <Text className="text-white text-lg font-semibold">
-                No song uploaded yet
+                No karaoke uploaded yet
               </Text>
               <TouchableOpacity
                 onPress={() => router.push("/addSong")}
                 className="bg-pink-500 rounded-lg px-6 py-3 mt-4"
               >
                 <Text className="text-white font-semibold text-base">
-                  Upload a Song
+                  Upload a Karaoke
                 </Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View className="px-4">
-              {videos.map((video) => (
+              {karaokes.map((karaoke) => (
                 <View
-                  key={video.id}
+                  key={karaoke.id}
                   className="flex-row items-center mb-5 border-b border-white/10 pb-4"
                 >
-                  <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4" />
+                  <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4">
+                    {karaoke.song.imageUrl && (
+                      <Image
+                        source={{ uri: karaoke.song.imageUrl }}
+                        className="w-full h-full rounded-lg"
+                      />
+                    )}
+                  </View>
                   <View className="flex-1">
                     <Text className="text-white font-bold text-base">
-                      {video.title}
+                      {karaoke.song.title}
                     </Text>
                     <Text className="text-gray-400 text-sm">
-                      {video.artist}
+                      {karaoke.song.artists?.map((artist) => artist.name).join(", ") || "Unknown Artist"}
                     </Text>
                     <Text className="text-gray-400 text-xs mt-1">
-                      {video.status === "public"
+                      {karaoke.status === "public"
                         ? "Public (Pending Admin Approval)"
                         : "Private"}
                     </Text>
                   </View>
                   <TouchableOpacity
-                    onPress={() => setMoreMenuVisible(video.id)}
+                    onPress={() => setMoreMenuVisible(karaoke.id)}
                     className="ml-2"
                   >
                     <Ionicons
@@ -133,7 +186,7 @@ const YourVideos = () => {
           )}
         </ScrollView>
 
-        {/* Video More Menu */}
+        {/* Karaoke More Menu */}
         {isMoreMenuVisible && (
           <VideoMoreMenu
             visible={!!isMoreMenuVisible}
@@ -142,7 +195,7 @@ const YourVideos = () => {
               isMoreMenuVisible === "global"
                 ? [
                     {
-                      label: "Upload New Video",
+                      label: "Upload New Karaoke",
                       onPress: () => router.push("/addSong"),
                     },
                     { label: "Cancel", onPress: () => router.back() },
@@ -150,19 +203,19 @@ const YourVideos = () => {
                 : [
                     {
                       label:
-                        videos.find((v) => v.id === isMoreMenuVisible)
+                        karaokes.find((k) => k.id === isMoreMenuVisible)
                           ?.status === "public"
                           ? "Make Private"
                           : "Make Public",
                       onPress: () =>
                         handleToggleStatus(
                           isMoreMenuVisible,
-                          videos.find((v) => v.id === isMoreMenuVisible)!.status
+                          karaokes.find((k) => k.id === isMoreMenuVisible)!.status
                         ),
                     },
                     {
-                      label: "Remove Video",
-                      onPress: () => handleRemoveVideo(isMoreMenuVisible),
+                      label: "Remove Karaoke",
+                      onPress: () => handleRemoveKaraoke(isMoreMenuVisible),
                     },
                     {
                       label: "Cancel",

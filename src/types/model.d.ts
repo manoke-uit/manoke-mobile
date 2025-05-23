@@ -44,6 +44,11 @@ declare global {
     postIds?: string[];
     commentIds?: string[];
   }
+  export interface ICreateArtistPayload {
+    name: string;
+    imageUrl: string;
+    songIds: string[];
+  }
   export interface ISong {
     id: string;
     title: string;
@@ -155,5 +160,18 @@ declare global {
     id: string;
     displayName: string;
     email: string;
+  }
+  export interface IKaraoke {
+    id: string;
+    description: string;
+    status: "public" | "private";
+    song: {
+      id: string;
+      title: string;
+      imageUrl: string;
+      artists: {
+        name: string;
+      }[];
+    };
   }
 }

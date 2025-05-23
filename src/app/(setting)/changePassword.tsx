@@ -13,7 +13,7 @@ import { APP_COLOR } from "@/utils/constant";
 import { useRouter } from "expo-router";
 import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons";
-import { getUserByIdAPI, changePasswordAPI} from "@/utils/api";
+import { changePasswordAPI} from "@/utils/api";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -109,7 +109,6 @@ const ChangePassword = () => {
       const payload = {
         oldPassword,
         newPassword,
-        verifyNewPassword,
       };
 
       await changePasswordAPI(payload);
