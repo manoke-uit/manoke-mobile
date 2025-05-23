@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  Modal,
 } from "react-native";
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import { APP_COLOR } from "@/utils/constant";
@@ -35,6 +36,8 @@ const SongItemScreen = () => {
   const [songs, setSongs] = useState<ISong[]>([]);
   const [isScoreModalVisible, setScoreModalVisible] = useState(false); 
   const [score, setScore] = useState<number>(0); 
+  const [isReadyModalVisible, setIsReadyModalVisible] = useState(true);
+  const [isVideoEnded, setIsVideoEnded] = useState(false);
 
   const videoRef = useRef<Video>(null);
 
@@ -72,8 +75,6 @@ const SongItemScreen = () => {
 
       const acc = await getAccountAPI();
       if (acc?.userId) setUserId(acc.userId);
-
-      await startRecording();
     };
 
     if (id) fetchData();
@@ -93,6 +94,7 @@ const SongItemScreen = () => {
 
       setRecording(recording);
       setIsRecording(true);
+      setIsReadyModalVisible(false);
     } catch (err) {
       Alert.alert("Error", "Unable to start recording");
     }
@@ -126,8 +128,19 @@ const SongItemScreen = () => {
   };
 
   const handleVideoStatusUpdate = (status: any) => {
-    if (status.didJustFinish && isRecording) {
-      stopRecordingAndUpload();
+    if (status.didJustFinish) {
+      setIsVideoEnded(true);
+      if (isRecording) {
+        stopRecordingAndUpload();
+      }
+    }
+  };
+
+  const handleReadyResponse = (isReady: boolean) => {
+    if (isReady) {
+      startRecording();
+    } else {
+      router.back();
     }
   };
 
@@ -138,6 +151,71 @@ const SongItemScreen = () => {
       end={{ x: 0, y: 1 }}
       style={{ flex: 1 }}
     >
+      {/* Ready Modal */}
+      <Modal
+        visible={isReadyModalVisible}
+        transparent
+        animationType="fade"
+      >
+        <View style={{ 
+          flex: 1, 
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20
+        }}>
+          <View style={{
+            backgroundColor: APP_COLOR.BLACK,
+            borderRadius: 20,
+            padding: 20,
+            width: '80%',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: APP_COLOR.PINK
+          }}>
+            <Text style={{ 
+              color: 'white', 
+              fontSize: 24, 
+              fontWeight: 'bold',
+              marginBottom: 20,
+              textAlign: 'center'
+            }}>
+              Are you ready to sing?
+            </Text>
+            <View style={{ 
+              flexDirection: 'row',
+              justifyContent: 'space-around',
+              width: '100%'
+            }}>
+              <TouchableOpacity
+                onPress={() => handleReadyResponse(false)}
+                style={{
+                  backgroundColor: APP_COLOR.PINK,
+                  paddingVertical: 10,
+                  paddingHorizontal: 30,
+                  borderRadius: 20,
+                  marginHorizontal: 10
+                }}
+              >
+                <Text style={{ color: 'white', fontWeight: 'bold' }}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleReadyResponse(true)}
+                style={{
+                  backgroundColor: APP_COLOR.PURPLE,
+                  paddingVertical: 10,
+                  paddingHorizontal: 30,
+                  borderRadius: 20,
+                  marginHorizontal: 10
+                }}
+              >
+                <Text style={{ color: 'white', fontWeight: 'bold' }}>Yes</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <View
         className="w-full flex flex-row"
         style={{ paddingVertical: 30, paddingHorizontal: 20 }}
@@ -162,7 +240,7 @@ const SongItemScreen = () => {
               source={{ uri: karaokeVideoUrl }}
               useNativeControls
               resizeMode={ResizeMode.CONTAIN}
-              shouldPlay
+              shouldPlay={!isReadyModalVisible}
               onPlaybackStatusUpdate={handleVideoStatusUpdate}
               style={{ width: "100%", height: 250 }}
             />
@@ -195,22 +273,10 @@ const SongItemScreen = () => {
             </View>
 
             <View className="flex-row justify-around mt-2">
-              {!isRecording ? (
-                <TouchableOpacity
-                  onPress={startRecording}
-                  className="bg-green-600 px-4 py-2 rounded"
-                >
-                  <Text className="text-white font-bold">🎤 Record</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  onPress={stopRecordingAndUpload}
-                  className="bg-red-600 px-4 py-2 rounded"
-                >
-                  <Text className="text-white font-bold">
-                    ⏹ Stop & Score
-                  </Text>
-                </TouchableOpacity>
+              {isRecording && (
+                <Text className="text-red-500 font-bold">
+                  Recording in progress...
+                </Text>
               )}
             </View>
 
@@ -264,7 +330,6 @@ const SongItemScreen = () => {
         onAddToPlaylist={() => console.log("Added to playlist")}
       />
 
-      {/* Add ScoreModal here */}
       <ScoreModal
         visible={isScoreModalVisible}
         title="Your Score"
