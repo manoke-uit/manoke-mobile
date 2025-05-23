@@ -198,7 +198,6 @@ const YourVideos = () => {
                       label: "Upload New Karaoke",
                       onPress: () => router.push("/addSong"),
                     },
-                    { label: "Cancel", onPress: () => router.back() },
                   ]
                 : [
                     {
@@ -216,10 +215,6 @@ const YourVideos = () => {
                     {
                       label: "Remove Karaoke",
                       onPress: () => handleRemoveKaraoke(isMoreMenuVisible),
-                    },
-                    {
-                      label: "Cancel",
-                      onPress: () => setMoreMenuVisible(null),
                     },
                   ]
             }
