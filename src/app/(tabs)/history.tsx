@@ -38,7 +38,12 @@ const HistoryTab = () => {
       style={{ flex: 1 }}
     >
       <AnimatedWrapper fade scale slideUp style={{ flex: 1 }}>
-        <ScrollView className="flex-1 px-4 pt-8">
+        <ScrollView
+          style={{ flex: 1, paddingHorizontal: 16, paddingTop: 32 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <View className="flex-row items-center bg-white/20 px-4 py-2 rounded-xl mb-6">
             <Ionicons name="search" size={20} color="white" className="mr-2" />
             <TextInput
