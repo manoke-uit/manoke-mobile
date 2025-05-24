@@ -88,6 +88,7 @@ declare global {
     userId: string;
     imageUrl: string;
     description: string;
+    isPublic: string;
     songs: string[];
   }
   export interface IPaginatedPlaylists {
