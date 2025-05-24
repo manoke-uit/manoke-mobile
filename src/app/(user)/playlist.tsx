@@ -19,7 +19,9 @@ import {
   getAccountAPI,
   getPlaylistsAPI,
   updatePlaylistAPI,
+  deletePlaylistAPI,
 } from "@/utils/api";
+import VideoMoreMenu from "@/components/videoMoreMenu";
 
 interface Playlist {
   id: string;
@@ -34,6 +36,9 @@ const PlaylistScreen = () => {
   const [playlistName, setPlaylistName] = useState("");
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
+    null
+  );
 
   const fetchUserAndPlaylists = async () => {
     try {
@@ -72,11 +77,7 @@ const PlaylistScreen = () => {
     }
 
     try {
-      await createPlaylistAPI({
-        title: playlistName,
-        userId,
-      });
-
+      await createPlaylistAPI({ title: playlistName, userId });
       setPlaylistName("");
       setModalVisible(false);
       fetchUserAndPlaylists();
@@ -105,6 +106,26 @@ const PlaylistScreen = () => {
     }
   };
 
+  const handleDeletePlaylist = async (playlistId: string) => {
+    Alert.alert("Xoá Playlist", "Bạn có chắc muốn xoá playlist này?", [
+      { text: "Huỷ", style: "cancel" },
+      {
+        text: "Xoá",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deletePlaylistAPI(playlistId);
+            setPlaylists((prev) => prev.filter((p) => p.id !== playlistId));
+            setSelectedPlaylistId(null);
+          } catch (error) {
+            console.error("Xoá playlist lỗi:", error);
+            Alert.alert("Lỗi", "Không thể xoá playlist");
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <LinearGradient
       colors={[APP_COLOR.LIGHT_PINK, APP_COLOR.BLACK]}
@@ -115,11 +136,7 @@ const PlaylistScreen = () => {
     >
       <View
         className="w-full flex flex-row justify-between items-center"
-        style={{
-          paddingVertical: 30,
-          paddingHorizontal: 20,
-          backgroundColor: "transparent",
-        }}
+        style={{ paddingVertical: 30, paddingHorizontal: 20 }}
       >
         <TouchableOpacity
           onPress={() => router.back()}
@@ -149,38 +166,40 @@ const PlaylistScreen = () => {
 
         <View className="px-4">
           {playlists.map((item) => (
-            <TouchableOpacity
+            <View
               key={item.id}
-              onPress={() => router.push(`/(user)/playlistSong?id=${item.id}`)}
               className="flex-row items-center mb-5 border-b border-white/10 pb-4"
             >
-              {item.imageUrl ? (
-                <Image
-                  source={{ uri: item.imageUrl }}
-                  className="w-16 h-16 rounded-lg mr-4"
-                  resizeMode="cover"
-                />
-              ) : (
-                <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4" />
-              )}
+              <TouchableOpacity
+                onPress={() =>
+                  router.push(`/(user)/playlistSong?id=${item.id}`)
+                }
+              >
+                {item.imageUrl ? (
+                  <Image
+                    source={{ uri: item.imageUrl }}
+                    className="w-16 h-16 rounded-lg mr-4"
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4" />
+                )}
+              </TouchableOpacity>
 
               <View className="flex-1">
                 <Text className="text-white font-bold">{item.name}</Text>
                 <Text className="text-gray-400">
                   Sum of Songs: {item.count}
                 </Text>
-                <TouchableOpacity
-                  onPress={() => handleTogglePublic(item.id, item.isPublic)}
-                  className={`mt-2 w-24 px-2 py-1 rounded-lg ${
-                    item.isPublic ? "bg-green-600" : "bg-red-600"
-                  }`}
-                >
-                  <Text className="text-white text-center text-xs">
-                    {item.isPublic ? "Public" : "Private"}
-                  </Text>
-                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setSelectedPlaylistId(item.id)}
+                className="ml-2"
+              >
+                <Ionicons name="ellipsis-vertical" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
           ))}
         </View>
       </ScrollView>
@@ -238,6 +257,33 @@ const PlaylistScreen = () => {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {selectedPlaylistId && (
+        <VideoMoreMenu
+          visible={!!selectedPlaylistId}
+          onClose={() => setSelectedPlaylistId(null)}
+          actions={[
+            {
+              label: playlists.find((p) => p.id === selectedPlaylistId)
+                ?.isPublic
+                ? "Make Private"
+                : "Make Public",
+              onPress: () => {
+                const playlist = playlists.find(
+                  (p) => p.id === selectedPlaylistId
+                );
+                if (playlist) {
+                  handleTogglePublic(playlist.id, playlist.isPublic);
+                }
+              },
+            },
+            {
+              label: "Delete Playlist",
+              onPress: () => handleDeletePlaylist(selectedPlaylistId!),
+            },
+          ]}
+        />
+      )}
     </LinearGradient>
   );
 };

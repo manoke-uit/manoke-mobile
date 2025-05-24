@@ -488,3 +488,7 @@ export const requestPublicKaraokeAPI = (karaokeId: string) => {
 export const createArtistAPI = (payload: ICreateArtistPayload) => {
   return axios.post("/artists", payload);
 };
+export const deletePlaylistAPI = async (playlistId: string) => {
+  const res = await axios.delete(`/playlists/${playlistId}`);
+  return res;
+};
