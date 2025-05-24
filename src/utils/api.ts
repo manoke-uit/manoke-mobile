@@ -73,7 +73,6 @@ export const getAllSongs = (genreId?: string, artistId?: string) => {
   return axios.get<IBackendRes<ISong[]>>("/songs", { params });
 };
 
-
 export const changePasswordAPI = (payload: {
   oldPassword: string;
   newPassword: string;
@@ -112,10 +111,10 @@ export const getPlaylistsAPI = () => {
 export const updatePlaylistAPI = (
   playlistId: string,
   payload: Partial<{
-    title: string;
-    imageUrl: string;
-    description: string;
-    songIds: string[];
+    title?: string;
+    imageUrl?: string;
+    songIds?: string[];
+    isPublic?: boolean;
   }>
 ) => {
   const url = `/playlists/${playlistId}`;
@@ -282,17 +281,24 @@ export const createFriendRequestAPI = async (receiverId: string) => {
   );
 };
 
-export const updateFriendRequestAPI = async (receiverId: string, status: "accepted" | "rejected") => {
+export const updateFriendRequestAPI = async (
+  receiverId: string,
+  status: "accepted" | "rejected"
+) => {
   const token = await AsyncStorage.getItem("accessToken");
   if (!token) {
     throw new Error("Token not found");
   }
   const url = `/friends/${receiverId}`;
-  return axios.patch<IFriend>(url, { status }, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return axios.patch<IFriend>(
+    url,
+    { status },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 };
 
 export const getFriendsAPI = async () => {

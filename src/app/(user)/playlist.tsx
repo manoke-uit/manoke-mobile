@@ -8,17 +8,25 @@ import {
   TouchableOpacity,
   Pressable,
   Alert,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import { router } from "expo-router";
-import { createPlaylistAPI, getAccountAPI, getPlaylistsAPI } from "@/utils/api";
+import {
+  createPlaylistAPI,
+  getAccountAPI,
+  getPlaylistsAPI,
+  updatePlaylistAPI,
+} from "@/utils/api";
 
 interface Playlist {
   id: string;
   name: string;
   count: number;
+  isPublic: boolean;
+  imageUrl?: string;
 }
 
 const PlaylistScreen = () => {
@@ -27,28 +35,30 @@ const PlaylistScreen = () => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchUserAndPlaylists = async () => {
-      try {
-        const userRes = await getAccountAPI();
-        setUserId(userRes.userId || null);
+  const fetchUserAndPlaylists = async () => {
+    try {
+      const userRes = await getAccountAPI();
+      setUserId(userRes.userId || null);
 
-        const res = await getPlaylistsAPI();
-        if (res) {
-          const fetched = res.map((p: any) => ({
-            id: p.id,
-            name: p.title,
-            count: p.songs?.length || 0,
-          }));
-          setPlaylists(fetched);
-        }
-      } catch (err) {
-        console.error("Init failed:", err);
+      const res = await getPlaylistsAPI();
+      if (res) {
+        const fetched = res.map((p: any) => ({
+          id: p.id,
+          name: p.title,
+          count: p.songs?.length || 0,
+          isPublic: p.isPublic,
+          imageUrl: p.imageUrl,
+        }));
+        setPlaylists(fetched);
       }
-    };
+    } catch (err) {
+      console.error("Init failed:", err);
+    }
+  };
 
+  useEffect(() => {
     fetchUserAndPlaylists();
-  }, [playlists]);
+  }, []);
 
   const handleCreatePlaylist = async () => {
     if (!playlistName.trim() || !userId) return;
@@ -69,12 +79,29 @@ const PlaylistScreen = () => {
 
       setPlaylistName("");
       setModalVisible(false);
+      fetchUserAndPlaylists();
     } catch (error: any) {
       if (error.response?.status === 409) {
         Alert.alert("Tên playlist đã tồn tại!");
       } else {
         console.error("Failed to create playlist:", error);
       }
+    }
+  };
+
+  const handleTogglePublic = async (
+    playlistId: string,
+    currentStatus: boolean
+  ) => {
+    try {
+      await updatePlaylistAPI(playlistId, { isPublic: !currentStatus });
+      setPlaylists((prev) =>
+        prev.map((p) =>
+          p.id === playlistId ? { ...p, isPublic: !p.isPublic } : p
+        )
+      );
+    } catch (err) {
+      Alert.alert("Lỗi", "Không thể cập nhật trạng thái công khai");
     }
   };
 
@@ -110,10 +137,6 @@ const PlaylistScreen = () => {
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80 }}
         className="flex-1"
       >
-        <View className="items-center mb-6">
-          <View className="w-48 h-48 bg-gray-400 rounded-xl" />
-        </View>
-
         <View className="flex-row justify-between items-center px-4 mb-10">
           <Text className="text-white text-2xl font-bold">All Playlists</Text>
           <TouchableOpacity
@@ -126,18 +149,38 @@ const PlaylistScreen = () => {
 
         <View className="px-4">
           {playlists.map((item) => (
-            <View
+            <TouchableOpacity
               key={item.id}
+              onPress={() => router.push(`/(user)/playlistSong?id=${item.id}`)}
               className="flex-row items-center mb-5 border-b border-white/10 pb-4"
             >
-              <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4" />
+              {item.imageUrl ? (
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  className="w-16 h-16 rounded-lg mr-4"
+                  resizeMode="cover"
+                />
+              ) : (
+                <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4" />
+              )}
+
               <View className="flex-1">
                 <Text className="text-white font-bold">{item.name}</Text>
                 <Text className="text-gray-400">
                   Sum of Songs: {item.count}
                 </Text>
+                <TouchableOpacity
+                  onPress={() => handleTogglePublic(item.id, item.isPublic)}
+                  className={`mt-2 w-24 px-2 py-1 rounded-lg ${
+                    item.isPublic ? "bg-green-600" : "bg-red-600"
+                  }`}
+                >
+                  <Text className="text-white text-center text-xs">
+                    {item.isPublic ? "Public" : "Private"}
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </ScrollView>

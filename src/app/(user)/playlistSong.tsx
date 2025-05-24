@@ -154,11 +154,10 @@ const PlaylistSong = () => {
         </View>
       </ScrollView>
 
-      <MoreMenu
+      {/* <MoreMenu
         visible={isMoreMenuVisible}
         onClose={() => setMoreMenuVisible(false)}
-        onAddToQueue={handleAddToQueue}
-        onRemoveFromQueue={() => {}}
+
         onAddToFavorite={handleAddToFavorite}
         onRemoveFromFavorite={() => {}}
         onAddToPlaylist={() => {}}
@@ -166,7 +165,7 @@ const PlaylistSong = () => {
         isFavoriteTab={false}
         isQueueTab={false}
         isPlaylistTab={true}
-      />
+      /> */}
     </LinearGradient>
   );
 };

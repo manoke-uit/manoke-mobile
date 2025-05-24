@@ -104,7 +104,8 @@ const HomeTab = () => {
     const fetchPlaylists = async () => {
       try {
         const res = await getPlaylistsAPI();
-        setPlaylists(res || []);
+        const publicPlaylists = (res || []).filter((p: any) => p.isPublic);
+        setPlaylists(publicPlaylists);
       } catch (error: any) {
         Toast.show({
           type: "error",
@@ -153,7 +154,9 @@ const HomeTab = () => {
             <View className="mb-6 pt-8">
               <View className="flex-row justify-between items-center mb-3">
                 <Text className="text-white text-2xl font-bold">Playlists</Text>
-                <TouchableOpacity onPress={() => router.push("/playlist")}>
+                <TouchableOpacity
+                  onPress={() => router.push("/(user)/publicPlaylists")}
+                >
                   <Text style={tw`text-[${APP_COLOR.PINK}] font-bold text-xl`}>
                     See All
                   </Text>
@@ -205,7 +208,9 @@ const HomeTab = () => {
             <View className="mb-6 mt-7">
               <View className="flex-row justify-between items-center mb-3">
                 <Text className="text-white text-2xl font-bold">Songs</Text>
-                <TouchableOpacity onPress={() => router.push("/(user)/yourSong")}>
+                <TouchableOpacity
+                  onPress={() => router.push("/(user)/yourSong")}
+                >
                   <Text style={tw`text-[${APP_COLOR.PINK}] font-bold text-xl`}>
                     See All
                   </Text>
