@@ -121,7 +121,7 @@ const SongItemScreen = () => {
       setScore(roundedScore); 
       setScoreModalVisible(true); 
     } catch (err) {
-      console.error("Upload audio failed:", err);
+      // console.error("Upload audio failed:", err);
       setIsUploading(false);
       Alert.alert("Error", "Unable to calculate score");
     }

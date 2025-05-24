@@ -57,7 +57,7 @@ const PlaylistScreen = () => {
         setPlaylists(fetched);
       }
     } catch (err) {
-      console.error("Init failed:", err);
+      // console.error("Init failed:", err);
     }
   };
 
@@ -85,7 +85,7 @@ const PlaylistScreen = () => {
       if (error.response?.status === 409) {
         Alert.alert("Tên playlist đã tồn tại!");
       } else {
-        console.error("Failed to create playlist:", error);
+        // console.error("Failed to create playlist:", error);
       }
     }
   };
@@ -118,7 +118,7 @@ const PlaylistScreen = () => {
             setPlaylists((prev) => prev.filter((p) => p.id !== playlistId));
             setSelectedPlaylistId(null);
           } catch (error) {
-            console.error("Xoá playlist lỗi:", error);
+            // console.error("Xoá playlist lỗi:", error);
             Alert.alert("Lỗi", "Không thể xoá playlist");
           }
         },

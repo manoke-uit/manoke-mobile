@@ -84,23 +84,22 @@ const NewPassword = () => {
         throw new Error("No response message from server.");
       }
     } catch (error: any) {
-      console.error("Error detail ", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      let errorMessage = "Error occurred. Please try again.";
-      if (error.response?.status === 400) {
-        errorMessage = "Token is invalid or has expired.";
-      } else if (error.response?.status === 500) {
-        errorMessage = "Error occurred on the server. Please try again later.";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
+      // console.error("Error detail ", {
+      //   message: error.message,
+      //   status: error.response?.status,
+      //   data: error.response?.data,
+      // });
+      // let errorMessage = "Error occurred. Please try again.";
+      // if (error.response?.status === 400) {
+      //   errorMessage = "Token is invalid or has expired.";
+      // } else if (error.response?.status === 500) {
+      //   errorMessage = "Error occurred on the server. Please try again later.";
+      // } else if (error.response?.data?.message) {
+      //   errorMessage = error.response.data.message;
+      // }
       Toast.show({
         type: "error",
         text1: "error",
-        text2: errorMessage,
       });
     } finally {
       setIsLoading(false);

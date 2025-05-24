@@ -84,10 +84,10 @@ const ForgotPassword = () => {
         throw new Error("Failed to send forgot password email.");
       }
     } catch (error: any) {
-        // console.error("Error detail ", {
-        // message: error.message,
-        // status: error.response?.status,
-        // data: error.response?.data,
+      //   console.error("Error detail ", {
+      //   message: error.message,
+      //   status: error.response?.status,
+      //   data: error.response?.data,
       // });
       // let errorMessage = "Error occurred. Please try again.";
       // if (error.response?.status === 404) {

@@ -44,7 +44,7 @@ const AccountPage = () => {
         setDisplayName(res.displayName || res.data?.displayName || null);
         setUserInfo(res);
       } catch (error) {
-        console.log("Error loading user info:", error);
+        // console.log("Error loading user info:", error);
         Toast.show({
           type: "error",
           text1: "Error",

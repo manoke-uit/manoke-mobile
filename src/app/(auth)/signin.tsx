@@ -67,7 +67,7 @@ const SignIn = () => {
         );
       }
     } catch (error) {
-      console.error("Login error: ", error);
+      // console.error("Login error: ", error);
       Toast.show({
         type: "error",
         text1: "Error",
@@ -92,7 +92,7 @@ const SignIn = () => {
         throw new Error("Profile fetch failed");
       }
     } catch (error) {
-      console.error("Google Login Error:", error);
+      // console.error("Google Login Error:", error);
       Toast.show({
         type: "error",
         text1: "Error",

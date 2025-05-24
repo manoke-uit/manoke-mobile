@@ -25,7 +25,7 @@ const HistoryTab = () => {
       const res = await getAllScores();
       setScores(res ?? []);
     } catch (error) {
-      console.error("Failed to fetch scores:", error);
+      // console.error("Failed to fetch scores:", error);
     }
   };
 

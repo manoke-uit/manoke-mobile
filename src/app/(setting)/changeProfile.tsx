@@ -45,7 +45,7 @@ const ChangeProfile = () => {
           Toast.show({ type: "error", text1: "User ID not found" });
         }
       } catch (err) {
-        console.error("Error fetching user:", err);
+        // console.error("Error fetching user:", err);
         Toast.show({ type: "error", text1: "Failed to load user data" });
       }
     };
@@ -111,7 +111,7 @@ const ChangeProfile = () => {
 
       Toast.show({ type: "success", text1: "Avatar updated successfully" });
     } catch (err) {
-      console.error("Upload error:", err);
+      // console.error("Upload error:", err);
       Toast.show({ type: "error", text1: "Failed to update avatar" });
     }
   };

@@ -67,27 +67,6 @@ const ProfileTab = () => {
 
           {/* Tabs */}
           <View style={{ gap: 8, marginTop: 45  }}>
-            <MotiPressable
-              from={{ scale: 1 }}
-              animate={({ pressed }) => ({ scale: pressed ? 0.95 : 1 })}
-              transition={{ type: "timing", duration: 150 }}
-              onPress={() => router.push("/record")}
-              style={{
-                backgroundColor: "#171717",
-                paddingHorizontal: 16,
-                paddingVertical: 16,
-                borderRadius: 12,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons name="mic-outline" size={20} color="white" />
-                <Text style={{ color: "white", marginLeft: 12 }}>Your Recordings</Text>
-              </View>
-              <Feather name="chevron-right" size={20} color="white" />
-            </MotiPressable>
 
             <MotiPressable
               from={{ scale: 1 }}

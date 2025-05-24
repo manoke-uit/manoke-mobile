@@ -38,7 +38,7 @@ const PublicPlaylists = () => {
       setMyPlaylists(mine);
     } catch (error) {
       Alert.alert("Lỗi", "Không thể tải danh sách playlist");
-      console.error(error);
+      // console.error(error);
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ const PublicPlaylists = () => {
       Alert.alert("Thành công", "Playlist đã được clone về tài khoản của bạn.");
     } catch (error) {
       Alert.alert("Lỗi", "Không thể clone playlist");
-      console.error(error);
+      // console.error(error);
     }
   };
 

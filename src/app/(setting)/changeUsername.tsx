@@ -39,7 +39,7 @@ const ChangeUsername = () => {
         setDisplayName(user.displayName || "");
         setUsername(user.displayName || "");
       } catch (err) {
-        console.error("Fetch user failed:", err);
+        // console.error("Fetch user failed:", err);
         Toast.show({ type: "error", text1: "Failed to load user" });
       }
     };
@@ -71,7 +71,7 @@ const ChangeUsername = () => {
       Toast.show({ type: "success", text1: "Username updated" });
       router.replace("/account");
     } catch (err) {
-      console.error("Update error:", err);
+      // console.error("Update error:", err);
       Toast.show({ type: "error", text1: "Update failed" });
     }
   };

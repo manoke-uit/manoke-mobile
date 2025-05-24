@@ -42,7 +42,7 @@ instance.interceptors.response.use(
     return response;
   },
   async function (error) {
-    console.error("Response Error:", error);
+    // console.error("Response Error:", error);
 
     const currentPath =
       typeof window !== "undefined" ? window.location.pathname : "";

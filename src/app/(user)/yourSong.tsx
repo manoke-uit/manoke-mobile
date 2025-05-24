@@ -24,7 +24,7 @@ const YourVideos = () => {
         setKaraokes([]);
       }
     } catch (error) {
-      console.error('Error fetching karaokes:', error);
+      // console.error('Error fetching karaokes:', error);
       Alert.alert("Error", "Failed to load your karaokes");
       setKaraokes([]);
     } finally {
@@ -63,7 +63,7 @@ const YourVideos = () => {
         Alert.alert("Info", "Making karaoke private is not implemented yet");
       }
     } catch (error) {
-      console.error('Error toggling status:', error);
+      // console.error('Error toggling status:', error);
       Alert.alert("Error", "Failed to update karaoke status");
     }
     setMoreMenuVisible(null);
@@ -77,7 +77,7 @@ const YourVideos = () => {
         Alert.alert("Success", "Karaoke has been deleted");
       }
     } catch (error) {
-      console.error('Error removing karaoke:', error);
+      // console.error('Error removing karaoke:', error);
       Alert.alert("Error", "Failed to remove karaoke");
     }
     setMoreMenuVisible(null);

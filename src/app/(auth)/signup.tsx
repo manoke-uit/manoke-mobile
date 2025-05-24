@@ -80,30 +80,29 @@ const SignUp = () => {
         params: { email, type: "signup" },
       });
     } catch (error: any) {
-      console.error("Error detail", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        headers: error.response?.headers,
-      });
-      let errorMessage = "Email already exists. Please try again.";
-      if (error.response?.status === 500) {
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: errorMessage,
-        });
-      } else if (error.response?.status === 403) {
-        errorMessage =
-          error.response?.data?.message ||
-          "Registration failed. Please try again.";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
+      // console.error("Error detail", {
+      //   message: error.message,
+      //   status: error.response?.status,
+      //   data: error.response?.data,
+      //   headers: error.response?.headers,
+      // });
+      // let errorMessage = "Email already exists. Please try again.";
+      // if (error.response?.status === 500) {
+      //   Toast.show({
+      //     type: "error",
+      //     text1: "Error",
+      //     text2: errorMessage,
+      //   });
+      // } else if (error.response?.status === 403) {
+      //   errorMessage =
+      //     error.response?.data?.message ||
+      //     "Registration failed. Please try again.";
+      // } else if (error.response?.data?.message) {
+      //   errorMessage = error.response.data.message;
+      // }
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: errorMessage,
       });
     } finally {
       setIsLoading(false);

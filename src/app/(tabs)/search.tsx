@@ -59,7 +59,7 @@ const SearchTab = () => {
         const res = await getAllSongs();
         setAllSongs(res.data ?? []);
       } catch (err) {
-        console.error("Lỗi tải danh sách bài hát:", err);
+        // console.error("Lỗi tải danh sách bài hát:", err);
       }
     };
     fetchSongs();
@@ -106,7 +106,7 @@ const SearchTab = () => {
       setPlaylistPickerVisible(false);
       setMoreMenuVisible(false);
     } catch (err) {
-      console.error("Thêm bài hát vào playlist lỗi:", err);
+      // console.error("Thêm bài hát vào playlist lỗi:", err);
     }
   };
 
@@ -174,8 +174,6 @@ const SearchTab = () => {
         <MoreMenu
           visible={isMoreMenuVisible}
           onClose={() => setMoreMenuVisible(false)}
-          onAddToQueue={() => {}}
-          onAddToFavorite={() => {}}
           onAddToPlaylist={handleAddToPlaylist}
         />
       </LinearGradient>

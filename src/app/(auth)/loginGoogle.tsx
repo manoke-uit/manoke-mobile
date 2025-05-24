@@ -27,10 +27,10 @@ export default function GoogleLoginButton({
       if (token) {
         onTokenReceived(token);
       } else {
-        console.warn("Không tìm thấy token trong URL.");
+        // console.warn("Không tìm thấy token trong URL.");
       }
     } else {
-      console.warn("Đăng nhập bị huỷ.");
+      // console.warn("Đăng nhập bị huỷ.");
     }
   };
 

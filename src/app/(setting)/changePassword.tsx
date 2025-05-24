@@ -39,7 +39,7 @@ const ChangePassword = () => {
         }
         setUserId(id);
       } catch (err) {
-        console.error("Error fetching user ID:", err);
+        // console.error("Error fetching user ID:", err);
         Toast.show({ type: "error", text1: "Failed to load user data" });
       }
     };
@@ -115,7 +115,7 @@ const ChangePassword = () => {
       Toast.show({ type: "success", text1: "Password changed successfully!" });
       router.replace("/account");
     } catch (err) {
-      console.error("Update error:", err);
+      // console.error("Update error:", err);
       Toast.show({
         type: "error",
         text1: "Change failed",
