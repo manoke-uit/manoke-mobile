@@ -193,7 +193,6 @@ export const createPostAPI = async (payload: {
   userId: string;
   description: string;
   scoreId: string;
-  createdAt: string;
 }) => {
   const token = await AsyncStorage.getItem("accessToken");
   if (!token) {
@@ -214,9 +213,6 @@ export const getPostsAPI = async (page: number = 1, limit: number = 10) => {
   }
   const url = `/posts`;
   return axios.get<IPaginatedPosts>(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     params: { page, limit },
   });
 };
