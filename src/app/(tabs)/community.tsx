@@ -87,6 +87,7 @@ const CommunityTab = () => {
         setFriends(friendIds);
 
         const postResponse = await getPostsAPI();
+
         setPosts(postResponse.items || []);
 
         const scoresResponse = await getAllScores();
@@ -131,7 +132,6 @@ const CommunityTab = () => {
         userId,
         description: newPostContent,
         scoreId: selectedScore.id,
-        createdAt: new Date().toISOString(),
       });
 
       Toast.show({
@@ -270,7 +270,15 @@ const CommunityTab = () => {
             <View className="flex-row items-center mb-3 justify-between">
               <View className="flex-row items-center">
                 {imageUrl ? (
-                  <Image source={{ uri: imageUrl }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }} />
+                  <Image
+                    source={{ uri: imageUrl }}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      marginRight: 12,
+                    }}
+                  />
                 ) : (
                   <Ionicons
                     name="person-circle-outline"
@@ -279,10 +287,14 @@ const CommunityTab = () => {
                     style={{ marginRight: 12 }}
                   />
                 )}
-                <Text className="text-white font-semibold text-base">{displayName || "You"}</Text>
+                <Text className="text-white font-semibold text-base">
+                  {displayName || "You"}
+                </Text>
               </View>
-              <TouchableOpacity onPress={() => router.push("/friends")}
-                style={{ marginLeft: 8 }}>
+              <TouchableOpacity
+                onPress={() => router.push("/friends")}
+                style={{ marginLeft: 8 }}
+              >
                 <Ionicons
                   name="people-outline"
                   size={28}
@@ -298,8 +310,12 @@ const CommunityTab = () => {
                   style={{ width: 40, height: 40, borderRadius: 8 }}
                 />
                 <View className="flex-1 ml-2">
-                  <Text className="text-white font-medium">{selectedScore.song.title}</Text>
-                  <Text className="text-gray-400 text-sm">Score: {Math.round(selectedScore.finalScore * 100) / 100}</Text>
+                  <Text className="text-white font-medium">
+                    {selectedScore.song.title}
+                  </Text>
+                  <Text className="text-gray-400 text-sm">
+                    Score: {Math.round(selectedScore.finalScore * 100) / 100}
+                  </Text>
                 </View>
                 <TouchableOpacity onPress={() => setSelectedScore(null)}>
                   <Ionicons name="close-circle" size={24} color="#eee" />
@@ -329,7 +345,11 @@ const CommunityTab = () => {
               <TouchableOpacity
                 onPress={handleCreatePost}
                 disabled={!newPostContent.trim() || !selectedScore || isLoading}
-                className={`bg-pink-500 rounded-full px-5 py-2 ${(!newPostContent.trim() || !selectedScore || isLoading) ? "opacity-50" : ""}`}
+                className={`bg-pink-500 rounded-full px-5 py-2 ${
+                  !newPostContent.trim() || !selectedScore || isLoading
+                    ? "opacity-50"
+                    : ""
+                }`}
               >
                 <Text className="text-white font-semibold">Share</Text>
               </TouchableOpacity>
@@ -343,9 +363,33 @@ const CommunityTab = () => {
             animationType="slide"
             onRequestClose={() => setAudioModalVisible(false)}
           >
-            <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
-              <View style={{ backgroundColor: APP_COLOR.BLACK, borderRadius: 10, padding: 20, width: "90%", maxHeight: "80%" }}>
-                <Text style={{ color: "white", fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>Select Audio from History</Text>
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: "rgba(0,0,0,0.5)",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: APP_COLOR.BLACK,
+                  borderRadius: 10,
+                  padding: 20,
+                  width: "90%",
+                  maxHeight: "80%",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontWeight: "bold",
+                    fontSize: 18,
+                    marginBottom: 10,
+                  }}
+                >
+                  Select Audio from History
+                </Text>
                 <ScrollView>
                   {scores.map((score) => (
                     <TouchableHighlight
@@ -355,7 +399,11 @@ const CommunityTab = () => {
                         setSelectedScore(score);
                         setAudioModalVisible(false);
                       }}
-                      style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: "#333" }}
+                      style={{
+                        padding: 10,
+                        borderBottomWidth: 1,
+                        borderBottomColor: "#333",
+                      }}
                     >
                       <View className="flex-row items-center">
                         <Image
@@ -363,18 +411,35 @@ const CommunityTab = () => {
                           style={{ width: 50, height: 50, borderRadius: 8 }}
                         />
                         <View className="flex-1 ml-3">
-                          <Text style={{ color: "white", fontWeight: "500" }}>{score.song.title}</Text>
-                          <Text style={{ color: "#999" }}>Score: {Math.round(score.finalScore * 100) / 100}</Text>
+                          <Text style={{ color: "white", fontWeight: "500" }}>
+                            {score.song.title}
+                          </Text>
+                          <Text style={{ color: "#999" }}>
+                            Score: {Math.round(score.finalScore * 100) / 100}
+                          </Text>
                         </View>
                       </View>
                     </TouchableHighlight>
                   ))}
                 </ScrollView>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setAudioModalVisible(false)}
-                  style={{ marginTop: 10, padding: 10, backgroundColor: APP_COLOR.PINK, borderRadius: 8 }}
+                  style={{
+                    marginTop: 10,
+                    padding: 10,
+                    backgroundColor: APP_COLOR.PINK,
+                    borderRadius: 8,
+                  }}
                 >
-                  <Text style={{ color: "white", textAlign: "center", fontWeight: "500" }}>Close</Text>
+                  <Text
+                    style={{
+                      color: "white",
+                      textAlign: "center",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Close
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -393,7 +458,12 @@ const CommunityTab = () => {
                   {post.user.imageUrl ? (
                     <Image
                       source={{ uri: post.user.imageUrl }}
-                      style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        marginRight: 12,
+                      }}
                     />
                   ) : (
                     <Ionicons
@@ -404,8 +474,12 @@ const CommunityTab = () => {
                     />
                   )}
                   <View className="flex-1">
-                    <Text className="text-white font-semibold">{post.user.displayName}</Text>
-                    <Text className="text-gray-400 text-sm">{post.score.song.title}</Text>
+                    <Text className="text-white font-semibold">
+                      {post.user.displayName}
+                    </Text>
+                    <Text className="text-gray-400 text-sm">
+                      {post.score.song.title}
+                    </Text>
                   </View>
                   {post.userId === userIdRef.current && (
                     <TouchableOpacity
@@ -422,7 +496,9 @@ const CommunityTab = () => {
                 </View>
 
                 {/* Post Content */}
-                <Text className="text-white text-base mb-3">{post.description}</Text>
+                <Text className="text-white text-base mb-3">
+                  {post.description}
+                </Text>
 
                 {/* Post Actions */}
                 <View className="flex-row items-center mb-3">
@@ -433,13 +509,18 @@ const CommunityTab = () => {
                       color="#eee"
                       className="mr-1"
                     />
-                    <Text className="text-gray-400">{post.comments.length}</Text>
+                    <Text className="text-gray-400">
+                      {post.comments.length}
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
                 {/* Comments Section */}
                 {post.comments.map((comment) => (
-                  <View key={comment.id} className="ml-2 mb-2 flex-row items-center">
+                  <View
+                    key={comment.id}
+                    className="ml-2 mb-2 flex-row items-center"
+                  >
                     <Ionicons
                       name="person-circle-outline"
                       size={24}
@@ -447,8 +528,12 @@ const CommunityTab = () => {
                       className="mr-2"
                     />
                     <View>
-                      <Text className="text-white font-semibold text-sm">{comment.user.displayName}</Text>
-                      <Text className="text-gray-400 text-sm">{comment.comment}</Text>
+                      <Text className="text-white font-semibold text-sm">
+                        {comment.user.displayName}
+                      </Text>
+                      <Text className="text-gray-400 text-sm">
+                        {comment.comment}
+                      </Text>
                     </View>
                   </View>
                 ))}
@@ -472,7 +557,9 @@ const CommunityTab = () => {
                     <Ionicons
                       name="send-sharp"
                       size={24}
-                      color={newComment[post.id]?.trim() ? "#f9a8d4" : "#9ca3af"}
+                      color={
+                        newComment[post.id]?.trim() ? "#f9a8d4" : "#9ca3af"
+                      }
                       style={{ transform: [{ rotate: "-45deg" }] }}
                     />
                   </TouchableOpacity>
