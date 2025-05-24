@@ -84,23 +84,22 @@ const ForgotPassword = () => {
         throw new Error("Failed to send forgot password email.");
       }
     } catch (error: any) {
-      console.error("Error detail ", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      let errorMessage = "Error occurred. Please try again.";
-      if (error.response?.status === 404) {
-        errorMessage = "Email not found. Please check and try again.";
-      } else if (error.response?.status === 500) {
-        errorMessage = "Server error. Please try again later.";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
+        // console.error("Error detail ", {
+        // message: error.message,
+        // status: error.response?.status,
+        // data: error.response?.data,
+      // });
+      // let errorMessage = "Error occurred. Please try again.";
+      // if (error.response?.status === 404) {
+      //   errorMessage = "Email not found. Please check and try again.";
+      // } else if (error.response?.status === 500) {
+      //   errorMessage = "Server error. Please try again later.";
+      // } else if (error.response?.data?.message) {
+      //   errorMessage = error.response.data.message;
+      // }
       Toast.show({
         type: "error",
         text1: "error",
-        text2: errorMessage,
       });
     } finally {
       setIsLoading(false);

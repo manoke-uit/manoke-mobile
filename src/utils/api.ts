@@ -213,7 +213,32 @@ export const getPostsAPI = async (page: number = 1, limit: number = 10) => {
   }
   const url = `/posts`;
   return axios.get<IPaginatedPosts>(url, {
-    params: { page, limit },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    params: { page, limit }
+  });
+};
+
+export const createCommentAPI = async (payload: {
+  comment: string;
+  postId: string;
+}) => {
+  const url = `/comments`;
+  return axios.post<IBackendRes<IComment>>(url, payload);
+};
+
+export const getCommentsByPostAPI = async (postId: string) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/comments`;
+  return axios.get<IBackendRes<IComment[]>>(url, {
+    params: { postId },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 };
 
@@ -224,22 +249,6 @@ export const deletePostAPI = async (postId: string) => {
   }
   const url = `/posts/${postId}`;
   return axios.delete(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-};
-
-export const createCommentAPI = async (payload: {
-  comment: string;
-  postId: string;
-}) => {
-  const token = await AsyncStorage.getItem("accessToken");
-  if (!token) {
-    throw new Error("Token not found");
-  }
-  const url = `/comments`;
-  return axios.post<IComment>(url, payload, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

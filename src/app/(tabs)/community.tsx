@@ -27,6 +27,7 @@ import {
   getFriendsAPI,
   getUserByIdAPI,
   getAllScores,
+  getCommentsByPostAPI,
 } from "@/utils/api";
 
 const CommunityTab = () => {
@@ -70,7 +71,7 @@ const CommunityTab = () => {
           router.replace("/signin");
           return;
         }
-
+  
         try {
           const res = await getUserByIdAPI(userId);
           setDisplayName(res.displayName || res.data?.displayName || "");
@@ -79,17 +80,25 @@ const CommunityTab = () => {
           setDisplayName("");
           setImageUrl(null);
         }
-
+  
         const friendResponse = await getFriendsAPI();
         const friendIds = friendResponse.map((f: any) =>
           f.userId_1 === userId ? f.userId_2 : f.userId_1
         );
         setFriends(friendIds);
-
+  
         const postResponse = await getPostsAPI();
-
-        setPosts(postResponse.items || []);
-
+        console.log('Posts API Response:', postResponse);
+        if (Array.isArray(postResponse)) {
+          console.log('Setting posts with array data:', postResponse);
+          setPosts(postResponse);
+        } else if (postResponse.items) {
+          console.log('Setting posts with data property:', postResponse.items);
+          setPosts(postResponse.items);
+        } else {
+          console.log('No valid data in postResponse');
+        }
+  
         const scoresResponse = await getAllScores();
         setScores(scoresResponse || []);
       } catch (error: any) {
@@ -144,7 +153,13 @@ const CommunityTab = () => {
       setSelectedScore(null);
 
       const postResponse = await getPostsAPI();
-      setPosts(postResponse.items || []);
+      console.log('Posts after comment:', postResponse);
+
+      if (Array.isArray(postResponse)) {
+        setPosts(postResponse);
+      } else if (postResponse.items) {
+        setPosts(postResponse.items);
+      }
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -197,6 +212,8 @@ const CommunityTab = () => {
         router.replace("/signin");
         return;
       }
+
+      // Create comment
       await createCommentAPI({ comment: commentText, postId });
       Toast.show({
         type: "success",
@@ -204,9 +221,19 @@ const CommunityTab = () => {
         text2: "Comment added successfully.",
       });
       setNewComment((prev) => ({ ...prev, [postId]: "" }));
+      
+      // Fetch updated posts with comments
       const postResponse = await getPostsAPI();
-      setPosts(postResponse.items || []);
+      console.log('Posts after comment:', JSON.stringify(postResponse, null, 2));
+      
+      // Update posts state
+      if (Array.isArray(postResponse)) {
+        setPosts(postResponse);
+      } else if (postResponse.items) {
+        setPosts(postResponse.items);
+      }
     } catch (error: any) {
+      console.error('Error adding comment:', error);
       Toast.show({
         type: "error",
         text1: "Error",
@@ -478,7 +505,7 @@ const CommunityTab = () => {
                       {post.user.displayName}
                     </Text>
                     <Text className="text-gray-400 text-sm">
-                      {post.score.song.title}
+                      Score: {Math.round(post.score.finalScore * 100) / 100}
                     </Text>
                   </View>
                   {post.userId === userIdRef.current && (
@@ -510,33 +537,37 @@ const CommunityTab = () => {
                       className="mr-1"
                     />
                     <Text className="text-gray-400">
-                      {post.comments.length}
+                      {post.comments?.length || 0}
                     </Text>
                   </TouchableOpacity>
                 </View>
 
                 {/* Comments Section */}
-                {post.comments.map((comment) => (
-                  <View
-                    key={comment.id}
-                    className="ml-2 mb-2 flex-row items-center"
-                  >
-                    <Ionicons
-                      name="person-circle-outline"
-                      size={24}
-                      color="#eee"
-                      className="mr-2"
-                    />
-                    <View>
-                      <Text className="text-white font-semibold text-sm">
-                        {comment.user.displayName}
-                      </Text>
-                      <Text className="text-gray-400 text-sm">
-                        {comment.comment}
-                      </Text>
-                    </View>
+                {post.comments && post.comments.length > 0 && (
+                  <View className="mt-2">
+                    {post.comments.map((comment) => (
+                      <View
+                        key={comment.id}
+                        className="ml-2 mb-2 flex-row items-center"
+                      >
+                        <Ionicons
+                          name="person-circle-outline"
+                          size={24}
+                          color="#eee"
+                          className="mr-2"
+                        />
+                        <View>
+                          <Text className="text-white font-semibold text-sm">
+                            {comment.user.displayName}
+                          </Text>
+                          <Text className="text-gray-400 text-sm">
+                            {comment.comment}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
                   </View>
-                ))}
+                )}
 
                 {/* Comment Input */}
                 <View className="flex-row items-center mt-2">

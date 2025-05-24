@@ -112,8 +112,8 @@ declare global {
     userId: string;
     description: string;
     createdAt: string;
-    commentIds: string[];
     scoreId: string;
+    commentIds: string[];
     user: {
       id: string;
       displayName: string;
@@ -129,7 +129,16 @@ declare global {
         imageUrl: string;
       };
     };
-    comments: IComment[];
+    comments:{
+      id: string;
+      comment: string;
+      createdAt: string;
+      user: {
+        id: string;
+        displayName: string;
+        imageUrl?: string;
+      };
+    }[];
   }
   export interface IPaginatedPosts {
     items: IPost[];
