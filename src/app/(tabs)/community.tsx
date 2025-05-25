@@ -28,12 +28,15 @@ import {
   getUserByIdAPI,
   getAllScores,
   getCommentsByPostAPI,
+  deleteCommentAPI,
 } from "@/utils/api";
+import { Audio } from 'expo-av';
 
 const CommunityTab = () => {
   const [posts, setPosts] = useState<IPost[]>([]);
   const [friends, setFriends] = useState<string[]>([]);
   const [isMoreMenuVisible, setMoreMenuVisible] = useState<string | null>(null);
+  const [commentMenuVisible, setCommentMenuVisible] = useState<string | null>(null);
   const [newComment, setNewComment] = useState<{ [key: string]: string }>({});
   const [newPostContent, setNewPostContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +44,7 @@ const CommunityTab = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [selectedScore, setSelectedScore] = useState<IScore | null>(null);
   const [scores, setScores] = useState<IScore[]>([]);
+  const [expandedComments, setExpandedComments] = useState<{ [key: string]: boolean }>({});
   const navigation = useNavigation();
   const router = useRouter();
   const currentOffset = useRef(0);
@@ -54,6 +58,9 @@ const CommunityTab = () => {
   });
   const userIdRef = useRef<string | null>(null);
   const [audioModalVisible, setAudioModalVisible] = useState(false);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState<{ [key: string]: boolean }>({});
+  const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -113,6 +120,14 @@ const CommunityTab = () => {
     };
     loadInitialData();
   }, []);
+
+  useEffect(() => {
+    return sound
+      ? () => {
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
 
   const handleCreatePost = async () => {
     if (!newPostContent.trim() || !selectedScore) {
@@ -245,6 +260,36 @@ const CommunityTab = () => {
     }
   };
 
+  const handleDeleteComment = async (commentId: string, postId: string) => {
+    try {
+      await deleteCommentAPI(commentId);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Comment deleted successfully.",
+      });
+      
+      // Update posts state to remove the deleted comment
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: post.comments.filter(comment => comment.id !== commentId)
+          };
+        }
+        return post;
+      }));
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to delete comment.",
+      });
+    } finally {
+      setCommentMenuVisible(null);
+    }
+  };
+
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     const diff = offsetY - currentOffset.current;
@@ -262,6 +307,56 @@ const CommunityTab = () => {
       });
     }
     currentOffset.current = offsetY;
+  };
+
+  const playSound = async (audioUrl: string, postId: string) => {
+    try {
+      // Stop current playing audio if any
+      if (sound) {
+        try {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+        } catch (error) {
+          console.log('Error stopping previous sound:', error);
+        }
+      }
+
+      // If clicking the same post, toggle play/pause
+      if (currentPlayingId === postId && isPlaying[postId]) {
+        try {
+          await sound?.pauseAsync();
+          setIsPlaying(prev => ({ ...prev, [postId]: false }));
+        } catch (error) {
+          console.log('Error pausing sound:', error);
+        }
+        return;
+      }
+
+      // Load and play new audio
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: true },
+        (status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            setIsPlaying(prev => ({ ...prev, [postId]: false }));
+            setCurrentPlayingId(null);
+          }
+        }
+      );
+      setSound(newSound);
+      setCurrentPlayingId(postId);
+      setIsPlaying(prev => ({ ...prev, [postId]: true }));
+
+    } catch (error) {
+      console.error('Error playing sound:', error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to play audio. Please try again.",
+      });
+      setIsPlaying(prev => ({ ...prev, [postId]: false }));
+      setCurrentPlayingId(null);
+    }
   };
 
   return (
@@ -530,6 +625,32 @@ const CommunityTab = () => {
                   {post.description}
                 </Text>
 
+                {/* Audio Player */}
+                <View className="flex-row items-center bg-white/10 rounded-lg p-3 mb-3">
+                  <Image
+                    source={{ uri: post.score.song.imageUrl }}
+                    style={{ width: 40, height: 40, borderRadius: 8 }}
+                  />
+                  <View className="flex-1 ml-3">
+                    <Text className="text-white font-medium">
+                      {post.score.song.title}
+                    </Text>
+                    <Text className="text-gray-400 text-sm">
+                      Score: {Math.round(post.score.finalScore * 100) / 100}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => playSound(post.score.audioUrl, post.id)}
+                    className="bg-pink-500 rounded-full p-2"
+                  >
+                    <Ionicons
+                      name={isPlaying[post.id] ? "pause" : "play"}
+                      size={24}
+                      color="white"
+                    />
+                  </TouchableOpacity>
+                </View>
+
                 {/* Post Actions */}
                 <View className="flex-row items-center mb-3">
                   <TouchableOpacity className="flex-row items-center">
@@ -548,27 +669,85 @@ const CommunityTab = () => {
                 {/* Comments Section */}
                 {post.comments && post.comments.length > 0 && (
                   <View className="mt-2">
-                    {post.comments.map((comment) => (
-                      <View
-                        key={comment.id}
-                        className="ml-2 mb-2 flex-row items-center"
-                      >
-                        <Ionicons
-                          name="person-circle-outline"
-                          size={24}
-                          color="#eee"
-                          className="mr-2"
-                        />
-                        <View>
-                          <Text className="text-white font-semibold text-sm">
-                            {comment.user.displayName}
-                          </Text>
-                          <Text className="text-gray-400 text-sm">
-                            {comment.comment}
-                          </Text>
+                    {post.comments
+                      .slice(0, expandedComments[post.id] ? undefined : 3)
+                      .map((comment) => (
+                        <View
+                          key={comment.id}
+                          className="ml-2 mb-2 flex-row items-center justify-between"
+                        >
+                          <View className="flex-row items-center flex-1">
+                            {comment.user.imageUrl ? (
+                              <Image
+                                source={{ uri: comment.user.imageUrl }}
+                                style={{
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: 12,
+                                  marginRight: 8,
+                                }}
+                              />
+                            ) : (
+                              <Ionicons
+                                name="person-circle-outline"
+                                size={24}
+                                color="#eee"
+                                style={{ marginRight: 8 }}
+                              />
+                            )}
+                            <View className="flex-1">
+                              <Text className="text-white font-semibold text-sm">
+                                {comment.user.displayName}
+                              </Text>
+                              <Text className="text-gray-400 text-sm">
+                                {comment.comment}
+                              </Text>
+                            </View>
+                          </View>
+                          {comment.user.id === userIdRef.current && (
+                            <TouchableOpacity
+                              onPress={() => setCommentMenuVisible(comment.id)}
+                              className="p-2"
+                            >
+                              <MaterialCommunityIcons
+                                name="dots-horizontal"
+                                size={20}
+                                color="#eee"
+                              />
+                            </TouchableOpacity>
+                          )}
+                          {commentMenuVisible === comment.id && (
+                            <View className="absolute right-0 top-8 bg-white/20 rounded-lg border border-white/10 z-10">
+                              <TouchableOpacity
+                                onPress={() => handleDeleteComment(comment.id, post.id)}
+                                className="px-4 py-2"
+                              >
+                                <Text className="text-pink-300">Delete Comment</Text>
+                              </TouchableOpacity>
+                            </View>
+                          )}
                         </View>
-                      </View>
                     ))}
+                    {post.comments.length > 3 && !expandedComments[post.id] && (
+                      <TouchableOpacity
+                        onPress={() => setExpandedComments(prev => ({ ...prev, [post.id]: true }))}
+                        className="ml-2 mt-1"
+                      >
+                        <Text className="text-pink-500 text-sm">
+                          View more comments ({post.comments.length - 3} more)
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                    {expandedComments[post.id] && (
+                      <TouchableOpacity
+                        onPress={() => setExpandedComments(prev => ({ ...prev, [post.id]: false }))}
+                        className="ml-2 mt-1"
+                      >
+                        <Text className="text-pink-500 text-sm">
+                          Show less
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 )}
 
@@ -599,9 +778,9 @@ const CommunityTab = () => {
                   </TouchableOpacity>
                 </View>
 
-                {/* More Menu */}
+                {/* More Menu for Post */}
                 {isMoreMenuVisible === post.id && (
-                  <View className="absolute right-4 top-10 bg-white/20 rounded-lg border border-white/10">
+                  <View className="absolute right-4 top-10 bg-white/20 rounded-lg border border-white/10 z-10">
                     <TouchableOpacity
                       onPress={() => handleDeletePost(post.id)}
                       className="px-4 py-2"

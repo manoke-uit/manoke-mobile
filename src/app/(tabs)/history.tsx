@@ -3,7 +3,7 @@ import { getAllScores } from "@/utils/api";
 import { APP_COLOR } from "@/utils/constant";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Text,
   TextInput,
@@ -12,13 +12,73 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
+import { Audio } from 'expo-av';
+import Toast from "react-native-toast-message";
 
 const HistoryTab = () => {
   const [scores, setScores] = useState<IScore[]>([]);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState<{ [key: string]: boolean }>({});
+  const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchScores();
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
   }, []);
+
+  const playSound = async (audioUrl: string, scoreId: string) => {
+    try {
+      // Stop current playing audio if any
+      if (sound) {
+        try {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+        } catch (error) {
+          console.log('Error stopping previous sound:', error);
+        }
+      }
+
+      // If clicking the same score, toggle play/pause
+      if (currentPlayingId === scoreId && isPlaying[scoreId]) {
+        try {
+          await sound?.pauseAsync();
+          setIsPlaying(prev => ({ ...prev, [scoreId]: false }));
+        } catch (error) {
+          console.log('Error pausing sound:', error);
+        }
+        return;
+      }
+
+      // Load and play new audio
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: true },
+        (status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            setIsPlaying(prev => ({ ...prev, [scoreId]: false }));
+            setCurrentPlayingId(null);
+          }
+        }
+      );
+      setSound(newSound);
+      setCurrentPlayingId(scoreId);
+      setIsPlaying(prev => ({ ...prev, [scoreId]: true }));
+
+    } catch (error) {
+      console.error('Error playing sound:', error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to play audio. Please try again.",
+      });
+      setIsPlaying(prev => ({ ...prev, [scoreId]: false }));
+      setCurrentPlayingId(null);
+    }
+  };
 
   const fetchScores = async () => {
     try {
@@ -80,11 +140,23 @@ const HistoryTab = () => {
                   </Text>
                 </View>
 
-                <Text className="text-pink-300 font-bold text-lg">
-                  {item.finalScore
-                    ? Math.round(item.finalScore * 100) / 100
-                    : 0}
-                </Text>
+                <View className="flex-row items-center">
+                  <Text className="text-pink-300 font-bold text-lg mr-3">
+                    {item.finalScore
+                      ? Math.round(item.finalScore * 100) / 100
+                      : 0}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => playSound(item.audioUrl, item.id)}
+                    className="bg-pink-500 rounded-full p-2"
+                  >
+                    <Ionicons
+                      name={isPlaying[item.id] ? "pause" : "play"}
+                      size={20}
+                      color="white"
+                    />
+                  </TouchableOpacity>
+                </View>
               </TouchableOpacity>
             ))}
           </View>

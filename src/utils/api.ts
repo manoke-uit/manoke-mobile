@@ -255,6 +255,19 @@ export const deletePostAPI = async (postId: string) => {
   });
 };
 
+export const deleteCommentAPI = async (commentId: string) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Token not found");
+  }
+  const url = `/comments/${commentId}`;
+  return axios.delete(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
 export const searchUsersAPI = async (email: string) => {
   const token = await AsyncStorage.getItem("accessToken");
   if (!token) {
