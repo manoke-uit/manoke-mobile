@@ -37,6 +37,7 @@ const CommunityTab = () => {
   const [friends, setFriends] = useState<string[]>([]);
   const [isMoreMenuVisible, setMoreMenuVisible] = useState<string | null>(null);
   const [commentMenuVisible, setCommentMenuVisible] = useState<string | null>(null);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState<string | null>(null);
   const [newComment, setNewComment] = useState<{ [key: string]: string }>({});
   const [newPostContent, setNewPostContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -203,6 +204,7 @@ const CommunityTab = () => {
       });
     } finally {
       setMoreMenuVisible(null);
+      setDeleteConfirmVisible(null);
     }
   };
 
@@ -607,16 +609,31 @@ const CommunityTab = () => {
                     </Text>
                   </View>
                   {post.userId === userIdRef.current && (
-                    <TouchableOpacity
-                      onPress={() => setMoreMenuVisible(post.id)}
-                      className="p-2"
-                    >
-                      <MaterialCommunityIcons
-                        name="dots-horizontal"
-                        size={20}
-                        color="#eee"
-                      />
-                    </TouchableOpacity>
+                    <View className="relative">
+                      <TouchableOpacity
+                        onPress={() => setMoreMenuVisible(post.id)}
+                        className="p-2"
+                      >
+                        <MaterialCommunityIcons
+                          name="dots-horizontal"
+                          size={20}
+                          color="#eee"
+                        />
+                      </TouchableOpacity>
+                      {isMoreMenuVisible === post.id && (
+                        <View className="absolute right-0 top-8 bg-white/20 rounded-lg border border-white/10 z-50 shadow-lg">
+                          <TouchableOpacity
+                            onPress={() => {
+                              setMoreMenuVisible(null);
+                              setDeleteConfirmVisible(post.id);
+                            }}
+                            className="px-4 py-2"
+                          >
+                            <Text className="text-pink-300">Delete Post</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
                   )}
                 </View>
 
@@ -778,17 +795,38 @@ const CommunityTab = () => {
                   </TouchableOpacity>
                 </View>
 
-                {/* More Menu for Post */}
-                {isMoreMenuVisible === post.id && (
-                  <View className="absolute right-4 top-10 bg-white/20 rounded-lg border border-white/10 z-10">
-                    <TouchableOpacity
-                      onPress={() => handleDeletePost(post.id)}
-                      className="px-4 py-2"
-                    >
-                      <Text className="text-pink-300">Delete Post</Text>
-                    </TouchableOpacity>
+                {/* Delete Confirmation Modal */}
+                <Modal
+                  visible={deleteConfirmVisible === post.id}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => setDeleteConfirmVisible(null)}
+                >
+                  <View className="flex-1 justify-center items-center bg-black/50">
+                    <View className="bg-white/10 rounded-xl p-6 w-4/5">
+                      <Text className="text-white text-lg font-semibold mb-4 text-center">
+                        Delete Post
+                      </Text>
+                      <Text className="text-gray-300 mb-6 text-center">
+                        Are you sure you want to delete this post? This action cannot be undone.
+                      </Text>
+                      <View className="flex-row justify-end space-x-4">
+                        <TouchableOpacity
+                          onPress={() => setDeleteConfirmVisible(null)}
+                          className="px-4 py-2"
+                        >
+                          <Text className="text-gray-400">Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => handleDeletePost(post.id)}
+                          className="bg-pink-500 px-4 py-2 rounded-lg"
+                        >
+                          <Text className="text-white font-semibold">Delete</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                   </View>
-                )}
+                </Modal>
               </View>
             ))
           )}

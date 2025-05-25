@@ -11,15 +11,42 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { Audio } from 'expo-av';
 import Toast from "react-native-toast-message";
+import { useNavigation } from "expo-router";
 
 const HistoryTab = () => {
   const [scores, setScores] = useState<IScore[]>([]);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState<{ [key: string]: boolean }>({});
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
+  const currentOffset = useRef(0);
+  const [visible, setVisible] = useState(true);
+  const navigation = useNavigation();
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const diff = offsetY - currentOffset.current;
+
+    if (diff > 10 && visible) {
+      setVisible(false);
+      navigation.setOptions({ tabBarStyle: { display: "none" } });
+    } else if (diff < -10 && !visible) {
+      setVisible(true);
+      navigation.setOptions({
+        tabBarStyle: {
+          backgroundColor: "#000",
+          borderTopWidth: 0,
+          height: 70,
+        },
+      });
+    }
+
+    currentOffset.current = offsetY;
+  };
 
   useEffect(() => {
     fetchScores();
@@ -103,6 +130,8 @@ const HistoryTab = () => {
           contentContainerStyle={{ paddingBottom: 100 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
         >
           <View className="flex-row items-center bg-white/20 px-4 py-2 rounded-xl mb-6">
             <Ionicons name="search" size={20} color="white" className="mr-2" />

@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   TextInput,
   ScrollView,
   TouchableOpacity,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,6 +14,7 @@ import { APP_COLOR } from "@/utils/constant";
 import AnimatedWrapper from "@/components/animation/animate";
 import MoreMenu from "@/components/moreMenu";
 import SelectPlaylistModal from "@/components/selectPlaylistModal";
+import { useNavigation } from "expo-router";
 
 import { getAllSongs, getPlaylistsAPI, updatePlaylistAPI } from "@/utils/api";
 import SongSearchResults from "@/components/songs/SongSearchResults";
@@ -27,6 +30,9 @@ const SearchTab = () => {
   const [availablePlaylists, setAvailablePlaylists] = useState<
     { id: string; name: string; count: number }[]
   >([]);
+  const currentOffset = useRef(0);
+  const [visible, setVisible] = useState(true);
+  const navigation = useNavigation();
 
   const keywordSuggestions = [
     "Chill",
@@ -110,6 +116,27 @@ const SearchTab = () => {
     }
   };
 
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const diff = offsetY - currentOffset.current;
+
+    if (diff > 10 && visible) {
+      setVisible(false);
+      navigation.setOptions({ tabBarStyle: { display: "none" } });
+    } else if (diff < -10 && !visible) {
+      setVisible(true);
+      navigation.setOptions({
+        tabBarStyle: {
+          backgroundColor: "#000",
+          borderTopWidth: 0,
+          height: 70,
+        },
+      });
+    }
+
+    currentOffset.current = offsetY;
+  };
+
   return (
     <>
       <LinearGradient
@@ -120,7 +147,11 @@ const SearchTab = () => {
         style={{ flex: 1 }}
       >
         <AnimatedWrapper fade scale slideUp style={{ flex: 1 }}>
-          <ScrollView className="flex-1 px-4">
+          <ScrollView 
+            className="flex-1 px-4"
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          >
             <View className="pt-8">
               <View className="flex-row items-center bg-white/20 px-4 py-2 rounded-xl mb-4">
                 <Ionicons name="search" size={20} color="white" />
