@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, Image } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Image,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import VideoMoreMenu from "@/components/videoMoreMenu";
 import { router, useNavigation } from "expo-router";
-import { getAllOwnKaraokesAPI, requestPublicKaraokeAPI, deleteKaraokeAPI } from "@/utils/api";
+import {
+  getAllOwnKaraokesAPI,
+  requestPublicKaraokeAPI,
+  deleteKaraokeAPI,
+} from "@/utils/api";
 
 const YourVideos = () => {
   const [isMoreMenuVisible, setMoreMenuVisible] = useState<string | null>(null);
@@ -43,18 +54,26 @@ const YourVideos = () => {
     return unsubscribe;
   }, [navigation]);
 
-  const handleToggleStatus = async (karaokeId: string, currentStatus: "public" | "private") => {
+  const handleToggleStatus = async (
+    karaokeId: string,
+    currentStatus: "public" | "private"
+  ) => {
     try {
       if (currentStatus === "private") {
         // Request to make public
         const response = await requestPublicKaraokeAPI(karaokeId);
         const backendRes = response as IBackendRes<IKaraoke>;
         if (backendRes?.data) {
-          Alert.alert("Success", "Request to make karaoke public has been sent");
+          Alert.alert(
+            "Success",
+            "Request to make karaoke public has been sent"
+          );
           // Update local state
-          setKaraokes(prev => prev.map(k => 
-            k.id === karaokeId ? { ...k, status: "public" } : k
-          ));
+          setKaraokes((prev) =>
+            prev.map((k) =>
+              k.id === karaokeId ? { ...k, status: "public" } : k
+            )
+          );
         } else {
           throw new Error("Failed to get response data");
         }
@@ -166,7 +185,9 @@ const YourVideos = () => {
                       {karaoke.song.title}
                     </Text>
                     <Text className="text-gray-400 text-sm">
-                      {karaoke.song.artists?.map((artist) => artist.name).join(", ") || "Unknown Artist"}
+                      {karaoke.song.artists
+                        ?.map((artist) => artist.name)
+                        .join(", ") || "Unknown Artist"}
                     </Text>
                     <Text className="text-gray-400 text-xs mt-1">
                       {karaoke.status === "public"
@@ -213,7 +234,8 @@ const YourVideos = () => {
                       onPress: () =>
                         handleToggleStatus(
                           isMoreMenuVisible,
-                          karaokes.find((k) => k.id === isMoreMenuVisible)!.status
+                          karaokes.find((k) => k.id === isMoreMenuVisible)!
+                            .status
                         ),
                     },
                     {
