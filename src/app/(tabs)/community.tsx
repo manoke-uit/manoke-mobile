@@ -71,7 +71,7 @@ const CommunityTab = () => {
           router.replace("/signin");
           return;
         }
-  
+
         try {
           const res = await getUserByIdAPI(userId);
           setDisplayName(res.displayName || res.data?.displayName || "");
@@ -80,25 +80,25 @@ const CommunityTab = () => {
           setDisplayName("");
           setImageUrl(null);
         }
-  
+
         const friendResponse = await getFriendsAPI();
         const friendIds = friendResponse.map((f: any) =>
           f.userId_1 === userId ? f.userId_2 : f.userId_1
         );
         setFriends(friendIds);
-  
+
         const postResponse = await getPostsAPI();
-        console.log('Posts API Response:', postResponse);
+        console.log("Posts API Response:", postResponse);
         if (Array.isArray(postResponse)) {
-          console.log('Setting posts with array data:', postResponse);
+          console.log("Setting posts with array data:", postResponse);
           setPosts(postResponse);
         } else if (postResponse.items) {
-          console.log('Setting posts with data property:', postResponse.items);
+          console.log("Setting posts with data property:", postResponse.items);
           setPosts(postResponse.items);
         } else {
-          console.log('No valid data in postResponse');
+          console.log("No valid data in postResponse");
         }
-  
+
         const scoresResponse = await getAllScores();
         setScores(scoresResponse || []);
       } catch (error: any) {
@@ -153,7 +153,7 @@ const CommunityTab = () => {
       setSelectedScore(null);
 
       const postResponse = await getPostsAPI();
-      console.log('Posts after comment:', postResponse);
+      console.log("Posts after comment:", postResponse);
 
       if (Array.isArray(postResponse)) {
         setPosts(postResponse);
@@ -221,11 +221,14 @@ const CommunityTab = () => {
         text2: "Comment added successfully.",
       });
       setNewComment((prev) => ({ ...prev, [postId]: "" }));
-      
+
       // Fetch updated posts with comments
       const postResponse = await getPostsAPI();
-      console.log('Posts after comment:', JSON.stringify(postResponse, null, 2));
-      
+      console.log(
+        "Posts after comment:",
+        JSON.stringify(postResponse, null, 2)
+      );
+
       // Update posts state
       if (Array.isArray(postResponse)) {
         setPosts(postResponse);
@@ -233,7 +236,7 @@ const CommunityTab = () => {
         setPosts(postResponse.items);
       }
     } catch (error: any) {
-      console.error('Error adding comment:', error);
+      console.error("Error adding comment:", error);
       Toast.show({
         type: "error",
         text1: "Error",
