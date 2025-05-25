@@ -164,9 +164,9 @@ const SignIn = () => {
               </Text>
             </TouchableOpacity>
           </View>
-          <View className="mt-4">
+          {/* <View className="mt-4">
             <GoogleLoginButton onTokenReceived={handleGoogleLogin} />
-          </View>
+          </View> */}
           <View style={tw`w-full items-center mt-10`}>
             <TouchableOpacity
               style={tw`w-[80%] h-[50px] rounded-lg items-center justify-center ${
