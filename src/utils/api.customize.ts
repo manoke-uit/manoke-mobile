@@ -3,10 +3,7 @@ import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, usePathname } from "expo-router";
 
-const backend =
-  Platform.OS === "android"
-    ? process.env.EXPO_PUBLIC_ANDROID_API_URL
-    : process.env.EXPO_PUBLIC_IOS_API_URL;
+const backend = process.env.EXPO_PUBLIC_API_URL;
 
 const instance = axios.create({
   baseURL: backend,
