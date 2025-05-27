@@ -21,11 +21,11 @@ import {
   getAllSongs,
 } from "@/utils/api";
 import { Audio, Video, ResizeMode } from "expo-av";
-import ScoreModal from "@/components/score"; 
+import ScoreModal from "@/components/score";
 
 const SongItemScreen = () => {
   const { id } = useLocalSearchParams();
-  const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
+  const [currentSongId, setCurrentSongId] = useState<string>(id as string);
   const [karaokeVideoUrl, setKaraokeVideoUrl] = useState<string | null>(null);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -34,38 +34,55 @@ const SongItemScreen = () => {
   const [songTitle, setSongTitle] = useState<string>("");
   const [artistNames, setArtistNames] = useState<string[]>([]);
   const [songs, setSongs] = useState<ISong[]>([]);
-  const [isScoreModalVisible, setScoreModalVisible] = useState(false); 
-  const [score, setScore] = useState<number>(0); 
+  const [isScoreModalVisible, setScoreModalVisible] = useState(false);
+  const [score, setScore] = useState<number>(0);
   const [isReadyModalVisible, setIsReadyModalVisible] = useState(true);
-  const [isVideoEnded, setIsVideoEnded] = useState(false);
-
+  const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
+  const [isExitModalVisible, setIsExitModalVisible] = useState(false);
   const videoRef = useRef<Video>(null);
 
+  const fetchSongData = async (songId: string) => {
+    if (recording) {
+      try {
+        await recording.stopAndUnloadAsync();
+        setRecording(null);
+        setIsRecording(false);
+      } catch (err) {
+        console.warn(" Không thể stop recording:", err);
+      }
+    }
+    try {
+      await videoRef.current?.stopAsync();
+    } catch (err) {
+      console.warn("Không thể stop video:", err);
+    }
+    try {
+      const res = await getKaraokesBySongId(songId);
+      const first = res.data?.[0];
+      setKaraokeVideoUrl(first?.videoUrl ?? null);
+    } catch {
+      Alert.alert("Error", "Unable to load karaoke");
+    }
+
+    try {
+      const songRes = await getSongById(songId);
+      setSongTitle(songRes.data?.title ?? "");
+      const names = songRes.data?.artists?.map((a: any) => a.name) ?? [];
+      setArtistNames(names);
+    } catch {
+      Alert.alert("Error", "Unable to load song info");
+    }
+
+    setIsReadyModalVisible(true);
+    setRecording(null);
+    setIsRecording(false);
+    setScoreModalVisible(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await getKaraokesBySongId(id as string);
-        const first = res.data?.[0];
-        if (first?.videoUrl) {
-          setKaraokeVideoUrl(first.videoUrl);
-        }
-      } catch {
-        Alert.alert("Error", "Unable to load karaoke");
-      }
+    fetchSongData(currentSongId);
 
-      try {
-        const songRes = await getSongById(id as string);
-        if (songRes?.data?.title) {
-          setSongTitle(songRes.data.title);
-        }
-        if (Array.isArray(songRes?.data?.artists)) {
-          const names = songRes.data.artists.map((a: any) => a.name);
-          setArtistNames(names);
-        }
-      } catch {
-        Alert.alert("Error", "Unable to load song information");
-      }
-
+    const loadInit = async () => {
       try {
         const allSongsRes = await getAllSongs();
         setSongs(allSongsRes.data ?? []);
@@ -77,8 +94,8 @@ const SongItemScreen = () => {
       if (acc?.userId) setUserId(acc.userId);
     };
 
-    if (id) fetchData();
-  }, [id]);
+    loadInit();
+  }, []);
 
   const startRecording = async () => {
     try {
@@ -95,7 +112,7 @@ const SongItemScreen = () => {
       setRecording(recording);
       setIsRecording(true);
       setIsReadyModalVisible(false);
-    } catch (err) {
+    } catch {
       Alert.alert("Error", "Unable to start recording");
     }
   };
@@ -104,44 +121,34 @@ const SongItemScreen = () => {
     try {
       await recording?.stopAndUnloadAsync();
       const uri = recording?.getURI();
-
       setRecording(null);
       setIsRecording(false);
 
       if (!uri) {
-        Alert.alert("Error", "No recorded file found to upload");
+        Alert.alert("Error", "No recorded file");
         return;
       }
 
       setIsUploading(true);
-      const score = await uploadScoreAudioAPI(uri, id as string, userId);
-      const roundedScore = score ? Math.round(score * 100) / 100 : 81;
-
+      const score = await uploadScoreAudioAPI(uri, currentSongId, userId);
+      setScore(score ? Math.round(score * 100) / 100 : 81);
       setIsUploading(false);
-      setScore(roundedScore); 
-      setScoreModalVisible(true); 
-    } catch (err) {
-      // console.error("Upload audio failed:", err);
+      setScoreModalVisible(true);
+    } catch {
       setIsUploading(false);
       Alert.alert("Error", "Unable to calculate score");
     }
   };
 
   const handleVideoStatusUpdate = (status: any) => {
-    if (status.didJustFinish) {
-      setIsVideoEnded(true);
-      if (isRecording) {
-        stopRecordingAndUpload();
-      }
+    if (status.didJustFinish && isRecording) {
+      stopRecordingAndUpload();
     }
   };
 
   const handleReadyResponse = (isReady: boolean) => {
-    if (isReady) {
-      startRecording();
-    } else {
-      router.back();
-    }
+    if (isReady) startRecording();
+    else router.back();
   };
 
   return (
@@ -151,42 +158,44 @@ const SongItemScreen = () => {
       end={{ x: 0, y: 1 }}
       style={{ flex: 1 }}
     >
-      {/* Ready Modal */}
-      <Modal
-        visible={isReadyModalVisible}
-        transparent
-        animationType="fade"
-      >
-        <View style={{ 
-          flex: 1, 
-          backgroundColor: 'rgba(0,0,0,0.7)',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 20
-        }}>
-          <View style={{
-            backgroundColor: APP_COLOR.BLACK,
-            borderRadius: 20,
+      <Modal visible={isReadyModalVisible} transparent animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.7)",
+            justifyContent: "center",
+            alignItems: "center",
             padding: 20,
-            width: '80%',
-            alignItems: 'center',
-            borderWidth: 1,
-            borderColor: APP_COLOR.PINK
-          }}>
-            <Text style={{ 
-              color: 'white', 
-              fontSize: 24, 
-              fontWeight: 'bold',
-              marginBottom: 20,
-              textAlign: 'center'
-            }}>
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: APP_COLOR.BLACK,
+              borderRadius: 20,
+              padding: 20,
+              width: "80%",
+              alignItems: "center",
+              borderWidth: 1,
+              borderColor: APP_COLOR.PINK,
+            }}
+          >
+            <Text
+              style={{
+                color: "white",
+                fontSize: 24,
+                fontWeight: "bold",
+                marginBottom: 20,
+              }}
+            >
               Are you ready to sing?
             </Text>
-            <View style={{ 
-              flexDirection: 'row',
-              justifyContent: 'space-around',
-              width: '100%'
-            }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-around",
+                width: "100%",
+              }}
+            >
               <TouchableOpacity
                 onPress={() => handleReadyResponse(false)}
                 style={{
@@ -194,10 +203,9 @@ const SongItemScreen = () => {
                   paddingVertical: 10,
                   paddingHorizontal: 30,
                   borderRadius: 20,
-                  marginHorizontal: 10
                 }}
               >
-                <Text style={{ color: 'white', fontWeight: 'bold' }}>No</Text>
+                <Text style={{ color: "white", fontWeight: "bold" }}>No</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleReadyResponse(true)}
@@ -206,29 +214,28 @@ const SongItemScreen = () => {
                   paddingVertical: 10,
                   paddingHorizontal: 30,
                   borderRadius: 20,
-                  marginHorizontal: 10
                 }}
               >
-                <Text style={{ color: 'white', fontWeight: 'bold' }}>Yes</Text>
+                <Text style={{ color: "white", fontWeight: "bold" }}>Yes</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      <View
-        className="w-full flex flex-row"
-        style={{ paddingVertical: 30, paddingHorizontal: 20 }}
-      >
+      <View style={{ paddingVertical: 30, paddingHorizontal: 20 }}>
         <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 items-center justify-center rounded-full bg-pink-500/30"
+          onPress={() => setIsExitModalVisible(true)}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: "#f472b6",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          <Ionicons
-            name="chevron-back-outline"
-            size={25}
-            color={APP_COLOR.WHITE}
-          />
+          <Ionicons name="chevron-back-outline" size={25} color="white" />
         </TouchableOpacity>
       </View>
 
@@ -236,6 +243,7 @@ const SongItemScreen = () => {
         <View style={{ height: 250 }}>
           {karaokeVideoUrl && (
             <Video
+              key={karaokeVideoUrl}
               ref={videoRef}
               source={{ uri: karaokeVideoUrl }}
               useNativeControls
@@ -251,46 +259,68 @@ const SongItemScreen = () => {
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: 80 }}
         >
-          <View className="w-full px-5 py-4">
-            <Text className="text-white font-bold text-2xl mb-2">
+          <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+            <Text style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>
               Now Playing
             </Text>
-            <View className="flex-row items-center mb-5">
-              <View className="justify-center">
-                <Text className="text-white font-bold text-xl">
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 8,
+              }}
+            >
+              <View>
+                <Text
+                  style={{ color: "white", fontSize: 18, fontWeight: "bold" }}
+                >
                   {songTitle || "Loading..."}
                 </Text>
-                <Text className="text-gray-400 text-base">
+                <Text style={{ color: "#aaa" }}>
                   {artistNames.join(", ") || "Loading artists..."}
                 </Text>
               </View>
               <TouchableOpacity
-                className="ml-auto px-4 py-2"
+                style={{ marginLeft: "auto", paddingHorizontal: 10 }}
                 onPress={() => setMoreMenuVisible(true)}
               >
                 <Entypo name="dots-three-vertical" size={20} color="#C0C0C0" />
               </TouchableOpacity>
             </View>
 
-            <View className="flex-row justify-around mt-2">
-              {isRecording && (
-                <Text className="text-red-500 font-bold">
-                  Recording in progress...
-                </Text>
-              )}
-            </View>
-
+            {isRecording && (
+              <Text style={{ color: "red", marginTop: 10, fontWeight: "bold" }}>
+                Recording in progress...
+              </Text>
+            )}
             {isUploading && (
-              <Text className="text-yellow-400 mt-2 text-center">
+              <Text style={{ color: "yellow", marginTop: 10 }}>
                 Calculating score...
               </Text>
             )}
 
-            <Text className="text-white font-bold text-2xl my-4">Songs</Text>
+            <Text
+              style={{
+                color: "white",
+                fontSize: 20,
+                fontWeight: "bold",
+                marginVertical: 16,
+              }}
+            >
+              Songs
+            </Text>
             {songs.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                className="flex-row items-center mb-4"
+                onPress={() => {
+                  setCurrentSongId(item.id);
+                  fetchSongData(item.id);
+                }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 16,
+                }}
               >
                 <Image
                   source={{
@@ -298,26 +328,22 @@ const SongItemScreen = () => {
                       item.imageUrl ||
                       "https://via.placeholder.com/80x80.png?text=No+Image",
                   }}
-                  className="w-20 h-20 rounded-lg mr-4"
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 10,
+                    marginRight: 12,
+                  }}
                   resizeMode="cover"
                 />
-
-                <View className="justify-center">
-                  <Text className="text-white font-semibold">{item.title}</Text>
-                  <Text className="text-gray-400">
-                    {item.artists?.map((a) => a.name).join(", ") ?? ""}
+                <View>
+                  <Text style={{ color: "white", fontWeight: "600" }}>
+                    {item.title}
+                  </Text>
+                  <Text style={{ color: "#ccc" }}>
+                    {item.artists?.map((a) => a.name).join(", ")}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  className="ml-auto px-4 py-2"
-                  onPress={() => setMoreMenuVisible(true)}
-                >
-                  <Entypo
-                    name="dots-three-vertical"
-                    size={20}
-                    color="#C0C0C0"
-                  />
-                </TouchableOpacity>
               </TouchableOpacity>
             ))}
           </View>
@@ -336,6 +362,88 @@ const SongItemScreen = () => {
         score={score}
         onClose={() => setScoreModalVisible(false)}
       />
+      <Modal visible={isExitModalVisible} transparent animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: APP_COLOR.BLACK,
+              borderRadius: 20,
+              padding: 20,
+              width: "80%",
+              alignItems: "center",
+              borderWidth: 1,
+              borderColor: APP_COLOR.PINK,
+            }}
+          >
+            <Text
+              style={{
+                color: "white",
+                fontSize: 20,
+                fontWeight: "bold",
+                marginBottom: 20,
+              }}
+            >
+              Bạn có chắc muốn thoát?
+            </Text>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-around",
+                width: "100%",
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => setIsExitModalVisible(false)}
+                style={{
+                  backgroundColor: APP_COLOR.PINK,
+                  paddingVertical: 10,
+                  paddingHorizontal: 30,
+                  borderRadius: 20,
+                }}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>Hủy</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    if (recording) {
+                      await recording.stopAndUnloadAsync();
+                      setRecording(null);
+                      setIsRecording(false);
+                    }
+                    await videoRef.current?.unloadAsync();
+                  } catch (err) {
+                    console.warn("Không thể dừng khi thoát:", err);
+                  } finally {
+                    setIsExitModalVisible(false);
+                    router.back();
+                  }
+                }}
+                style={{
+                  backgroundColor: APP_COLOR.PURPLE,
+                  paddingVertical: 10,
+                  paddingHorizontal: 30,
+                  borderRadius: 20,
+                }}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>
+                  Thoát
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 };

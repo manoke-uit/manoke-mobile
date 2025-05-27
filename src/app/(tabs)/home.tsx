@@ -119,7 +119,7 @@ const HomeTab = () => {
 
     fetchSongs();
     fetchPlaylists();
-  }, []);
+  }, [playlists]);
 
   return (
     <LinearGradient
