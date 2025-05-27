@@ -129,7 +129,7 @@ declare global {
         imageUrl: string;
       };
     };
-    comments:{
+    comments: {
       id: string;
       comment: string;
       createdAt: string;
@@ -185,6 +185,7 @@ declare global {
   export interface IKaraoke {
     id: string;
     description: string;
+    videoUrl: string;
     status: "public" | "private";
     song: {
       id: string;
