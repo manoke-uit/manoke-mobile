@@ -39,6 +39,7 @@ const SongItemScreen = () => {
   const [isReadyModalVisible, setIsReadyModalVisible] = useState(true);
   const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
   const [isExitModalVisible, setIsExitModalVisible] = useState(false);
+  const [description, setDescription] = useState<string>("");
   const videoRef = useRef<Video>(null);
 
   const fetchSongData = async (songId: string) => {
@@ -60,6 +61,7 @@ const SongItemScreen = () => {
       const res = await getKaraokesBySongId(songId);
       const first = res.data?.[0];
       setKaraokeVideoUrl(first?.videoUrl ?? null);
+      setDescription(first?.description ?? ""); // Lấy description từ karaoke
     } catch {
       Alert.alert("Error", "Unable to load karaoke");
     }
@@ -279,6 +281,22 @@ const SongItemScreen = () => {
                 <Text style={{ color: "#aaa" }}>
                   {artistNames.join(", ") || "Loading artists..."}
                 </Text>
+                {description ? (
+                  <Text
+                    style={{
+                      color: "#aaa",
+                      fontStyle: "italic",
+                      marginTop: 6,
+                      fontSize: 15,
+                      lineHeight: 20,
+                      maxWidth: 320,
+                    }}
+                    numberOfLines={3}
+                    ellipsizeMode="tail"
+                  >
+                    Description: {description}
+                  </Text>
+                ) : null}
               </View>
               <TouchableOpacity
                 style={{ marginLeft: "auto", paddingHorizontal: 10 }}
@@ -391,7 +409,7 @@ const SongItemScreen = () => {
                 marginBottom: 20,
               }}
             >
-              Bạn có chắc muốn thoát?
+              Do you want to exit?
             </Text>
 
             <View
@@ -410,7 +428,7 @@ const SongItemScreen = () => {
                   borderRadius: 20,
                 }}
               >
-                <Text style={{ color: "white", fontWeight: "bold" }}>Hủy</Text>
+                <Text style={{ color: "white", fontWeight: "bold" }}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -437,7 +455,7 @@ const SongItemScreen = () => {
                 }}
               >
                 <Text style={{ color: "white", fontWeight: "bold" }}>
-                  Thoát
+                  OK
                 </Text>
               </TouchableOpacity>
             </View>

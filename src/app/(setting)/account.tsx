@@ -26,6 +26,7 @@ const AccountPage = () => {
 
   const [userInfo, setUserInfo] = useState<{ email: string } | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -42,7 +43,8 @@ const AccountPage = () => {
         if (!userId) return;
         const res = await getUserByIdAPI(userId);
         setDisplayName(res.displayName || res.data?.displayName || null);
-        setUserInfo(res);
+        setUserInfo(res); 
+        if (res.imageUrl) setImageUri(res.imageUrl);
       } catch (error) {
         // console.log("Error loading user info:", error);
         Toast.show({
@@ -86,7 +88,10 @@ const AccountPage = () => {
         </View>
 
         <View className="pt-10 justify-center items-center">
-          <Image source={avatarDefault} />
+          <Image
+            source={imageUri ? { uri: imageUri } : avatarDefault}
+            style={tw`w-32 h-32 rounded-full`}
+          />
           <Text className="pt-5 text-white text-[20px]">
             {displayName || userInfo?.email?.split("@")[0] || "Loading..."}
           </Text>

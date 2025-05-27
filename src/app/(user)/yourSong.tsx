@@ -191,7 +191,7 @@ const YourVideos = () => {
                     </Text>
                     <Text className="text-gray-400 text-xs mt-1">
                       {karaoke.status === "public"
-                        ? "Public (Pending Admin Approval)"
+                        ? "Public"
                         : "Private"}
                     </Text>
                   </View>
