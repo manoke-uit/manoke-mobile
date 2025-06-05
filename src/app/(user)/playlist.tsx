@@ -17,7 +17,6 @@ import { router } from "expo-router";
 import {
   createPlaylistAPI,
   getAccountAPI,
-  getPlaylistsAPI,
   updatePlaylistAPI,
   deletePlaylistAPI,
   getUserPlaylistAPI,
@@ -49,15 +48,18 @@ const PlaylistScreen = () => {
       setUserId(userRes.userId || null);
 
       const res = await getUserPlaylistAPI();
-      console.log(res);
       if (res) {
-        const fetched = res.map((p: any) => ({
-          id: p.id,
-          name: p.title,
-          count: p.songs?.length || 0,
-          isPublic: p.isPublic,
-          imageUrl: p.imageUrl,
-        }));
+        const fetched = res.map((p: any) => {
+          const firstSongImage = p.songs?.[0]?.imageUrl || null;
+          return {
+            id: p.id,
+            name: p.title,
+            count: p.songs?.length || 0,
+            isPublic: p.isPublic,
+            imageUrl: p.imageUrl || firstSongImage,
+          };
+        });
+
         setPlaylists(fetched);
       }
     } catch (err) {
@@ -232,9 +234,6 @@ const PlaylistScreen = () => {
 
               <View className="flex-1">
                 <Text className="text-white font-bold">{item.name}</Text>
-                <Text className="text-gray-400">
-                  Sum of Songs: {item.count}
-                </Text>
               </View>
 
               <TouchableOpacity
