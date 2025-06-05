@@ -14,7 +14,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
-import { Audio } from 'expo-av';
+import { Audio } from "expo-av";
 import Toast from "react-native-toast-message";
 import { useNavigation } from "expo-router";
 
@@ -65,7 +65,7 @@ const HistoryTab = () => {
           await sound.stopAsync();
           await sound.unloadAsync();
         } catch (error) {
-          console.log('Error stopping previous sound:', error);
+          console.log("Error stopping previous sound:", error);
         }
       }
 
@@ -73,9 +73,9 @@ const HistoryTab = () => {
       if (currentPlayingId === scoreId && isPlaying[scoreId]) {
         try {
           await sound?.pauseAsync();
-          setIsPlaying(prev => ({ ...prev, [scoreId]: false }));
+          setIsPlaying((prev) => ({ ...prev, [scoreId]: false }));
         } catch (error) {
-          console.log('Error pausing sound:', error);
+          console.log("Error pausing sound:", error);
         }
         return;
       }
@@ -86,23 +86,22 @@ const HistoryTab = () => {
         { shouldPlay: true },
         (status) => {
           if (status.isLoaded && status.didJustFinish) {
-            setIsPlaying(prev => ({ ...prev, [scoreId]: false }));
+            setIsPlaying((prev) => ({ ...prev, [scoreId]: false }));
             setCurrentPlayingId(null);
           }
         }
       );
       setSound(newSound);
       setCurrentPlayingId(scoreId);
-      setIsPlaying(prev => ({ ...prev, [scoreId]: true }));
-
+      setIsPlaying((prev) => ({ ...prev, [scoreId]: true }));
     } catch (error) {
-      console.error('Error playing sound:', error);
+      console.error("Error playing sound:", error);
       Toast.show({
         type: "error",
         text1: "Error",
         text2: "Failed to play audio. Please try again.",
       });
-      setIsPlaying(prev => ({ ...prev, [scoreId]: false }));
+      setIsPlaying((prev) => ({ ...prev, [scoreId]: false }));
       setCurrentPlayingId(null);
     }
   };

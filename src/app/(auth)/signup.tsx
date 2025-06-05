@@ -15,6 +15,7 @@ import tw from "twrnc";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Toast from "react-native-toast-message";
 import { registerAPI } from "@/utils/api";
+import { Ionicons } from "@expo/vector-icons";
 
 const { height: screenHeight } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
@@ -29,6 +30,8 @@ const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const isSubmitting = useRef(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -66,8 +69,13 @@ const SignUp = () => {
       const payload = { email, password, displayName: username };
       const response = await registerAPI(email, password, username);
 
-      if (response?.message && response.message.toLowerCase().includes('exist')) {
-        throw { response: { status: 500, data: { message: response.message } } };
+      if (response?.message) {
+        console.log(response.message);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: response?.message[0],
+        });
       }
 
       Toast.show({
@@ -103,6 +111,7 @@ const SignUp = () => {
       Toast.show({
         type: "error",
         text1: "Error",
+        text2: "Password is not strong enough.",
       });
     } finally {
       setIsLoading(false);
@@ -164,22 +173,47 @@ const SignUp = () => {
               value={username}
               onChangeText={setUsername}
             />
-            <TextInput
-              placeholder="Password"
-              secureTextEntry={true}
-              style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
-              placeholderTextColor={"#66339980"}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TextInput
-              placeholder="Confirm Password"
-              secureTextEntry={true}
-              style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
-              placeholderTextColor={"#66339980"}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
+            <View style={tw`w-[85%] mb-4 relative`}>
+              <TextInput
+                placeholder="Password"
+                secureTextEntry={!showPassword}
+                style={tw`h-[50px] bg-white rounded-lg px-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
+                placeholderTextColor={"#66339980"}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={tw`absolute right-4 top-3`}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={20}
+                  color="#663399"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={tw`w-[85%] mb-4 relative`}>
+              <TextInput
+                placeholder="Confirm Password"
+                secureTextEntry={!showConfirmPassword}
+                style={tw`h-[50px] bg-white rounded-lg px-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
+                placeholderTextColor={"#66339980"}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={tw`absolute right-4 top-3`}
+              >
+                <Ionicons
+                  name={showConfirmPassword ? "eye-off" : "eye"}
+                  size={20}
+                  color="#663399"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={tw`w-full items-center mt-5`}>

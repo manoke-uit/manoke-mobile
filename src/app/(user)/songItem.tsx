@@ -24,7 +24,7 @@ import { Audio, Video, ResizeMode } from "expo-av";
 import ScoreModal from "@/components/score";
 
 const SongItemScreen = () => {
-  const { id } = useLocalSearchParams();
+  const { id, karaokeId } = useLocalSearchParams();
   const [currentSongId, setCurrentSongId] = useState<string>(id as string);
   const [karaokeVideoUrl, setKaraokeVideoUrl] = useState<string | null>(null);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -36,32 +36,44 @@ const SongItemScreen = () => {
   const [songs, setSongs] = useState<ISong[]>([]);
   const [isScoreModalVisible, setScoreModalVisible] = useState(false);
   const [score, setScore] = useState<number>(0);
-  const [isReadyModalVisible, setIsReadyModalVisible] = useState(true);
+  const [isReadyModalVisible, setIsReadyModalVisible] = useState(false);
   const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
   const [isExitModalVisible, setIsExitModalVisible] = useState(false);
   const [description, setDescription] = useState<string>("");
   const videoRef = useRef<Video>(null);
+  const [karaokeList, setKaraokeList] = useState<IKaraoke[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
 
-  const fetchSongData = async (songId: string) => {
+  const fetchSongData = async (songId: string, karaokeIdFromParam?: string) => {
     if (recording) {
       try {
         await recording.stopAndUnloadAsync();
         setRecording(null);
         setIsRecording(false);
       } catch (err) {
-        console.warn(" Không thể stop recording:", err);
+        console.warn("Không thể stop recording:", err);
       }
     }
+
     try {
       await videoRef.current?.stopAsync();
     } catch (err) {
       console.warn("Không thể stop video:", err);
     }
+
     try {
       const res = await getKaraokesBySongId(songId);
-      const first = res.data?.[0];
-      setKaraokeVideoUrl(first?.videoUrl ?? null);
-      setDescription(first?.description ?? ""); // Lấy description từ karaoke
+      const list = res.data || [];
+      setKaraokeList(list);
+
+      let selectedKaraoke = list[0];
+      if (karaokeIdFromParam) {
+        const found = list.find((k: any) => k.id === karaokeIdFromParam);
+        if (found) selectedKaraoke = found;
+      }
+
+      setKaraokeVideoUrl(selectedKaraoke?.videoUrl ?? null);
+      setDescription(selectedKaraoke?.description ?? "");
     } catch {
       Alert.alert("Error", "Unable to load karaoke");
     }
@@ -75,14 +87,16 @@ const SongItemScreen = () => {
       Alert.alert("Error", "Unable to load song info");
     }
 
-    setIsReadyModalVisible(true);
+    setTimeout(() => {
+      setIsReadyModalVisible(true);
+    }, 200);
     setRecording(null);
     setIsRecording(false);
     setScoreModalVisible(false);
   };
 
   useEffect(() => {
-    fetchSongData(currentSongId);
+    fetchSongData(currentSongId, karaokeId as string);
 
     const loadInit = async () => {
       try {
@@ -244,16 +258,18 @@ const SongItemScreen = () => {
       <View style={{ flex: 1 }}>
         <View style={{ height: 250 }}>
           {karaokeVideoUrl && (
-            <Video
-              key={karaokeVideoUrl}
-              ref={videoRef}
-              source={{ uri: karaokeVideoUrl }}
-              useNativeControls
-              resizeMode={ResizeMode.CONTAIN}
-              shouldPlay={!isReadyModalVisible}
-              onPlaybackStatusUpdate={handleVideoStatusUpdate}
-              style={{ width: "100%", height: 250 }}
-            />
+            <>
+              <Video
+                key={karaokeVideoUrl}
+                ref={videoRef}
+                source={{ uri: karaokeVideoUrl }}
+                useNativeControls
+                resizeMode={ResizeMode.CONTAIN}
+                shouldPlay={!isPaused && !isReadyModalVisible}
+                onPlaybackStatusUpdate={handleVideoStatusUpdate}
+                style={{ width: "100%", height: 250 }}
+              />
+            </>
           )}
         </View>
 
@@ -265,6 +281,31 @@ const SongItemScreen = () => {
             <Text style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>
               Now Playing
             </Text>
+            {isRecording && (
+              <View style={{ alignItems: "center", marginTop: 12 }}>
+                <TouchableOpacity
+                  onPress={async () => {
+                    if (isPaused) {
+                      await videoRef.current?.playAsync();
+                    } else {
+                      await videoRef.current?.pauseAsync();
+                    }
+                    setIsPaused(!isPaused);
+                  }}
+                  style={{
+                    backgroundColor: "#f472b6",
+                    padding: 12,
+                    borderRadius: 30,
+                  }}
+                >
+                  <Ionicons
+                    name={isPaused ? "play" : "pause"}
+                    size={24}
+                    color="white"
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
             <View
               style={{
                 flexDirection: "row",
@@ -298,6 +339,7 @@ const SongItemScreen = () => {
                   </Text>
                 ) : null}
               </View>
+
               <TouchableOpacity
                 style={{ marginLeft: "auto", paddingHorizontal: 10 }}
                 onPress={() => setMoreMenuVisible(true)}
@@ -306,11 +348,6 @@ const SongItemScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {isRecording && (
-              <Text style={{ color: "red", marginTop: 10, fontWeight: "bold" }}>
-                Recording in progress...
-              </Text>
-            )}
             {isUploading && (
               <Text style={{ color: "yellow", marginTop: 10 }}>
                 Calculating score...
@@ -325,14 +362,15 @@ const SongItemScreen = () => {
                 marginVertical: 16,
               }}
             >
-              Songs
+              Karaoke Versions
             </Text>
-            {songs.map((item) => (
+            {karaokeList.map((karaoke) => (
               <TouchableOpacity
-                key={item.id}
+                key={karaoke.id}
                 onPress={() => {
-                  setCurrentSongId(item.id);
-                  fetchSongData(item.id);
+                  router.push(
+                    `/songItem?id=${currentSongId}&karaokeId=${karaoke.id}`
+                  );
                 }}
                 style={{
                   flexDirection: "row",
@@ -343,7 +381,7 @@ const SongItemScreen = () => {
                 <Image
                   source={{
                     uri:
-                      item.imageUrl ||
+                      karaoke.song.imageUrl ||
                       "https://via.placeholder.com/80x80.png?text=No+Image",
                   }}
                   style={{
@@ -356,10 +394,10 @@ const SongItemScreen = () => {
                 />
                 <View>
                   <Text style={{ color: "white", fontWeight: "600" }}>
-                    {item.title}
+                    {karaoke.song.title}
                   </Text>
                   <Text style={{ color: "#ccc" }}>
-                    {item.artists?.map((a) => a.name).join(", ")}
+                    {karaoke.description || "No description"}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -428,7 +466,9 @@ const SongItemScreen = () => {
                   borderRadius: 20,
                 }}
               >
-                <Text style={{ color: "white", fontWeight: "bold" }}>Cancel</Text>
+                <Text style={{ color: "white", fontWeight: "bold" }}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -454,9 +494,7 @@ const SongItemScreen = () => {
                   borderRadius: 20,
                 }}
               >
-                <Text style={{ color: "white", fontWeight: "bold" }}>
-                  OK
-                </Text>
+                <Text style={{ color: "white", fontWeight: "bold" }}>OK</Text>
               </TouchableOpacity>
             </View>
           </View>

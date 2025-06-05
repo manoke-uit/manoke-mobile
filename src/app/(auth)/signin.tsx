@@ -17,7 +17,7 @@ import { loginAPI, getAccountAPI, printAsyncStorage } from "@/utils/api";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import GoogleLoginButton from "./loginGoogle";
-
+import { Ionicons } from "@expo/vector-icons";
 const { height: screenHeight } = Dimensions.get("window");
 const modalHeight = screenHeight * 0.9;
 const avatar = require("@/assets/auth/Icon/avatar.png");
@@ -27,7 +27,7 @@ const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-
+  const [showPassword, setShowPassword] = useState(false);
   useEffect(() => {
     Animated.timing(slideAnim, {
       toValue: 0,
@@ -148,12 +148,22 @@ const SignIn = () => {
             />
             <TextInput
               placeholder="Password"
-              secureTextEntry
-              style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}]`}
+              secureTextEntry={!showPassword}
+              style={tw`w-[85%] h-[50px] bg-white rounded-lg px-4 mb-4 colors-[${APP_COLOR.TEXT_PURPLE}] relative`}
               placeholderTextColor={"#66339980"}
               value={password}
               onChangeText={setPassword}
             />
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              className="absolute right-12 bottom-16"
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={20}
+                color="#663399"
+              />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push("/(auth)/forgotpassword")}
             >
@@ -164,9 +174,9 @@ const SignIn = () => {
               </Text>
             </TouchableOpacity>
           </View>
-          {/* <View className="mt-4">
+          <View className="mt-4">
             <GoogleLoginButton onTokenReceived={handleGoogleLogin} />
-          </View> */}
+          </View>
           <View style={tw`w-full items-center mt-10`}>
             <TouchableOpacity
               style={tw`w-[80%] h-[50px] rounded-lg items-center justify-center ${
