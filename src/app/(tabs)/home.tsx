@@ -104,6 +104,7 @@ const HomeTab = () => {
     const fetchPlaylists = async () => {
       try {
         const res = await getPlaylistsAPI();
+
         const publicPlaylists = (res || []).filter((p: any) => p.isPublic);
         setPlaylists(publicPlaylists);
       } catch (error: any) {
@@ -209,7 +210,7 @@ const HomeTab = () => {
               <View className="flex-row justify-between items-center mb-3">
                 <Text className="text-white text-2xl font-bold">Songs</Text>
                 <TouchableOpacity
-                  onPress={() => router.push("/(user)/yourSong")}
+                  onPress={() => router.push("/(user)/publicSongs")}
                 >
                   <Text style={tw`text-[${APP_COLOR.PINK}] font-bold text-xl`}>
                     See All
@@ -227,7 +228,7 @@ const HomeTab = () => {
                     <TouchableOpacity
                       key={s.id}
                       className="w-[48%] mb-4"
-                      onPress={() => router.push(`/songItem?id=${s.id}`)}
+                      onPress={() => router.push(`/chooseKaraokes?id=${s.id}`)}
                     >
                       <Image
                         source={{ uri: s.imageUrl }}

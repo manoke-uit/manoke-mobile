@@ -1,42 +1,48 @@
-import React from "react";
-import { Text, TouchableOpacity, Image } from "react-native";
-import { makeRedirectUri } from "expo-auth-session";
+import React, { useEffect } from "react";
+import { Text, TouchableOpacity, Image, View } from "react-native";
 import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
+import axios from "axios";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_ICON =
   "https://th.bing.com/th/id/R.0b5f56acafa451e24c84ece2e848c7b5?rik=GbZk1A%2bLRZVRnA&pid=ImgRaw&r=0";
 
-const BACKEND_LOGIN_URL = "http://192.168.210.5:3000/auth/google/login";
-
-export default function GoogleLoginButton({
-  onTokenReceived,
-}: {
+interface Props {
   onTokenReceived: (token: string) => void;
-}) {
-  const handleLogin = async () => {
-    const redirectUri = makeRedirectUri();
+}
 
-    const authUrl = `${BACKEND_LOGIN_URL}?redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}`;
+const GoogleLoginButton: React.FC<Props> = ({ onTokenReceived }) => {
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId:
+      "806331050880-k34vttuuou6hr84q5ai2c57ucjodq2g8.apps.googleusercontent.com",
+  });
 
-    const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
-
-    if (result.type === "success" && result.url) {
-      const token = new URL(result.url).searchParams.get("token");
-      if (token) {
-        onTokenReceived(token);
-      } else {
-        // console.warn("Không tìm thấy token trong URL.");
+  useEffect(() => {
+    if (response?.type === "success") {
+      const id_token = response.authentication?.idToken;
+      if (id_token) {
+        // Gửi token lên backend để xác thực và lấy accessToken riêng
+        axios
+          .post("https://manoke-server-6gsv.onrender.com/auth/google/mobile", {
+            idToken: id_token,
+          })
+          .then((res) => {
+            const { accessToken } = res.data;
+            onTokenReceived(accessToken);
+          })
+          .catch((err) => {
+            console.error("Google login backend failed", err);
+          });
       }
-    } else {
-      // console.warn("Đăng nhập bị huỷ.");
     }
-  };
+  }, [response]);
 
   return (
     <TouchableOpacity
-      onPress={handleLogin}
+      disabled={!request}
+      onPress={() => promptAsync()}
       className="flex-row items-center bg-white py-3 px-5 rounded-lg mt-4 shadow"
     >
       <Image
@@ -49,4 +55,6 @@ export default function GoogleLoginButton({
       </Text>
     </TouchableOpacity>
   );
-}
+};
+
+export default GoogleLoginButton;

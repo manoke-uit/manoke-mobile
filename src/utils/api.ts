@@ -23,7 +23,7 @@ export const registerAPI = (
   displayName: string
 ) => {
   const url = `/auth/signup`;
-  return axios.post<{ message: string }>(url, { email, password, displayName });
+  return axios.post(url, { email, password, displayName });
 };
 
 export const loginAPI = (email: string, password: string) => {
@@ -104,21 +104,22 @@ export const createPlaylistAPI = (payload: {
 };
 
 export const getPlaylistsAPI = () => {
-  const url = `/playlists`;
+  const url = `/playlists/publicPlaylist`;
   return axios.get(url);
 };
-
-export const updatePlaylistAPI = (
-  playlistId: string,
-  payload: Partial<{
-    title?: string;
-    imageUrl?: string;
-    songIds?: string[];
-    isPublic?: boolean;
-  }>
-) => {
+export const getUserPlaylistAPI = () => {
+  const url = `/playlists/userPlaylist`;
+  return axios.get(url);
+};
+export const updatePlaylistAPI = (playlistId: string, payload: any) => {
   const url = `/playlists/${playlistId}`;
-  return axios.patch<IPlaylist>(url, payload);
+
+  const isFormData = payload instanceof FormData;
+  return axios.patch(url, payload, {
+    headers: {
+      "Content-Type": isFormData ? "multipart/form-data" : "application/json",
+    },
+  });
 };
 
 export const uploadAvatar = async (fileUri: string, userId: string) => {
@@ -216,7 +217,7 @@ export const getPostsAPI = async (page: number = 1, limit: number = 10) => {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    params: { page, limit }
+    params: { page, limit },
   });
 };
 

@@ -17,12 +17,13 @@ import { router } from "expo-router";
 import {
   createPlaylistAPI,
   getAccountAPI,
-  getPlaylistsAPI,
   updatePlaylistAPI,
   deletePlaylistAPI,
+  getUserPlaylistAPI,
 } from "@/utils/api";
 import VideoMoreMenu from "@/components/videoMoreMenu";
-
+import * as ImagePicker from "expo-image-picker";
+import Toast from "react-native-toast-message";
 interface Playlist {
   id: string;
   name: string;
@@ -39,21 +40,26 @@ const PlaylistScreen = () => {
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
     null
   );
+  const [playlistImage, setPlaylistImage] = useState<string | null>(null);
 
   const fetchUserAndPlaylists = async () => {
     try {
       const userRes = await getAccountAPI();
       setUserId(userRes.userId || null);
 
-      const res = await getPlaylistsAPI();
+      const res = await getUserPlaylistAPI();
       if (res) {
-        const fetched = res.map((p: any) => ({
-          id: p.id,
-          name: p.title,
-          count: p.songs?.length || 0,
-          isPublic: p.isPublic,
-          imageUrl: p.imageUrl,
-        }));
+        const fetched = res.map((p: any) => {
+          const firstSongImage = p.songs?.[0]?.imageUrl || null;
+          return {
+            id: p.id,
+            name: p.title,
+            count: p.songs?.length || 0,
+            isPublic: p.isPublic,
+            imageUrl: p.imageUrl || firstSongImage,
+          };
+        });
+
         setPlaylists(fetched);
       }
     } catch (err) {
@@ -63,7 +69,7 @@ const PlaylistScreen = () => {
 
   useEffect(() => {
     fetchUserAndPlaylists();
-  }, []);
+  }, [playlistImage, userId]);
 
   const handleCreatePlaylist = async () => {
     if (!playlistName.trim() || !userId) return;
@@ -103,6 +109,46 @@ const PlaylistScreen = () => {
       );
     } catch (err) {
       Alert.alert("Lỗi", "Không thể cập nhật trạng thái công khai");
+    }
+  };
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled && selectedPlaylistId) {
+      const imageUri = result.assets[0].uri;
+      setPlaylistImage(imageUri);
+
+      const fileName = imageUri.split("/").pop() || "playlist.jpg";
+      const match = /\.(\w+)$/.exec(fileName);
+      const fileType = match ? `image/${match[1]}` : `image`;
+
+      const formData = new FormData();
+      formData.append("image", {
+        uri: imageUri,
+        name: fileName,
+        type: fileType,
+      } as any);
+
+      try {
+        await updatePlaylistAPI(selectedPlaylistId, formData);
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Upload image successful!",
+        });
+
+        fetchUserAndPlaylists();
+      } catch (err) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Cannot upload image",
+        });
+      }
     }
   };
 
@@ -188,9 +234,6 @@ const PlaylistScreen = () => {
 
               <View className="flex-1">
                 <Text className="text-white font-bold">{item.name}</Text>
-                <Text className="text-gray-400">
-                  Sum of Songs: {item.count}
-                </Text>
               </View>
 
               <TouchableOpacity
@@ -275,6 +318,12 @@ const PlaylistScreen = () => {
                 if (playlist) {
                   handleTogglePublic(playlist.id, playlist.isPublic);
                 }
+              },
+            },
+            {
+              label: "Upload Image",
+              onPress: () => {
+                pickImage();
               },
             },
             {
