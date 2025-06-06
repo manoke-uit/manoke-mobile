@@ -19,7 +19,10 @@
     },
     "extra": {
       "eas": {
-        "projectId": "a90bff96-6dc5-45d9-9570-157411438314"
+        "projectId": "db6fb033-22c5-4092-a793-75d501d803db"
+      },
+      "router": {
+        "origin": false
       }
     },
     "android": {
@@ -45,7 +48,10 @@
               "pathPrefix": "/auth/confirm-email"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "adaptiveIcon": {
@@ -72,6 +78,7 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "owner": "july234"
   }
 }
