@@ -107,7 +107,7 @@ const ProfileTab = () => {
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Ionicons name="add-circle-outline" size={20} color="white" />
-                <Text style={{ color: "white", marginLeft: 12 }}>Add a song</Text>
+                <Text style={{ color: "white", marginLeft: 12 }}>Add Karaoke</Text>
               </View>
               <Feather name="chevron-right" size={20} color="white" />
             </MotiPressable>
@@ -129,7 +129,7 @@ const ProfileTab = () => {
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Ionicons name="radio-outline" size={20} color="white" />
-                <Text style={{ color: "white", marginLeft: 12 }}>Your Songs</Text>
+                <Text style={{ color: "white", marginLeft: 12 }}>Your Karaokes</Text>
               </View>
               <Feather name="chevron-right" size={20} color="white" />
             </MotiPressable>

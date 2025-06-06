@@ -187,7 +187,7 @@ const SignUp = () => {
                 style={tw`absolute right-4 top-3`}
               >
                 <Ionicons
-                  name={showPassword ? "eye-off" : "eye"}
+                  name={showPassword ? "eye" : "eye-off"}
                   size={20}
                   color="#663399"
                 />
@@ -208,7 +208,7 @@ const SignUp = () => {
                 style={tw`absolute right-4 top-3`}
               >
                 <Ionicons
-                  name={showConfirmPassword ? "eye-off" : "eye"}
+                  name={showConfirmPassword ? "eye" : "eye-off"}
                   size={20}
                   color="#663399"
                 />

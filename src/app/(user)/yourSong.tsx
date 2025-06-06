@@ -1,41 +1,80 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   Alert,
-  Image,
+  ImageBackground,
+  StyleSheet,
+  ActivityIndicator,
+  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import VideoMoreMenu from "@/components/videoMoreMenu";
-import { router, useNavigation } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import {
   getAllOwnKaraokesAPI,
   requestPublicKaraokeAPI,
   deleteKaraokeAPI,
 } from "@/utils/api";
 
+// Interface IKaraoke
+interface IKaraoke {
+  id: string;
+  description: string;
+  status: 'public' | 'private' | 'pending';
+  song: {
+    id: string;
+    title:string;
+    imageUrl?: string;
+    artists?: { name: string }[];
+  };
+}
+
+// Component cho Status Badge
+const StatusBadge = ({ status }: { status: IKaraoke['status'] }) => {
+  const statusConfig = {
+    public: {
+      text: "Public",
+      icon: "earth",
+      color: "#28a745",
+    },
+    private: {
+      text: "Private",
+      icon: "lock-closed",
+      color: "#6c757d",
+    },
+    pending: {
+        text: "Pending",
+        icon: "hourglass-outline",
+        color: "#ffc107",
+    }
+  } as const; 
+
+  const config = statusConfig[status] || statusConfig.private;
+
+  return (
+    <View style={[styles.statusBadge, { backgroundColor: config.color }]}>
+      <Ionicons name={config.icon} size={12} color="white" />
+      <Text style={styles.statusBadgeText}>{config.text}</Text>
+    </View>
+  );
+};
+
 const YourVideos = () => {
   const [isMoreMenuVisible, setMoreMenuVisible] = useState<string | null>(null);
   const [karaokes, setKaraokes] = useState<IKaraoke[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigation = useNavigation();
 
   const fetchKaraokes = async () => {
     try {
       setLoading(true);
       const response = await getAllOwnKaraokesAPI();
       const backendRes = response as IBackendRes<IKaraoke[]>;
-      if (backendRes?.data) {
-        setKaraokes(backendRes.data);
-      } else {
-        setKaraokes([]);
-      }
+      setKaraokes(backendRes?.data || []);
     } catch (error) {
-      // console.error('Error fetching karaokes:', error);
       Alert.alert("Error", "Failed to load your karaokes");
       setKaraokes([]);
     } finally {
@@ -43,64 +82,90 @@ const YourVideos = () => {
     }
   };
 
-  useEffect(() => {
-    fetchKaraokes();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
+  useFocusEffect(
+    useCallback(() => {
       fetchKaraokes();
-    });
-    return unsubscribe;
-  }, [navigation]);
+    }, [])
+  );
 
-  const handleToggleStatus = async (
-    karaokeId: string,
-    currentStatus: "public" | "private"
-  ) => {
-    try {
-      if (currentStatus === "private") {
-        // Request to make public
-        const response = await requestPublicKaraokeAPI(karaokeId);
-        const backendRes = response as IBackendRes<IKaraoke>;
-        if (backendRes?.data) {
-          Alert.alert(
-            "Success",
-            "Request to make karaoke public has been sent"
-          );
-          // Update local state
-          setKaraokes((prev) =>
-            prev.map((k) =>
-              k.id === karaokeId ? { ...k, status: "public" } : k
-            )
-          );
-        } else {
-          throw new Error("Failed to get response data");
+  const handleToggleStatus = async (karaokeId: string) => {
+    const karaoke = karaokes.find((k) => k.id === karaokeId);
+    if (!karaoke) return;
+    
+    if (karaoke.status === 'private') {
+        try {
+            await requestPublicKaraokeAPI(karaokeId);
+            Alert.alert("Success", "Request to make karaoke public has been sent.");
+            setKaraokes(prev => prev.map(k => k.id === karaokeId ? { ...k, status: 'pending' } : k));
+        } catch (error) {
+            Alert.alert("Error", "Failed to send request.");
         }
-      } else {
-        // TODO: Implement private request if needed
-        Alert.alert("Info", "Making karaoke private is not implemented yet");
-      }
-    } catch (error) {
-      // console.error('Error toggling status:', error);
-      Alert.alert("Error", "Failed to update karaoke status");
+    } else {
+        Alert.alert("Info", "This action is not available for this status.");
     }
+    setMoreMenuVisible(null);
+  };
+  
+  const handleRemoveKaraoke = (karaokeId: string) => {
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete this karaoke? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setKaraokes(prev => prev.filter(k => k.id !== karaokeId));
+              await deleteKaraokeAPI(karaokeId);
+              Alert.alert("Success", "Karaoke has been deleted.");
+            } catch (error) {
+              Alert.alert("Error", "Failed to remove karaoke. Please refresh.");
+              fetchKaraokes();
+            }
+          },
+        },
+      ]
+    );
     setMoreMenuVisible(null);
   };
 
-  const handleRemoveKaraoke = async (karaokeId: string) => {
-    try {
-      const response = await deleteKaraokeAPI(karaokeId);
-      const backendRes = response as IBackendRes<IKaraoke>;
-      if (backendRes?.data) {
-        Alert.alert("Success", "Karaoke has been deleted");
-      }
-    } catch (error) {
-      // console.error('Error removing karaoke:', error);
-      Alert.alert("Error", "Failed to remove karaoke");
-    }
-    setMoreMenuVisible(null);
-  };
+  // THAY ĐỔI BỐ CỤC BÊN TRONG CARD
+  const renderKaraokeCard = ({ item }: { item: IKaraoke }) => (
+    <View style={styles.cardContainer}>
+      <TouchableOpacity onPress={() => router.push(`/songItem?id=${item.song.id}&karaokeId=${item.id}`)}>
+        <ImageBackground
+          source={{ uri: item.song.imageUrl || "https://via.placeholder.com/300x169.png?text=No+Image" }}
+          style={styles.cardImage}
+          imageStyle={{ borderRadius: 12 }}
+        >
+          {/* Status Badge đã được di chuyển từ đây xuống dưới */}
+        </ImageBackground>
+      </TouchableOpacity>
+      <View style={styles.cardInfo}>
+        <Text style={styles.cardTitle} numberOfLines={1}>{item.song.title}</Text>
+        <Text style={styles.cardDescription} numberOfLines={2}>
+            {item.description || "No description"}
+        </Text>
+        {/* Hàng dưới cùng chứa Status, Artist, và nút More */}
+        <View style={styles.bottomRow}>
+            <View style={styles.bottomRowLeft}>
+                <StatusBadge status={item.status} />
+                <Text style={styles.cardArtist} numberOfLines={1}>
+                    {item.song.artists?.map((artist) => artist.name).join(", ") || "Unknown Artist"}
+                </Text>
+            </View>
+            <TouchableOpacity 
+                style={styles.moreButton}
+                onPress={() => setMoreMenuVisible(item.id)}
+            >
+                <Ionicons name="ellipsis-vertical" size={20} color={APP_COLOR.WHITE} />
+            </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
 
   return (
     <LinearGradient
@@ -108,147 +173,173 @@ const YourVideos = () => {
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       locations={[0, 0.4]}
-      style={{ flex: 1 }}
+      style={styles.container}
     >
-      <View style={{ flex: 1 }}>
-        {/* Custom Header */}
-        <View
-          className="w-full flex-row items-center"
-          style={{
-            paddingVertical: 30,
-            paddingHorizontal: 20,
-            backgroundColor: "transparent",
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 items-center justify-center rounded-full bg-pink-500/30"
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={25}
-              color={APP_COLOR.WHITE}
-            />
-          </TouchableOpacity>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+          <Ionicons name="chevron-back-outline" size={25} color={APP_COLOR.WHITE} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Your Karaokes</Text>
+        <TouchableOpacity onPress={() => router.push("/addSong")} style={styles.headerButton}>
+            <Ionicons name="add" size={28} color={APP_COLOR.WHITE} />
+        </TouchableOpacity>
+      </View>
 
-          <View className="flex-1 items-center">
-            <Text className="text-white text-2xl font-bold">Your Songs</Text>
-          </View>
-
-          <View className="w-10" />
+      {/* Karaoke Grid */}
+      {loading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={APP_COLOR.WHITE} />
         </View>
-
-        <ScrollView
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingBottom: 80,
-          }}
-          className="flex-1"
-        >
-          {/* Karaoke List */}
-          {loading ? (
-            <View className="items-center mt-10">
-              <Text className="text-white text-lg">Loading...</Text>
-            </View>
-          ) : karaokes.length === 0 ? (
-            <View className="items-center mt-10">
-              <Text className="text-white text-lg font-semibold">
-                No karaoke uploaded yet
-              </Text>
-              <TouchableOpacity
-                onPress={() => router.push("/addSong")}
-                className="bg-pink-500 rounded-lg px-6 py-3 mt-4"
-              >
-                <Text className="text-white font-semibold text-base">
-                  Upload a Karaoke
-                </Text>
+      ) : (
+        <FlatList
+          data={karaokes}
+          renderItem={renderKaraokeCard}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 8 }}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={() => (
+            <View style={styles.centered}>
+              <Ionicons name="videocam-off-outline" size={64} color="rgba(255,255,255,0.5)" />
+              <Text style={styles.emptyText}>Your stage is empty... for now!</Text>
+              <TouchableOpacity onPress={() => router.push("/addSong")} style={styles.uploadButton}>
+                <Text style={styles.uploadButtonText}>Upload Your First Karaoke</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            <View className="px-4">
-              {karaokes.map((karaoke) => (
-                <TouchableOpacity
-                  key={karaoke.id}
-                  className="flex-row items-center mb-5 border-b border-white/10 pb-4"
-                  onPress={() => router.push(`/songItem?id=${karaoke.song.id}`)}
-                >
-                  <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4">
-                    {karaoke.song.imageUrl && (
-                      <Image
-                        source={{ uri: karaoke.song.imageUrl }}
-                        className="w-full h-full rounded-lg"
-                      />
-                    )}
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-white font-bold text-base">
-                      {karaoke.song.title}
-                    </Text>
-                    <Text className="text-gray-400 text-sm">
-                      {karaoke.song.artists
-                        ?.map((artist) => artist.name)
-                        .join(", ") || "Unknown Artist"}
-                    </Text>
-                    <Text className="text-gray-400 text-xs mt-1">
-                      {karaoke.status === "public"
-                        ? "Public"
-                        : "Private"}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => setMoreMenuVisible(karaoke.id)}
-                    className="ml-2"
-                  >
-                    <Ionicons
-                      name="ellipsis-vertical"
-                      size={20}
-                      color={APP_COLOR.WHITE}
-                    />
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              ))}
-            </View>
           )}
-        </ScrollView>
+        />
+      )}
 
-        {/* Karaoke More Menu */}
-        {isMoreMenuVisible && (
-          <VideoMoreMenu
-            visible={!!isMoreMenuVisible}
-            onClose={() => setMoreMenuVisible(null)}
-            actions={
-              isMoreMenuVisible === "global"
-                ? [
-                    {
-                      label: "Upload New Karaoke",
-                      onPress: () => router.push("/addSong"),
-                    },
-                  ]
-                : [
-                    {
-                      label:
-                        karaokes.find((k) => k.id === isMoreMenuVisible)
-                          ?.status === "public"
-                          ? "Make Private"
-                          : "Make Public",
-                      onPress: () =>
-                        handleToggleStatus(
-                          isMoreMenuVisible,
-                          karaokes.find((k) => k.id === isMoreMenuVisible)!
-                            .status
-                        ),
-                    },
-                    {
-                      label: "Remove Karaoke",
-                      onPress: () => handleRemoveKaraoke(isMoreMenuVisible),
-                    },
-                  ]
-            }
-          />
-        )}
-      </View>
+      {/* Menu */}
+      {isMoreMenuVisible && (
+        <VideoMoreMenu
+          visible={!!isMoreMenuVisible}
+          onClose={() => setMoreMenuVisible(null)}
+          actions={[
+            {
+                label: "Request to make public",
+                icon: "earth-outline",
+                onPress: () => handleToggleStatus(isMoreMenuVisible),
+                disabled: karaokes.find(k => k.id === isMoreMenuVisible)?.status !== 'private'
+            },
+            {
+                label: "Delete Karaoke",
+                icon: "trash-outline",
+                onPress: () => handleRemoveKaraoke(isMoreMenuVisible),
+                isDestructive: true,
+            },
+          ]}
+        />
+      )}
     </LinearGradient>
   );
 };
+
+// THAY ĐỔI CÁC STYLE LIÊN QUAN
+const styles = StyleSheet.create({
+    container: { flex: 1 },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingTop: 40,
+        paddingBottom: 10,
+        paddingHorizontal: 16,
+    },
+    headerButton: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerTitle: {
+        color: 'white',
+        fontSize: 22,
+        fontWeight: 'bold',
+    },
+    centered: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        marginTop: -50,
+    },
+    cardContainer: {
+        flex: 1,
+        margin: 8,
+    },
+    cardImage: {
+        width: '100%',
+        aspectRatio: 16 / 9,
+    },
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 3,
+        paddingHorizontal: 6,
+        borderRadius: 12,
+        alignSelf: 'flex-start' // Để badge co lại vừa với nội dung
+    },
+    statusBadgeText: {
+        color: 'white',
+        fontSize: 10,
+        fontWeight: 'bold',
+        marginLeft: 4,
+    },
+    cardInfo: {
+        paddingTop: 8,
+    },
+    cardTitle: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 15,
+    },
+    cardDescription: {
+        color: 'rgba(255, 255, 255, 0.8)',
+        fontSize: 12,
+        marginTop: 4,
+        marginBottom: 8, // Thêm margin dưới
+        minHeight: 30, 
+    },
+    bottomRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    bottomRowLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1, // Để chiếm phần lớn không gian
+        marginRight: 4, // Khoảng cách với nút more
+    },
+    cardArtist: {
+        color: 'rgba(255, 255, 255, 0.7)',
+        fontSize: 12,
+        marginLeft: 6,
+        flexShrink: 1, // Cho phép text co lại nếu cần
+    },
+    moreButton: {
+        padding: 4,
+    },
+    emptyText: {
+        color: 'white',
+        fontSize: 18,
+        marginTop: 16,
+        textAlign: 'center',
+        fontWeight: '600',
+    },
+    uploadButton: {
+        backgroundColor: APP_COLOR.PINK,
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 25,
+        marginTop: 24,
+    },
+    uploadButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    }
+});
 
 export default YourVideos;
