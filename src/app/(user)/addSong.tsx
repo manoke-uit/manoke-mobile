@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,13 +7,16 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Modal, // THAY ĐỔI: Sử dụng lại Modal
+  FlatList,
+  StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
 import { router } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
-import { createSongAPI, createKaraokeAPI } from "@/utils/api";
+import { createKaraokeAPI, searchSongsByTitleAPI } from "@/utils/api";
 
 interface VideoAsset {
   uri: string;
@@ -21,31 +24,68 @@ interface VideoAsset {
   mimeType: string;
 }
 
-interface AudioAsset {
-  uri: string;
-  name: string;
-  mimeType: string;
-}
-
-interface ImageAsset {
-  uri: string;
-  name: string;
-  mimeType: string;
+interface ISong {
+  id: string;
+  title: string;
+  artist: {
+    name: string;
+  };
 }
 
 const AddVideo = () => {
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [songTitle, setSongTitle] = useState("");
-  const [artistName, setArtistName] = useState("");
-  const [lyrics, setLyrics] = useState("");
-  const [status, setStatus] = useState<"public" | "private">("private");
+  const [description, setDescription] = useState("");
+  const [filteredSongs, setFilteredSongs] = useState<ISong[]>([]);
+  const [selectedSong, setSelectedSong] = useState<ISong | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoAsset | null>(null);
-  const [selectedAudio, setSelectedAudio] = useState<AudioAsset | null>(null);
-  const [selectedImage, setSelectedImage] = useState<ImageAsset | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [loadingSongs, setLoadingSongs] = useState(false);
+  
+  // THAY ĐỔI: Mang state và logic của Modal trở lại
+  const [isSongPickerVisible, setSongPickerVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // Logic debounce này giờ sẽ phục vụ cho ô tìm kiếm bên trong Modal
+    if (!isSongPickerVisible) return; // Chỉ chạy khi modal được mở
+
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+    
+    if (searchQuery.trim() === "") {
+      setFilteredSongs([]);
+      setLoadingSongs(false);
+      return;
+    }
+
+    setLoadingSongs(true);
+    debounceTimeout.current = setTimeout(async () => {
+      try {
+        const response = await searchSongsByTitleAPI(searchQuery);
+        if (response.data) {
+          setFilteredSongs(response.data);
+        } else {
+          setFilteredSongs([]);
+        }
+      } catch (error) {
+        console.error("Failed to search songs:", error);
+        setFilteredSongs([]);
+      } finally {
+        setLoadingSongs(false);
+      }
+    }, 500);
+
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, [searchQuery, isSongPickerVisible]);
 
   const handleUploadVideo = async () => {
-    setUploading(true);
+    // ... logic không đổi
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: "video/*",
@@ -55,86 +95,25 @@ const AddVideo = () => {
         setSelectedVideo({
           uri: result.assets[0].uri,
           name: result.assets[0].name,
-          mimeType: result.assets[0].mimeType || 'video/mp4'
-        });
-        setUploadSuccess(true);
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to upload video. Please try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleUploadAudio = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "audio/*",
-        copyToCacheDirectory: true,
-      });
-      if (!result.canceled) {
-        setSelectedAudio({
-          uri: result.assets[0].uri,
-          name: result.assets[0].name,
-          mimeType: result.assets[0].mimeType || 'audio/mp3'
+          mimeType: result.assets[0].mimeType || 'video/mp4',
         });
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to upload audio. Please try again.");
+      Alert.alert("Error", "Failed to select video. Please try again.");
     }
   };
 
-  const handleUploadImage = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "image/*",
-        copyToCacheDirectory: true,
-      });
-      if (!result.canceled) {
-        setSelectedImage({
-          uri: result.assets[0].uri,
-          name: result.assets[0].name,
-          mimeType: result.assets[0].mimeType || 'image/jpeg'
-        });
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to upload image. Please try again.");
-    }
-  };
-
-  const handleSubmitVideo = async () => {
-    if (!songTitle.trim() || !artistName.trim() || !selectedVideo || !selectedAudio || !selectedImage) {
-      Alert.alert("Error", "Please fill in all fields and select all required files");
+  const handleSubmitKaraoke = async () => {
+    // ... logic không đổi
+    if (!description.trim() || !selectedSong || !selectedVideo) {
+      Alert.alert("Missing Information", "Please provide a description, select a song, and upload a video.");
       return;
     }
-
     setUploading(true);
     try {
-      // First create the song
-      const songFormData = new FormData();
-      songFormData.append("title", songTitle);
-      songFormData.append("lyrics", lyrics || `${songTitle} - ${artistName}`);
-      songFormData.append("audio", {
-        uri: selectedAudio.uri,
-        name: selectedAudio.name,
-        type: selectedAudio.mimeType,
-      } as any);
-      songFormData.append("image", {
-        uri: selectedImage.uri,
-        name: selectedImage.name,
-        type: selectedImage.mimeType,
-      } as any);
-
-      const songResponse = await createSongAPI(songFormData);
-      
-      if (!songResponse.data) {
-        throw new Error("Failed to create song");
-      }
-
-      // Then create the karaoke with the song ID
       const karaokeFormData = new FormData();
-      karaokeFormData.append("description", `${songTitle} - ${artistName}`);
-      karaokeFormData.append("songId", songResponse.data.id);
+      karaokeFormData.append("description", description);
+      karaokeFormData.append("songId", selectedSong.id);
       karaokeFormData.append("file", {
         uri: selectedVideo.uri,
         name: selectedVideo.name,
@@ -142,26 +121,32 @@ const AddVideo = () => {
       } as any);
 
       const karaokeResponse = await createKaraokeAPI(karaokeFormData);
-      
       if (karaokeResponse.data) {
-        Alert.alert("Success", "Video uploaded successfully!");
-        setSongTitle("");
-        setArtistName("");
-        setLyrics("");
-        setUploadSuccess(false);
-        setSelectedVideo(null);
-        setSelectedAudio(null);
-        setSelectedImage(null);
-        setStatus("private");
-        router.replace("/yourSong");
+        Alert.alert("Success", "Karaoke video uploaded successfully!");
+        router.back();
       }
-    } catch (error) {
-      Alert.alert("Error", "Failed to submit video. Please try again.");
+    } catch (error: any) {
+      Alert.alert("Upload Failed", error.message || "An error occurred during upload.");
     } finally {
       setUploading(false);
     }
   };
 
+  const handleSelectSong = (song: ISong) => {
+    setSelectedSong(song);
+    closeModal(); // Đóng modal và reset state
+  };
+
+  const openModal = () => {
+    setSongPickerVisible(true);
+  }
+
+  const closeModal = () => {
+    setSongPickerVisible(false);
+    setSearchQuery("");
+    setFilteredSongs([]);
+  }
+  
   return (
     <LinearGradient
       colors={[APP_COLOR.LIGHT_PINK, APP_COLOR.BLACK]}
@@ -171,180 +156,258 @@ const AddVideo = () => {
       style={{ flex: 1 }}
     >
       <View style={{ flex: 1 }}>
-        {/* Custom Header */}
-        <View
-          className="w-full flex-row items-center"
-          style={{
-            paddingVertical: 30,
-            paddingHorizontal: 20,
-            backgroundColor: "transparent",
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 items-center justify-center rounded-full bg-pink-500/30"
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={25}
-              color={APP_COLOR.WHITE}
-            />
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="chevron-back-outline" size={25} color={APP_COLOR.WHITE}/>
           </TouchableOpacity>
-
-          <View className="flex-1 items-center">
-            <Text className="text-white text-2xl font-bold">Add New Song</Text>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Upload Karaoke</Text>
           </View>
-
-          <View className="w-10" />
+          <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingBottom: 80,
-          }}
-          className="flex-1"
-        >
-          {/* Upload Area */}
-          <View className="bg-white/10 rounded-xl p-6 mb-6">
-            <View className="flex-row items-center mb-4">
-              <Ionicons
-                name="videocam-outline"
-                size={40}
-                color={APP_COLOR.WHITE}
-                className="mr-3"
-              />
-              <Text className="text-white font-semibold text-lg">
-                Upload Files
-              </Text>
-            </View>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Karaoke Details</Text>
             
-            {/* Video Upload */}
-            <TouchableOpacity
-              onPress={handleUploadVideo}
-              disabled={uploading || uploadSuccess}
-              className={`bg-pink-500 rounded-lg px-6 py-3 flex-row items-center justify-center mb-4 ${
-                uploading || uploadSuccess ? "opacity-50" : ""
-              }`}
-            >
-              {uploading ? (
-                <ActivityIndicator
-                  size="small"
-                  color={APP_COLOR.WHITE}
-                  className="mr-2"
-                />
-              ) : (
-                <Ionicons
-                  name="film-outline"
-                  size={20}
-                  color={APP_COLOR.WHITE}
-                  className="mr-2"
-                />
-              )}
-              <Text className="text-white font-semibold text-base">
-                {uploading
-                  ? "Uploading..."
-                  : selectedVideo
-                  ? "Video Selected"
-                  : "Upload Video"}
+            <TextInput
+              placeholder="Enter a description for your video..."
+              placeholderTextColor="#ccc"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              style={[styles.textInput, { height: 100, textAlignVertical: 'top' }]}
+            />
+
+            {/* THAY ĐỔI: Nút bấm kiểu Dropdown */}
+            <TouchableOpacity onPress={openModal} style={styles.dropdownButton}>
+              <Text style={styles.dropdownText} numberOfLines={1}>
+                {selectedSong ? selectedSong.title : "Select a song..."}
               </Text>
+              <Ionicons name="chevron-down" size={20} color="#ccc" />
             </TouchableOpacity>
 
-            {/* Audio Upload */}
-            <TouchableOpacity
-              onPress={handleUploadAudio}
-              disabled={selectedAudio !== null}
-              className={`bg-pink-500 rounded-lg px-6 py-3 flex-row items-center justify-center mb-4 ${
-                selectedAudio ? "opacity-50" : ""
-              }`}
-            >
-              <Ionicons
-                name="musical-notes-outline"
-                size={20}
-                color={APP_COLOR.WHITE}
-                className="mr-2"
-              />
-              <Text className="text-white font-semibold text-base">
-                {selectedAudio ? "Audio Selected" : "Upload Audio"}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Image Upload */}
-            <TouchableOpacity
-              onPress={handleUploadImage}
-              disabled={selectedImage !== null}
-              className={`bg-pink-500 rounded-lg px-6 py-3 flex-row items-center justify-center ${
-                selectedImage ? "opacity-50" : ""
-              }`}
-            >
-              <Ionicons
-                name="image-outline"
-                size={20}
-                color={APP_COLOR.WHITE}
-                className="mr-2"
-              />
-              <Text className="text-white font-semibold text-base">
-                {selectedImage ? "Image Selected" : "Upload Image"}
+            <TouchableOpacity onPress={handleUploadVideo} style={styles.uploadButton}>
+              <Ionicons name="videocam-outline" size={20} color={APP_COLOR.WHITE} style={{ marginRight: 10 }} />
+              <Text style={styles.buttonText} numberOfLines={1}>
+                {selectedVideo ? `Video: ${selectedVideo.name}` : "Upload a karaoke video"}
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Song Details Input */}
-          {uploadSuccess && (
-            <View className="bg-white/10 rounded-xl p-6 mb-6">
-              <View className="flex-row items-center mb-4">
-                <Ionicons
-                  name="pencil-outline"
-                  size={30}
-                  color={APP_COLOR.WHITE}
-                  className="mr-3"
-                />
-                <Text className="text-white font-semibold text-lg">
-                  Song Details
-                </Text>
-              </View>
-              <TextInput
-                placeholder="Song Title"
-                placeholderTextColor="#eee"
-                value={songTitle}
-                onChangeText={setSongTitle}
-                className="text-white text-base bg-white/5 rounded-lg px-4 py-3 mb-4"
-              />
-              <TextInput
-                placeholder="Artist Name"
-                placeholderTextColor="#eee"
-                value={artistName}
-                onChangeText={setArtistName}
-                className="text-white text-base bg-white/5 rounded-lg px-4 py-3 mb-4"
-              />
-              <TextInput
-                placeholder="Lyrics (optional)"
-                placeholderTextColor="#eee"
-                value={lyrics}
-                onChangeText={setLyrics}
-                multiline
-                numberOfLines={4}
-                className="text-white text-base bg-white/5 rounded-lg px-4 py-3 mb-4"
-              />
-              <View className="flex-row justify-end">
-                <TouchableOpacity
-                  onPress={handleSubmitVideo}
-                  disabled={!songTitle.trim() || !artistName.trim() || !selectedVideo || !selectedAudio || !selectedImage}
-                  className={`bg-pink-500 rounded-lg px-6 py-3 ${
-                    !songTitle.trim() || !artistName.trim() || !selectedVideo || !selectedAudio || !selectedImage ? "opacity-50" : ""
-                  }`}
-                >
-                  <Text className="text-white font-semibold text-base">
-                    Submit
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+          <TouchableOpacity
+            onPress={handleSubmitKaraoke}
+            disabled={uploading || !description || !selectedSong || !selectedVideo}
+            style={[styles.submitButton, (uploading || !description || !selectedSong || !selectedVideo) && styles.disabledButton]}
+          >
+            {uploading ? (
+              <ActivityIndicator size="small" color={APP_COLOR.WHITE} />
+            ) : (
+              <Text style={styles.buttonText}>Submit Karaoke</Text>
+            )}
+          </TouchableOpacity>
         </ScrollView>
       </View>
+      
+      {/* THAY ĐỔI: Modal để tìm kiếm và chọn bài hát */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isSongPickerVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select a Song</Text>
+            <TextInput
+              placeholder="Search by title or artist..."
+              placeholderTextColor="#999"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={styles.searchBar}
+            />
+            {loadingSongs ? (
+              <ActivityIndicator size="large" color={APP_COLOR.PINK} style={{marginTop: 20}} />
+            ) : (
+              <FlatList
+                data={filteredSongs}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity onPress={() => handleSelectSong(item)} style={styles.songItem}>
+                    <View>
+                      <Text style={styles.songTitle}>{item.title}</Text>
+                      <Text style={styles.songArtist}>{item.artist?.name}</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <Text style={styles.emptyListText}>
+                    {searchQuery.trim() !== '' ? 'No songs found.' : 'Type to start searching.'}
+                  </Text>
+                }
+              />
+            )}
+            <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  header: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 40,
+    paddingBottom: 10,
+    paddingHorizontal: 20,
+    backgroundColor: 'transparent',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    backgroundColor: 'rgba(236, 72, 153, 0.3)',
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  scrollViewContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 80,
+  },
+  formSection: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  textInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    color: 'white',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  // THAY ĐỔI: Style cho nút dropdown
+  dropdownButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dropdownText: {
+    color: 'white',
+    fontSize: 16,
+    flex: 1,
+  },
+  uploadButton: {
+    backgroundColor: APP_COLOR.PINK,
+    borderRadius: 8,
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  submitButton: {
+    backgroundColor: APP_COLOR.PURPLE, 
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  // THAY ĐỔI: Styles cho Modal
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  modalContent: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '#2d3748', 
+    borderRadius: 12,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  searchBar: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    color: 'white',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 20,
+  },
+  songItem: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  songTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  songArtist: {
+    color: '#a0aec0',
+    fontSize: 14,
+  },
+  emptyListText: {
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  closeButton: {
+    backgroundColor: APP_COLOR.PINK,
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  }
+});
 
 export default AddVideo;

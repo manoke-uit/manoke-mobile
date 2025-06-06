@@ -34,7 +34,7 @@ const FriendsTab = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
+useEffect(() => {
     const loadInitialData = async () => {
       try {
         const userId = await AsyncStorage.getItem("userId");
@@ -49,7 +49,8 @@ const FriendsTab = () => {
           return;
         }
         setCurrentUserId(userId);
-        await Promise.all([fetchFriends(), fetchPendingRequests()]);
+        // THAY ĐỔI: Truyền userId trực tiếp vào các hàm fetch để tránh race condition
+        await Promise.all([fetchFriends(userId), fetchPendingRequests(userId)]);
       } catch (error) {
         Toast.show({
           type: "error",
@@ -61,7 +62,8 @@ const FriendsTab = () => {
     loadInitialData();
   }, []);
 
-  const fetchFriends = async () => {
+  // THAY ĐỔI: Hàm nhận userId làm tham số
+  const fetchFriends = async (userId: string) => {
     try {
       const response = await getFriendsAPI();
       setFriends(response);
@@ -74,15 +76,13 @@ const FriendsTab = () => {
     }
   };
 
-  const fetchPendingRequests = async () => {
+  // THAY ĐỔI: Hàm nhận userId và bỏ bộ lọc thừa
+  const fetchPendingRequests = async (userId: string) => {
     try {
       const response = await getFriendRequestsAPI();
-      const allRequests = response.filter(
-        (request) => 
-          request.userId_1 === currentUserId ||
-          request.userId_2 === currentUserId
-      );
-      setPendingRequests(allRequests);
+      // Backend đã trả về đúng các request liên quan đến user hiện tại (cả gửi và nhận)
+      // nên không cần lọc lại ở frontend.
+      setPendingRequests(response);
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -126,7 +126,7 @@ const FriendsTab = () => {
         text1: "Success",
         text2: "Friend request sent successfully.",
       });
-      fetchPendingRequests();
+      fetchPendingRequests(receiverId);
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -136,28 +136,30 @@ const FriendsTab = () => {
     }
   };
 
-  const handleRespondToRequest = async (receiverId: string, status: "accepted" | "rejected") => {
+  const handleRespondToRequest = async (senderId: string, status: "accepted" | "rejected") => {
+    if (!currentUserId) return;
     try {
-      await updateFriendRequestAPI(receiverId, status);
+      await updateFriendRequestAPI(senderId, status);
       Toast.show({
         type: "success",
         text1: "Success",
-        text2: `Friend request ${status === "accepted" ? "accepted" : "rejected"} successfully.`,
+        text2: `Friend request ${status === "accepted" ? "accepted" : "rejected"}.`,
       });
-      fetchPendingRequests();
+      fetchPendingRequests(currentUserId);
       if (status === "accepted") {
-        fetchFriends();
+        fetchFriends(currentUserId);
       }
     } catch (error: any) {
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: error.message || "Failed to process friend request.",
+        text2: error.response?.data?.message || "Failed to process friend request.",
       });
     }
   };
 
   const handleRemoveFriend = async (id: string) => {
+    if (!currentUserId) return;
     try {
       await removeFriendAPI(id);
       Toast.show({
@@ -165,12 +167,12 @@ const FriendsTab = () => {
         text1: "Success",
         text2: "Friend removed successfully.",
       });
-      fetchFriends();
+      fetchFriends(currentUserId);
     } catch (error: any) {
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: error.message || "Failed to remove friend.",
+        text2: error.response?.data?.message || "Failed to remove friend.",
       });
     }
   };

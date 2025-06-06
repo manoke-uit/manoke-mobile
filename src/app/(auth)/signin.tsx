@@ -159,7 +159,7 @@ const SignIn = () => {
               className="absolute right-12 bottom-16"
             >
               <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
+                name={showPassword ? "eye" : "eye-off"}
                 size={20}
                 color="#663399"
               />

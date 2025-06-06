@@ -147,21 +147,13 @@ const HomeTab = () => {
                 Sing without limits
               </Text>
               <Text className="text-white pt-7 mx-5 text-[18px] text-center">
-                Subscribes to unlock full versions of the songs and premium
-                features!
+                Unleash your voice on a global stage, where every song tells your story.
               </Text>
             </LinearGradient>
 
             <View className="mb-6 pt-8">
               <View className="flex-row justify-between items-center mb-3">
                 <Text className="text-white text-2xl font-bold">Playlists</Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/(user)/publicPlaylists")}
-                >
-                  <Text style={tw`text-[${APP_COLOR.PINK}] font-bold text-xl`}>
-                    See All
-                  </Text>
-                </TouchableOpacity>
               </View>
 
               {loadingPlaylists ? (
@@ -209,13 +201,6 @@ const HomeTab = () => {
             <View className="mb-6 mt-7">
               <View className="flex-row justify-between items-center mb-3">
                 <Text className="text-white text-2xl font-bold">Songs</Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/(user)/publicSongs")}
-                >
-                  <Text style={tw`text-[${APP_COLOR.PINK}] font-bold text-xl`}>
-                    See All
-                  </Text>
-                </TouchableOpacity>
               </View>
 
               {loadingSongs ? (
