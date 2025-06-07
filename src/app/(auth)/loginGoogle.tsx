@@ -2,6 +2,7 @@ import React from "react";
 import { Text, TouchableOpacity, Image, Alert } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
+import tw from "twrnc";
 
 const GOOGLE_ICON =
   "https://th.bing.com/th/id/R.0b5f56acafa451e24c84ece2e848c7b5?rik=GbZk1A%2bLRZVRnA&pid=ImgRaw&r=0";
@@ -46,15 +47,16 @@ const GoogleLoginButton: React.FC<Props> = ({ onTokenReceived }) => {
   return (
     <TouchableOpacity
       onPress={loginWithGoogle}
-      className="flex-row items-center bg-white py-3 px-5 rounded-lg mt-4 shadow"
+      style={tw`flex-row items-center justify-center bg-white py-3 px-6 rounded-full border border-gray-200 shadow-lg w-full h-[50px]`}
+      activeOpacity={0.7}
     >
       <Image
         source={{ uri: GOOGLE_ICON }}
-        className="w-8 h-8 mr-2"
+        style={tw`w-6 h-6 mr-3`}
         resizeMode="contain"
       />
-      <Text className="text-base font-medium text-gray-800">
-        Sign In With Google
+      <Text style={tw`text-base font-semibold text-gray-900`}>
+        Sign in with Google
       </Text>
     </TouchableOpacity>
   );
