@@ -159,7 +159,7 @@ const SignIn = () => {
               className="absolute right-12 bottom-16"
             >
               <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
+                name={showPassword ? "eye" : "eye-off"}
                 size={20}
                 color="#663399"
               />
@@ -173,9 +173,6 @@ const SignIn = () => {
                 Forgot Password?
               </Text>
             </TouchableOpacity>
-          </View>
-          <View className="mt-4">
-            <GoogleLoginButton onTokenReceived={handleGoogleLogin} />
           </View>
           <View style={tw`w-full items-center mt-10`}>
             <TouchableOpacity
@@ -193,11 +190,15 @@ const SignIn = () => {
 
             <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
               <Text
-                style={tw`text-sm text-center mt-2 text-[${APP_COLOR.TEXT_PURPLE}]`}
+                style={tw`text-sm text-center mt-2 mb-6 text-[${APP_COLOR.TEXT_PURPLE}]`}
               >
                 Don't have an account?
               </Text>
             </TouchableOpacity>
+
+            <View style={tw`w-[80%] max-w-[400px]`}>
+              <GoogleLoginButton onTokenReceived={handleGoogleLogin} />
+            </View>
           </View>
         </Animated.View>
       </LinearGradient>

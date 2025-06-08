@@ -12,6 +12,7 @@ import {
   TouchableHighlight,
   Image,
 } from "react-native";
+import { StyleSheet } from 'react-native';
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AnimatedWrapper from "@/components/animation/animate";
@@ -31,9 +32,10 @@ import {
   deleteCommentAPI,
 } from "@/utils/api";
 import { Audio } from 'expo-av';
+import AudioPlayer from "@/components/AudioPlayer";
 
 const CommunityTab = () => {
-  const [posts, setPosts] = useState<IPost[]>([]);
+const [posts, setPosts] = useState<IPost[]>([]);
   const [friends, setFriends] = useState<string[]>([]);
   const [isMoreMenuVisible, setMoreMenuVisible] = useState<string | null>(null);
   const [commentMenuVisible, setCommentMenuVisible] = useState<string | null>(null);
@@ -61,6 +63,9 @@ const CommunityTab = () => {
   const [audioModalVisible, setAudioModalVisible] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState<{ [key: string]: boolean }>({});
+  const [isAudioLoading, setIsAudioLoading] = useState<{ [key: string]: boolean }>({}); // New state for loading
+  const [audioPosition, setAudioPosition] = useState<{ [key: string]: number }>({}); // New state for position
+  const [audioDuration, setAudioDuration] = useState<{ [key: string]: number }>({}); // New state for duration
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -96,15 +101,10 @@ const CommunityTab = () => {
         setFriends(friendIds);
 
         const postResponse = await getPostsAPI();
-        console.log("Posts API Response:", postResponse);
         if (Array.isArray(postResponse)) {
-          console.log("Setting posts with array data:", postResponse);
           setPosts(postResponse);
         } else if (postResponse.items) {
-          console.log("Setting posts with data property:", postResponse.items);
           setPosts(postResponse.items);
-        } else {
-          console.log("No valid data in postResponse");
         }
 
         const scoresResponse = await getAllScores();
@@ -129,6 +129,91 @@ const CommunityTab = () => {
         }
       : undefined;
   }, [sound]);
+
+  const playSound = async (audioUrl: string, postId: string) => {
+    try {
+      setIsAudioLoading((prev) => ({ ...prev, [postId]: true }));
+
+      // Stop current playing audio if any
+      if (sound) {
+        try {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+          if (currentPlayingId) {
+            setIsPlaying((prev) => ({ ...prev, [currentPlayingId]: false }));
+          }
+        } catch (error) {
+          console.log("Error stopping previous sound:", error);
+        }
+      }
+
+      // If clicking the same post, toggle play/pause
+      if (currentPlayingId === postId && isPlaying[postId]) {
+        try {
+          await sound?.pauseAsync();
+          setIsPlaying((prev) => ({ ...prev, [postId]: false }));
+          setCurrentPlayingId(null);
+        } catch (error) {
+          console.log("Error pausing sound:", error);
+        }
+        setIsAudioLoading((prev) => ({ ...prev, [postId]: false }));
+        return;
+      }
+
+      // Load and play new audio
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: true },
+        (status) => {
+          if (status.isLoaded) {
+            setIsAudioLoading((prev) => ({ ...prev, [postId]: false }));
+            setAudioPosition((prev) => ({
+              ...prev,
+              [postId]: status.positionMillis || 0,
+            }));
+            setAudioDuration((prev) => ({
+              ...prev,
+              [postId]: status.durationMillis || 0,
+            }));
+            if (status.didJustFinish) {
+              setIsPlaying((prev) => ({ ...prev, [postId]: false }));
+              setCurrentPlayingId(null);
+              setAudioPosition((prev) => ({ ...prev, [postId]: 0 }));
+            }
+          }
+        }
+      );
+      setSound(newSound);
+      setCurrentPlayingId(postId);
+      setIsPlaying((prev) => ({ ...prev, [postId]: true }));
+    } catch (error) {
+      console.error("Error playing sound:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to play audio. Please try again.",
+      });
+      setIsPlaying((prev) => ({ ...prev, [postId]: false }));
+      setIsAudioLoading((prev) => ({ ...prev, [postId]: false }));
+      setCurrentPlayingId(null);
+    }
+  };
+
+  const handleSeek = async (postId: string, value: number) => {
+    if (sound && currentPlayingId === postId) {
+      try {
+        await sound.setPositionAsync(value);
+        setAudioPosition((prev) => ({ ...prev, [postId]: value }));
+      } catch (error) {
+        console.error("Error seeking audio:", error);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to seek audio.",
+        });
+      }
+    }
+  };
 
   const handleCreatePost = async () => {
     if (!newPostContent.trim() || !selectedScore) {
@@ -311,55 +396,55 @@ const CommunityTab = () => {
     currentOffset.current = offsetY;
   };
 
-  const playSound = async (audioUrl: string, postId: string) => {
-    try {
-      // Stop current playing audio if any
-      if (sound) {
-        try {
-          await sound.stopAsync();
-          await sound.unloadAsync();
-        } catch (error) {
-          console.log('Error stopping previous sound:', error);
-        }
-      }
+  // const playSound = async (audioUrl: string, postId: string) => {
+  //   try {
+  //     // Stop current playing audio if any
+  //     if (sound) {
+  //       try {
+  //         await sound.stopAsync();
+  //         await sound.unloadAsync();
+  //       } catch (error) {
+  //         console.log('Error stopping previous sound:', error);
+  //       }
+  //     }
 
-      // If clicking the same post, toggle play/pause
-      if (currentPlayingId === postId && isPlaying[postId]) {
-        try {
-          await sound?.pauseAsync();
-          setIsPlaying(prev => ({ ...prev, [postId]: false }));
-        } catch (error) {
-          console.log('Error pausing sound:', error);
-        }
-        return;
-      }
+  //     // If clicking the same post, toggle play/pause
+  //     if (currentPlayingId === postId && isPlaying[postId]) {
+  //       try {
+  //         await sound?.pauseAsync();
+  //         setIsPlaying(prev => ({ ...prev, [postId]: false }));
+  //       } catch (error) {
+  //         console.log('Error pausing sound:', error);
+  //       }
+  //       return;
+  //     }
 
-      // Load and play new audio
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: audioUrl },
-        { shouldPlay: true },
-        (status) => {
-          if (status.isLoaded && status.didJustFinish) {
-            setIsPlaying(prev => ({ ...prev, [postId]: false }));
-            setCurrentPlayingId(null);
-          }
-        }
-      );
-      setSound(newSound);
-      setCurrentPlayingId(postId);
-      setIsPlaying(prev => ({ ...prev, [postId]: true }));
+  //     // Load and play new audio
+  //     const { sound: newSound } = await Audio.Sound.createAsync(
+  //       { uri: audioUrl },
+  //       { shouldPlay: true },
+  //       (status) => {
+  //         if (status.isLoaded && status.didJustFinish) {
+  //           setIsPlaying(prev => ({ ...prev, [postId]: false }));
+  //           setCurrentPlayingId(null);
+  //         }
+  //       }
+  //     );
+  //     setSound(newSound);
+  //     setCurrentPlayingId(postId);
+  //     setIsPlaying(prev => ({ ...prev, [postId]: true }));
 
-    } catch (error) {
-      console.error('Error playing sound:', error);
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Failed to play audio. Please try again.",
-      });
-      setIsPlaying(prev => ({ ...prev, [postId]: false }));
-      setCurrentPlayingId(null);
-    }
-  };
+  //   } catch (error) {
+  //     console.error('Error playing sound:', error);
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Error",
+  //       text2: "Failed to play audio. Please try again.",
+  //     });
+  //     setIsPlaying(prev => ({ ...prev, [postId]: false }));
+  //     setCurrentPlayingId(null);
+  //   }
+  // };
 
   return (
     <View style={{ flex: 1, backgroundColor: APP_COLOR.BLACK }}>
@@ -643,29 +728,32 @@ const CommunityTab = () => {
                 </Text>
 
                 {/* Audio Player */}
-                <View className="flex-row items-center bg-white/10 rounded-lg p-3 mb-3">
-                  <Image
-                    source={{ uri: post.score.song.imageUrl }}
-                    style={{ width: 40, height: 40, borderRadius: 8 }}
-                  />
-                  <View className="flex-1 ml-3">
-                    <Text className="text-white font-medium">
-                      {post.score.song.title}
-                    </Text>
-                    <Text className="text-gray-400 text-sm">
-                      Score: {Math.round(post.score.finalScore * 100) / 100}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => playSound(post.score.audioUrl, post.id)}
-                    className="bg-pink-500 rounded-full p-2"
-                  >
-                    <Ionicons
-                      name={isPlaying[post.id] ? "pause" : "play"}
-                      size={24}
-                      color="white"
+<View style={styles.musicCard}>
+                  {/* Phần thông tin bài hát */}
+                  <View style={styles.songInfoContainer}>
+                    <Image
+                      source={{ uri: post.score.song.imageUrl }}
+                      style={styles.songImage}
                     />
-                  </TouchableOpacity>
+                    <View style={styles.songTextContainer}>
+                      <Text style={styles.songTitle} numberOfLines={1}>
+                        {post.score.song.title}
+                      </Text>
+                      <Text style={styles.songScore}>
+                        Score: {Math.round(post.score.finalScore * 100) / 100}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Phần trình phát audio */}
+                  <AudioPlayer
+                    isPlaying={isPlaying[post.id] || false}
+                    isLoading={isAudioLoading[post.id] || false}
+                    duration={audioDuration[post.id] || 0}
+                    position={audioPosition[post.id] || 0}
+                    onPlayPause={() => playSound(post.score.audioUrl, post.id)}
+                    onSeek={(value) => handleSeek(post.id, value)}
+                  />
                 </View>
 
                 {/* Post Actions */}
@@ -835,5 +923,41 @@ const CommunityTab = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  musicCard: {
+  backgroundColor: 'rgba(30, 30, 30, 0.7)', // Màu nền tối hơn để nổi bật
+  borderRadius: 16,
+  borderWidth: 1,
+  borderColor: 'rgba(255, 255, 255, 0.1)',
+  padding: 12, // Padding chung cho cả card
+  marginBottom: 12,
+},
+songInfoContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 8, // Khoảng cách giữa phần info và trình phát
+},
+songImage: {
+  width: 48,
+  height: 48,
+  borderRadius: 8,
+},
+songTextContainer: {
+  flex: 1,
+  marginLeft: 12,
+  justifyContent: 'center',
+},
+songTitle: {
+  color: 'white',
+  fontWeight: '600',
+  fontSize: 16,
+},
+songScore: {
+  color: '#a0aec0', // Màu xám nhạt hơn
+  fontSize: 14,
+  marginTop: 2,
+},
+});
 
 export default CommunityTab;
