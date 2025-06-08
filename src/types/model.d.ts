@@ -186,7 +186,7 @@ declare global {
     id: string;
     description: string;
     videoUrl: string;
-    status: "public" | "private";
+    status: "public" | "private" | "pending";
     song: {
       id: string;
       title: string;
