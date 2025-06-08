@@ -58,9 +58,10 @@ const ChooseKaraokes = () => {
     try {
       setLoading(true);
       const res = await getKaraokesBySongId(id as string);
-      const publicKara = res.data.filter((item: IKaraoke) => {
-        item.status !== "private";
-      });
+      const publicKara = res.data.filter(
+        (item: IKaraoke) => item.status === "public"
+      );
+
       setKaraokes(publicKara || []);
     } catch (error) {
       Alert.alert("Error", "Failed to load karaokes");
