@@ -60,13 +60,13 @@ const HomeTab = () => {
       try {
         const userId = await AsyncStorage.getItem("userId");
         const token = await registerForPushNotificationsAsync();
-        // console.log(token);
+        console.log(token);
 
         if (token && userId) {
           await registerOrUpdateExpoPushTokenAPI(userId, token);
         }
       } catch (error) {
-        // console.error("Lỗi lấy hoặc gửi push token:", error);
+        console.error("Lỗi lấy hoặc gửi push token:", error);
       }
     };
 
@@ -75,7 +75,7 @@ const HomeTab = () => {
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener(
       (notification) => {
-        // console.log("🔔 Thông báo nhận:", notification);
+        console.log("🔔 Thông báo nhận:", notification);
         const title = notification.request?.content?.title || "Thông báo";
         const body = notification.request?.content?.body || "";
         showNotification(title, body);
