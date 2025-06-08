@@ -3,6 +3,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "./supabase";
 import * as FileSystem from "expo-file-system";
 
+const EXPO_PUBLIC_API_URL=`https://manoke-server-6gsv.onrender.com/`;
+
+
 export const confirmEmailAPI = (token: string) => {
   const url = `/auth/confirm-email`;
   return axios.post<{ success: boolean; message: string }>(url, { token });
@@ -406,6 +409,34 @@ export const searchPlaylistsByTitleAPI = (searchTitle: string) => {
 export const getSongsInPlaylistAPI = (playlistId: string) => {
   return axios.get(`/playlists/${playlistId}/songs`);
 };
+export const addSongToPlaylistAPI = (
+  playlistId: string,
+  songId: string
+) => {
+  const url = `/playlists/${playlistId}/songs/${songId}`;
+
+  return axios.patch(url);
+};
+// export const addSongToPlaylistAPI = async (
+//   playlistId: string,
+//   songId: string
+// ) => {
+//   // ---- THAY ĐỔI Ở ĐÂY ----
+//   // Tạm thời hardcode URL để kiểm tra.
+//   const hardcodedUrl = `https://manoke-server-6gsv.onrender.com/playlists/${playlistId}/songs/${songId}`;
+
+//   // Log URL mới để chắc chắn nó đúng
+//   console.log("Testing with HARDCODED URL:", hardcodedUrl); 
+
+//   const token = await AsyncStorage.getItem("accessToken");
+
+//   // Sử dụng URL đã hardcode
+//   return axios.patch(hardcodedUrl, null, { 
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//     },
+//   });
+// }
 export const getKaraokesBySongId = async (songId: string) => {
   return await axios.get(`/karaokes/song/${songId}`);
 };
@@ -514,4 +545,9 @@ export const createArtistAPI = (payload: ICreateArtistPayload) => {
 export const deletePlaylistAPI = async (playlistId: string) => {
   const res = await axios.delete(`/playlists/${playlistId}`);
   return res;
+};
+
+export const clonePlaylistAPI = async (playlistId: string) => {
+    const url = `/playlists/clonePlaylist`;
+    return await axios.post<IPlaylist>(url, {}, { params: { q: playlistId } });
 };

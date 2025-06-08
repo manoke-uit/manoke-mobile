@@ -173,7 +173,7 @@ const HomeTab = () => {
                       key={p.id}
                       className="w-[120px] mr-3"
                       onPress={() =>
-                        router.push(`/(user)/playlistSong?id=${p.id}`)
+                        router.push(`/(user)/publicPlaylists?id=${p.id}`)
                       }
                     >
                       {p.imageUrl ? (
