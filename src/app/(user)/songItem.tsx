@@ -43,6 +43,13 @@ const SongItemScreen = () => {
   const videoRef = useRef<Video>(null);
   const [karaokeList, setKaraokeList] = useState<IKaraoke[]>([]);
   const [isPaused, setIsPaused] = useState(false);
+  const [isConfirmScoreModalVisible, setConfirmScoreModalVisible] =
+    useState(false);
+  const [recordStartTime, setRecordStartTime] = useState<number | null>(null);
+  const [
+    isConfirmStopRecordingModalVisible,
+    setConfirmStopRecordingModalVisible,
+  ] = useState(false);
 
   const fetchSongData = async (songId: string, karaokeIdFromParam?: string) => {
     if (recording) {
@@ -127,18 +134,24 @@ const SongItemScreen = () => {
 
       setRecording(recording);
       setIsRecording(true);
+      setRecordStartTime(Date.now());
       setIsReadyModalVisible(false);
     } catch {
       Alert.alert("Error", "Unable to start recording");
     }
   };
 
-  const stopRecordingAndUpload = async () => {
+  const uploadAndScore = async () => {
     try {
-      await recording?.stopAndUnloadAsync();
-      const uri = recording?.getURI();
+      if (!recording) {
+        Alert.alert("Error", "No recording found.");
+        return;
+      }
+
+      await recording.stopAndUnloadAsync();
+
+      const uri = recording.getURI();
       setRecording(null);
-      setIsRecording(false);
 
       if (!uri) {
         Alert.alert("Error", "No recorded file");
@@ -148,17 +161,20 @@ const SongItemScreen = () => {
       setIsUploading(true);
       const score = await uploadScoreAudioAPI(uri, currentSongId, userId);
       setScore(score ? Math.round(score * 100) / 100 : 81);
-      setIsUploading(false);
       setScoreModalVisible(true);
-    } catch {
-      setIsUploading(false);
+    } catch (err) {
+      console.warn("Upload audio failed:", err);
       Alert.alert("Error", "Unable to calculate score");
+    } finally {
+      setIsUploading(false);
+      setConfirmScoreModalVisible(false);
     }
   };
 
   const handleVideoStatusUpdate = (status: any) => {
     if (status.didJustFinish && isRecording) {
-      stopRecordingAndUpload();
+      setIsRecording(false);
+      setConfirmScoreModalVisible(true);
     }
   };
 
@@ -263,7 +279,6 @@ const SongItemScreen = () => {
                 key={karaokeVideoUrl}
                 ref={videoRef}
                 source={{ uri: karaokeVideoUrl }}
-                useNativeControls
                 resizeMode={ResizeMode.CONTAIN}
                 shouldPlay={!isPaused && !isReadyModalVisible}
                 onPlaybackStatusUpdate={handleVideoStatusUpdate}
@@ -282,7 +297,14 @@ const SongItemScreen = () => {
               Now Playing
             </Text>
             {isRecording && (
-              <View style={{ alignItems: "center", marginTop: 12 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  marginTop: 12,
+                  gap: 16,
+                }}
+              >
                 <TouchableOpacity
                   onPress={async () => {
                     if (isPaused) {
@@ -304,8 +326,47 @@ const SongItemScreen = () => {
                     color="white"
                   />
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      await videoRef.current?.replayAsync();
+                      setIsPaused(false);
+                    } catch (err) {
+                      console.warn("Không thể reset video:", err);
+                    }
+                  }}
+                  style={{
+                    backgroundColor: "#6b21a8",
+                    padding: 12,
+                    borderRadius: 30,
+                  }}
+                >
+                  <Ionicons name="refresh" size={24} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    const now = Date.now();
+                    if (recordStartTime && now - recordStartTime < 60_000) {
+                      Alert.alert(
+                        "Warning",
+                        "Please sing for at least 1 minute before submitting."
+                      );
+                      return;
+                    }
+                    setConfirmStopRecordingModalVisible(true);
+                  }}
+                  style={{
+                    backgroundColor: "#fbbf24",
+                    padding: 12,
+                    borderRadius: 30,
+                  }}
+                >
+                  <Ionicons name="stop" size={24} color="white" />
+                </TouchableOpacity>
               </View>
             )}
+
             <View
               style={{
                 flexDirection: "row",
@@ -495,6 +556,163 @@ const SongItemScreen = () => {
                 }}
               >
                 <Text style={{ color: "white", fontWeight: "bold" }}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={isConfirmScoreModalVisible}
+        transparent
+        animationType="fade"
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: APP_COLOR.BLACK,
+              borderRadius: 20,
+              padding: 20,
+              width: "80%",
+              alignItems: "center",
+              borderWidth: 1,
+              borderColor: APP_COLOR.PINK,
+            }}
+          >
+            <Text
+              style={{
+                color: "white",
+                fontSize: 20,
+                fontWeight: "bold",
+                marginBottom: 20,
+                textAlign: "center",
+              }}
+            >
+              Are you confident to get your singing score?
+            </Text>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-around",
+                width: "100%",
+              }}
+            >
+              <TouchableOpacity
+                onPress={uploadAndScore}
+                style={{
+                  backgroundColor: APP_COLOR.PURPLE,
+                  paddingVertical: 10,
+                  paddingHorizontal: 30,
+                  borderRadius: 20,
+                }}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>Yes</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setConfirmScoreModalVisible(false);
+                  router.back();
+                }}
+                style={{
+                  backgroundColor: APP_COLOR.PINK,
+                  paddingVertical: 10,
+                  paddingHorizontal: 30,
+                  borderRadius: 20,
+                }}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>No</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={isConfirmStopRecordingModalVisible}
+        transparent
+        animationType="fade"
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: APP_COLOR.BLACK,
+              borderRadius: 20,
+              padding: 20,
+              width: "80%",
+              alignItems: "center",
+              borderWidth: 1,
+              borderColor: APP_COLOR.PINK,
+            }}
+          >
+            <Text
+              style={{
+                color: "white",
+                fontSize: 20,
+                fontWeight: "bold",
+                marginBottom: 20,
+                textAlign: "center",
+              }}
+            >
+              Do you want to stop and get your score?
+            </Text>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-around",
+                width: "100%",
+              }}
+            >
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    setConfirmStopRecordingModalVisible(false);
+
+                    if (videoRef.current) {
+                      await videoRef.current.pauseAsync();
+                    }
+
+                    await uploadAndScore();
+                  } catch (err) {
+                    console.warn("Lỗi khi dừng video và chấm điểm:", err);
+                  }
+                }}
+                style={{
+                  backgroundColor: APP_COLOR.PURPLE,
+                  paddingVertical: 10,
+                  paddingHorizontal: 30,
+                  borderRadius: 20,
+                }}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>Yes</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setConfirmStopRecordingModalVisible(false)}
+                style={{
+                  backgroundColor: APP_COLOR.PINK,
+                  paddingVertical: 10,
+                  paddingHorizontal: 30,
+                  borderRadius: 20,
+                }}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>No</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -12,7 +12,7 @@ import {
   TouchableHighlight,
   Image,
 } from "react-native";
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AnimatedWrapper from "@/components/animation/animate";
@@ -31,15 +31,19 @@ import {
   getCommentsByPostAPI,
   deleteCommentAPI,
 } from "@/utils/api";
-import { Audio } from 'expo-av';
+import { Audio } from "expo-av";
 import AudioPlayer from "@/components/AudioPlayer";
 
 const CommunityTab = () => {
-const [posts, setPosts] = useState<IPost[]>([]);
+  const [posts, setPosts] = useState<IPost[]>([]);
   const [friends, setFriends] = useState<string[]>([]);
   const [isMoreMenuVisible, setMoreMenuVisible] = useState<string | null>(null);
-  const [commentMenuVisible, setCommentMenuVisible] = useState<string | null>(null);
-  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState<string | null>(null);
+  const [commentMenuVisible, setCommentMenuVisible] = useState<string | null>(
+    null
+  );
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState<
+    string | null
+  >(null);
   const [newComment, setNewComment] = useState<{ [key: string]: string }>({});
   const [newPostContent, setNewPostContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +51,9 @@ const [posts, setPosts] = useState<IPost[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [selectedScore, setSelectedScore] = useState<IScore | null>(null);
   const [scores, setScores] = useState<IScore[]>([]);
-  const [expandedComments, setExpandedComments] = useState<{ [key: string]: boolean }>({});
+  const [expandedComments, setExpandedComments] = useState<{
+    [key: string]: boolean;
+  }>({});
   const navigation = useNavigation();
   const router = useRouter();
   const currentOffset = useRef(0);
@@ -63,9 +69,15 @@ const [posts, setPosts] = useState<IPost[]>([]);
   const [audioModalVisible, setAudioModalVisible] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState<{ [key: string]: boolean }>({});
-  const [isAudioLoading, setIsAudioLoading] = useState<{ [key: string]: boolean }>({}); // New state for loading
-  const [audioPosition, setAudioPosition] = useState<{ [key: string]: number }>({}); // New state for position
-  const [audioDuration, setAudioDuration] = useState<{ [key: string]: number }>({}); // New state for duration
+  const [isAudioLoading, setIsAudioLoading] = useState<{
+    [key: string]: boolean;
+  }>({}); // New state for loading
+  const [audioPosition, setAudioPosition] = useState<{ [key: string]: number }>(
+    {}
+  ); // New state for position
+  const [audioDuration, setAudioDuration] = useState<{ [key: string]: number }>(
+    {}
+  ); // New state for duration
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -316,7 +328,11 @@ const [posts, setPosts] = useState<IPost[]>([]);
       }
 
       // Create comment
-      await createCommentAPI({ comment: commentText, postId });
+      const res = await createCommentAPI({
+        comment: commentText,
+        postId,
+      });
+      console.log(res);
       Toast.show({
         type: "success",
         text1: "Success",
@@ -355,17 +371,21 @@ const [posts, setPosts] = useState<IPost[]>([]);
         text1: "Success",
         text2: "Comment deleted successfully.",
       });
-      
+
       // Update posts state to remove the deleted comment
-      setPosts(posts.map(post => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            comments: post.comments.filter(comment => comment.id !== commentId)
-          };
-        }
-        return post;
-      }));
+      setPosts(
+        posts.map((post) => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              comments: post.comments.filter(
+                (comment) => comment.id !== commentId
+              ),
+            };
+          }
+          return post;
+        })
+      );
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -728,7 +748,7 @@ const [posts, setPosts] = useState<IPost[]>([]);
                 </Text>
 
                 {/* Audio Player */}
-<View style={styles.musicCard}>
+                <View style={styles.musicCard}>
                   {/* Phần thông tin bài hát */}
                   <View style={styles.songInfoContainer}>
                     <Image
@@ -824,18 +844,27 @@ const [posts, setPosts] = useState<IPost[]>([]);
                           {commentMenuVisible === comment.id && (
                             <View className="absolute right-0 top-8 bg-white/20 rounded-lg border border-white/10 z-10">
                               <TouchableOpacity
-                                onPress={() => handleDeleteComment(comment.id, post.id)}
+                                onPress={() =>
+                                  handleDeleteComment(comment.id, post.id)
+                                }
                                 className="px-4 py-2"
                               >
-                                <Text className="text-pink-300">Delete Comment</Text>
+                                <Text className="text-pink-300">
+                                  Delete Comment
+                                </Text>
                               </TouchableOpacity>
                             </View>
                           )}
                         </View>
-                    ))}
+                      ))}
                     {post.comments.length > 3 && !expandedComments[post.id] && (
                       <TouchableOpacity
-                        onPress={() => setExpandedComments(prev => ({ ...prev, [post.id]: true }))}
+                        onPress={() =>
+                          setExpandedComments((prev) => ({
+                            ...prev,
+                            [post.id]: true,
+                          }))
+                        }
                         className="ml-2 mt-1"
                       >
                         <Text className="text-pink-500 text-sm">
@@ -845,12 +874,15 @@ const [posts, setPosts] = useState<IPost[]>([]);
                     )}
                     {expandedComments[post.id] && (
                       <TouchableOpacity
-                        onPress={() => setExpandedComments(prev => ({ ...prev, [post.id]: false }))}
+                        onPress={() =>
+                          setExpandedComments((prev) => ({
+                            ...prev,
+                            [post.id]: false,
+                          }))
+                        }
                         className="ml-2 mt-1"
                       >
-                        <Text className="text-pink-500 text-sm">
-                          Show less
-                        </Text>
+                        <Text className="text-pink-500 text-sm">Show less</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -896,7 +928,8 @@ const [posts, setPosts] = useState<IPost[]>([]);
                         Delete Post
                       </Text>
                       <Text className="text-gray-300 mb-6 text-center">
-                        Are you sure you want to delete this post? This action cannot be undone.
+                        Are you sure you want to delete this post? This action
+                        cannot be undone.
                       </Text>
                       <View className="flex-row justify-end space-x-4">
                         <TouchableOpacity
@@ -909,7 +942,9 @@ const [posts, setPosts] = useState<IPost[]>([]);
                           onPress={() => handleDeletePost(post.id)}
                           className="bg-pink-500 px-4 py-2 rounded-lg"
                         >
-                          <Text className="text-white font-semibold">Delete</Text>
+                          <Text className="text-white font-semibold">
+                            Delete
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -926,38 +961,38 @@ const [posts, setPosts] = useState<IPost[]>([]);
 
 const styles = StyleSheet.create({
   musicCard: {
-  backgroundColor: 'rgba(30, 30, 30, 0.7)', // Màu nền tối hơn để nổi bật
-  borderRadius: 16,
-  borderWidth: 1,
-  borderColor: 'rgba(255, 255, 255, 0.1)',
-  padding: 12, // Padding chung cho cả card
-  marginBottom: 12,
-},
-songInfoContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginBottom: 8, // Khoảng cách giữa phần info và trình phát
-},
-songImage: {
-  width: 48,
-  height: 48,
-  borderRadius: 8,
-},
-songTextContainer: {
-  flex: 1,
-  marginLeft: 12,
-  justifyContent: 'center',
-},
-songTitle: {
-  color: 'white',
-  fontWeight: '600',
-  fontSize: 16,
-},
-songScore: {
-  color: '#a0aec0', // Màu xám nhạt hơn
-  fontSize: 14,
-  marginTop: 2,
-},
+    backgroundColor: "rgba(30, 30, 30, 0.7)", // Màu nền tối hơn để nổi bật
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    padding: 12, // Padding chung cho cả card
+    marginBottom: 12,
+  },
+  songInfoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8, // Khoảng cách giữa phần info và trình phát
+  },
+  songImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+  },
+  songTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+    justifyContent: "center",
+  },
+  songTitle: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  songScore: {
+    color: "#a0aec0", // Màu xám nhạt hơn
+    fontSize: 14,
+    marginTop: 2,
+  },
 });
 
 export default CommunityTab;
