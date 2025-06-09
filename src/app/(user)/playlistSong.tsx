@@ -50,8 +50,12 @@ const PlaylistSong = () => {
         setPlaylistImage(playlistDetails.imageUrl);
         setSongs(songsList || []);
       } catch (err: any) {
-        console.error("Lỗi tải dữ liệu playlist:", err);
-        Alert.alert("Lỗi", "Không thể tải dữ liệu playlist");
+        // console.error("Lỗi tải dữ liệu playlist:", err);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Cannot load data playlist",
+        });
       } finally {
         setLoading(false);
       }
@@ -60,6 +64,10 @@ const PlaylistSong = () => {
     fetchPlaylistData();
   }, [id]);
 
+  const handleNavigateToKaraoke = (songId: string) => {
+    router.push(`/chooseKaraokes?id=${songId}`);
+  };
+
   const handleRemoveSong = async () => {
     if (!selectedSongId || !id) return;
     try {
@@ -67,15 +75,15 @@ const PlaylistSong = () => {
       setSongs((prev) => prev.filter((s) => s.id !== selectedSongId));
       Toast.show({
         type: "success",
-        text1: "Thành công",
-        text2: "Bài hát đã được xoá khỏi playlist",
+        text1: "success",
+        text2: "Song removed from playlist",
       });
     } catch (err) {
-      console.error("Lỗi xoá bài hát:", err);
+      // console.error("Error:", err);
       Toast.show({
         type: "error",
-        text1: "Lỗi",
-        text2: "Không thể xoá bài hát",
+        text1: "Error",
+        text2: "Cannot remove song from playlist",
       });
     } finally {
       setMoreMenuVisible(false);
@@ -178,7 +186,13 @@ const PlaylistSong = () => {
 
             <View className="px-4">
               {songs.map((s) => (
-                <SongItem key={s.id} {...s} />
+                <TouchableOpacity 
+                  key={s.id}
+                  onPress={() => handleNavigateToKaraoke(s.id)}
+                >
+                  <SongItem key={s.id} {...s} />
+                </TouchableOpacity>
+                
               ))}
             </View>
           </>
