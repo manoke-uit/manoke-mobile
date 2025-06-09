@@ -72,7 +72,7 @@ export const getAllSongs = (genreId?: string, artistId?: string) => {
   if (genreId) params.genreId = genreId;
   if (artistId) params.artistId = artistId;
 
-  return axios.get<IBackendRes<ISong[]>>("/songs", { params });
+  return axios.get("/songs", { params });
 };
 
 export const changePasswordAPI = (payload: {
