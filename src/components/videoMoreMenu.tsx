@@ -1,5 +1,12 @@
 import React from "react";
-import { Modal, Pressable, Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import {
+  Modal,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+} from "react-native";
 import { APP_COLOR } from "@/utils/constant";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -18,7 +25,11 @@ interface VideoMoreMenuProps {
   actions: Action[];
 }
 
-const VideoMoreMenu: React.FC<VideoMoreMenuProps> = ({ visible, onClose, actions }) => {
+const VideoMoreMenu: React.FC<VideoMoreMenuProps> = ({
+  visible,
+  onClose,
+  actions,
+}) => {
   return (
     <Modal
       animationType="slide"
@@ -34,30 +45,37 @@ const VideoMoreMenu: React.FC<VideoMoreMenuProps> = ({ visible, onClose, actions
               <React.Fragment key={index}>
                 <TouchableOpacity
                   disabled={action.disabled}
-                  onPress={() => {
-                    action.onPress();
+                  onPress={async () => {
+                    await action.onPress();
                     onClose();
                   }}
                   activeOpacity={0.7}
-                  style={[styles.actionRow, action.disabled && styles.disabledRow]}
+                  style={[
+                    styles.actionRow,
+                    action.disabled && styles.disabledRow,
+                  ]}
                 >
                   <Ionicons
-                    name={action.icon || 'chevron-forward'}
+                    name={action.icon || "chevron-forward"}
                     size={22}
                     style={[
-                        styles.icon,
-                        action.isDestructive && styles.destructiveColor
+                      styles.icon,
+                      action.isDestructive && styles.destructiveColor,
                     ]}
                   />
-                  <Text style={[
-                    styles.labelText,
-                    action.isDestructive && styles.destructiveColor
-                  ]}>
+                  <Text
+                    style={[
+                      styles.labelText,
+                      action.isDestructive && styles.destructiveColor,
+                    ]}
+                  >
                     {action.label}
                   </Text>
                 </TouchableOpacity>
                 {/* Thêm đường kẻ ngăn cách nếu không phải là item cuối cùng */}
-                {index < actions.length - 1 && <View style={styles.separator} />}
+                {index < actions.length - 1 && (
+                  <View style={styles.separator} />
+                )}
               </React.Fragment>
             ))}
           </View>
@@ -89,7 +107,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   actionsContainer: {
-    backgroundColor: '#1C1C1E',
+    backgroundColor: "#1C1C1E",
     borderRadius: 14,
   },
   actionRow: {
@@ -105,7 +123,7 @@ const styles = StyleSheet.create({
     color: APP_COLOR.WHITE,
     marginRight: 16,
     width: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
   labelText: {
     color: APP_COLOR.WHITE,
@@ -113,13 +131,13 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   destructiveColor: {
-    color: '#FF453A', // Màu đỏ cho hành động nguy hiểm
+    color: "#FF453A", // Màu đỏ cho hành động nguy hiểm
   },
   separator: {
     height: 1,
-    backgroundColor: 'rgba(94, 94, 98, 0.5)',
+    backgroundColor: "rgba(94, 94, 98, 0.5)",
     marginLeft: 56, // Căn lề với text
-  }
+  },
 });
 
 export default VideoMoreMenu;

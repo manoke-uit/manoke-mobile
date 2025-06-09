@@ -1,5 +1,4 @@
 // app/selectPlaylist.tsx
-
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -12,7 +11,11 @@ import {
 import { useLocalSearchParams, router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { getUserPlaylistAPI, addSongToPlaylistAPI } from "@/utils/api";
+import {
+  getUserPlaylistAPI,
+  addSongToPlaylistAPI,
+  getPlaylistById,
+} from "@/utils/api";
 import { APP_COLOR } from "@/utils/constant";
 import Toast from "react-native-toast-message";
 
@@ -30,9 +33,9 @@ const SelectPlaylistScreen = () => {
         setPlaylists(userPlaylists);
       } catch (error) {
         Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Could not load your playlists.'
+          type: "error",
+          text1: "Error",
+          text2: "Could not load your playlists.",
         });
       } finally {
         setLoading(false);
@@ -42,47 +45,42 @@ const SelectPlaylistScreen = () => {
   }, []);
 
   const handleSelectPlaylist = async (playlistId: string) => {
-    // LOG 1: Kiểm tra các ID trước khi gọi API
-    console.log(`[BẮT ĐẦU] Thêm bài hát ID: ${songId} vào playlist ID: ${playlistId}`);
+    if (!songId) return;
 
-    if (!songId || adding) {
-      console.log("[DỪNG] Thiếu songId hoặc đang trong quá trình thêm.");
-      return;
-    }
-
-    setAdding(true);
     try {
-      console.log("[GỌI API] Đang gọi addSongToPlaylistAPI...");
-      const result = await addSongToPlaylistAPI(playlistId, songId as string);
+      setAdding(true);
 
-      // LOG 2: In ra kết quả khi thành công
-      console.log("[THÀNH CÔNG] API trả về:", JSON.stringify(result.data, null, 2));
+      // Gọi thêm API để lấy songIds hiện tại của playlist
+      const playlist = await getPlaylistById(playlistId);
+      const currentSongIds = playlist.songs.map((s: any) => s.id);
+
+      // Kiểm tra nếu đã tồn tại
+      if (currentSongIds.includes(songId)) {
+        Toast.show({
+          type: "info",
+          text1: "Info",
+          text2: "Bài hát đã có trong playlist!",
+        });
+        return;
+      }
+
+      const newSongIds = [...currentSongIds, songId];
+      await addSongToPlaylistAPI(playlistId, newSongIds);
 
       Toast.show({
         type: "success",
-        text1: "Success",
-        text2: "Song added to the playlist!",
+        text1: "Thành công",
+        text2: "Đã thêm bài hát vào playlist!",
       });
-      router.back(); // Quay lại màn hình trước đó
-    } catch (error: any) {
-      // LOG 3: In ra lỗi chi tiết khi thất bại
-      console.error("!!!!!!!!!! LỖI KHI THÊM BÀI HÁT !!!!!!!!!!");
-      if (error.response) {
-        console.error("Lỗi Status:", error.response.status);
-        console.error("Lỗi Data:", JSON.stringify(error.response.data, null, 2));
-      } else {
-        console.error("Lỗi Message:", error.message);
-      }
-      console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
-      const message = error.response?.data?.message || "Failed to add the song.";
+      router.back();
+    } catch (err) {
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: message,
+        text1: "Lỗi",
+        text2: "Không thể thêm bài hát vào playlist.",
       });
     } finally {
-      console.log("[KẾT THÚC] Quá trình thêm bài hát hoàn tất.");
       setAdding(false);
     }
   };
@@ -104,10 +102,13 @@ const SelectPlaylistScreen = () => {
       style={styles.container}
     >
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
           <Ionicons name="close" size={28} color={APP_COLOR.WHITE} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Select a Playlist</Text> 
+        <Text style={styles.headerTitle}>Select a Playlist</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -126,14 +127,16 @@ const SelectPlaylistScreen = () => {
         )}
         ListEmptyComponent={
           <View style={styles.containerCenter}>
-            <Text style={styles.emptyText}>You don't have any playlists yet.</Text>
+            <Text style={styles.emptyText}>
+              You don't have any playlists yet.
+            </Text>
           </View>
         }
       />
       {adding && (
         <View style={styles.addingOverlay}>
-            <ActivityIndicator size="large" color={APP_COLOR.PINK} />
-            <Text style={{color: 'white', marginTop: 10}}>Adding...</Text>
+          <ActivityIndicator size="large" color={APP_COLOR.PINK} />
+          <Text style={{ color: "white", marginTop: 10 }}>Adding...</Text>
         </View>
       )}
     </LinearGradient>
@@ -185,10 +188,10 @@ const styles = StyleSheet.create({
   },
   addingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center'
-  }
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
 
 export default SelectPlaylistScreen;
