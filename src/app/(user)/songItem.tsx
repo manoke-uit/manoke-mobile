@@ -143,30 +143,27 @@ const SongItemScreen = () => {
   };
 
   const uploadAndScore = async () => {
-    try {
-      if (!recording) {
-        Alert.alert("Error", "No recording found.");
-        return;
-      }
-
-      await recording.stopAndUnloadAsync();
-
-      const uri = recording.getURI();
-      setRecording(null);
-
-      if (!uri) {
-        Alert.alert("Error", "No recorded file");
-        return;
-      }
-
-      setIsUploading(true);
-      const score = await uploadScoreAudioAPI(uri, currentSongId, userId);
-      setScore(score ? Math.round(score * 100) / 100 : 81);
-      setScoreModalVisible(true);
-    } catch (err) {
-    } finally {
-      setIsUploading(false);
+    if (!recording) {
+      Alert.alert("Error", "No recording found.");
+      return;
     }
+
+    await recording.stopAndUnloadAsync();
+
+    const uri = recording.getURI();
+    setRecording(null);
+
+    if (!uri) {
+      Alert.alert("Error", "No recorded file");
+      return;
+    }
+
+    setIsUploading(true);
+
+    const score = await uploadScoreAudioAPI(uri, currentSongId, userId);
+    setScore(score ? Math.round(score * 100) / 100 : 81);
+    setScoreModalVisible(true);
+    setIsUploading(false);
   };
 
   const handleVideoStatusUpdate = (status: any) => {
