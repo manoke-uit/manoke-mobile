@@ -28,7 +28,11 @@ const AddKaraokeScreen = () => {
   useEffect(() => {
     const fetchSong = async () => {
       if (!songId) {
-        Alert.alert("Error", "Song ID not found.");
+        Toast.show({
+          type: "error",  
+          text1: "Error",
+          text2: "Song ID is missing.",
+        });
         router.back();
         return;
       }
@@ -36,7 +40,11 @@ const AddKaraokeScreen = () => {
         const songData = await getSongById(songId as string);
         setSong(songData);
       } catch (error) {
-        Alert.alert("Error", "Could not load song information.");
+        Toast.show({
+          type: "error",
+          text1: "Error", 
+          text2: "Could not load song information.",
+        });
       } finally {
         setLoading(false);
       }
@@ -53,14 +61,22 @@ const AddKaraokeScreen = () => {
         setKaraokeFile(result.assets[0]);
       }
     } catch (error) {
-      console.error("File picking error:", error);
-      Alert.alert("Error", "Could not select the file.");
+      //console.error("File picking error:", error);
+      Toast.show({ 
+        type: "error",
+        text1: "Error",
+        text2: "Could not select the file.",
+      });
     }
   };
 
   const handleSubmit = async () => {
     if (!karaokeFile) {
-      Alert.alert("Missing Information", "Please select a karaoke file.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please select a karaoke file.",
+      });
       return;
     }
     if (!songId) return;
@@ -85,7 +101,11 @@ const AddKaraokeScreen = () => {
       router.back();
     } catch (error) {
       console.error(error);
-      Alert.alert("Upload Failed", "An error occurred during upload.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Could not upload the karaoke file.",
+      });
     } finally {
       setSubmitting(false);
     }

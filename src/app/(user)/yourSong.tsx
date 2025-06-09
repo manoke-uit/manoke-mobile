@@ -19,6 +19,7 @@ import {
   requestPublicKaraokeAPI,
   deleteKaraokeAPI,
 } from "@/utils/api";
+import Toast from "react-native-toast-message";
 
 // Interface IKaraoke
 interface IKaraoke {
@@ -75,7 +76,11 @@ const YourVideos = () => {
       const backendRes = response as IBackendRes<IKaraoke[]>;
       setKaraokes(backendRes?.data || []);
     } catch (error) {
-      Alert.alert("Error", "Failed to load your karaokes");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load your karaokes. Please try again later.",
+      });
       setKaraokes([]);
     } finally {
       setLoading(false);
@@ -95,13 +100,25 @@ const YourVideos = () => {
     if (karaoke.status === 'private') {
         try {
             await requestPublicKaraokeAPI(karaokeId);
-            Alert.alert("Success", "Request to make karaoke public has been sent.");
+            Toast.show({
+                type: "success",
+                text1: "Success",
+                text2: "Request to make karaoke public has been sent.",
+            });
             setKaraokes(prev => prev.map(k => k.id === karaokeId ? { ...k, status: 'pending' } : k));
         } catch (error) {
-            Alert.alert("Error", "Failed to send request.");
+            Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: "Failed to send request to make karaoke public.",
+            });
         }
     } else {
-        Alert.alert("Info", "This action is not available for this status.");
+      Toast.show({
+        type: "info",
+        text1: "Info",
+        text2: "This action is only available for private karaokes.",
+      });
     }
     setMoreMenuVisible(null);
   };
@@ -263,7 +280,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
-        marginTop: -50,
+        marginTop: 50,
     },
     cardContainer: {
         flex: 1,
