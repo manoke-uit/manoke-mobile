@@ -11,23 +11,21 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_COLOR } from "@/utils/constant";
-import MoreMenu from "@/components/moreMenu";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   getPlaylistById,
   getSongsInPlaylistAPI,
   removeSongFromPlaylistAPI,
 } from "@/utils/api";
-import VideoMoreMenu from "@/components/videoMoreMenu";
 import Toast from "react-native-toast-message";
+import VideoMoreMenu from "@/components/videoMoreMenu";
 
 const PlaylistSong = () => {
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
-  const [playlistTitle, setPlaylistTitle] = useState<string>("");
-  const [playlistImage, setPlaylistImage] = useState<string>("");
+  const [playlistTitle, setPlaylistTitle] = useState("");
+  const [playlistImage, setPlaylistImage] = useState("");
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
-
   const [songs, setSongs] = useState<
     {
       id: string;
@@ -36,74 +34,25 @@ const PlaylistSong = () => {
       artists: { name: string }[];
     }[]
   >([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPlaylistData = async () => {
-      // LOG 1: Kiểm tra xem ID có được truyền đúng cách không
-      console.log(`[BẮT ĐẦU] Fetching data cho playlist với ID: ${id}`);
+    if (!id) return;
 
-      if (!id) {
-        console.log("[DỪNG] Không có ID, không gọi API.");
-        return;
-      }
+    const fetchPlaylistData = async () => {
       setLoading(true);
       try {
-        console.log("[GỌI API] Bắt đầu gọi Promise.all...");
-
         const [playlistDetails, songsList] = await Promise.all([
-          getPlaylistById(id as string),
-          getSongsInPlaylistAPI(id as string),
+          getPlaylistById(id),
+          getSongsInPlaylistAPI(id),
         ]);
-
-        // LOG 2: In ra dữ liệu thô từ API - QUAN TRỌNG NHẤT
-        console.log("---------- DỮ LIỆU THÔ TỪ API ----------");
-        console.log(
-          ">>> Kết quả từ getPlaylistById:",
-          JSON.stringify(playlistDetails, null, 2)
-        );
-        console.log(
-          ">>> Kết quả từ getSongsInPlaylistAPI:",
-          JSON.stringify(songsList, null, 2)
-        );
-        console.log("----------------------------------------");
-
-        // LOG 3: Kiểm tra dữ liệu trước khi gán vào state
-        console.log(`[GÁN STATE] Gán tiêu đề: "${playlistDetails?.title}"`);
-        console.log(`[GÁN STATE] Gán ảnh: "${playlistDetails?.imageUrl}"`);
-        console.log(
-          `[GÁN STATE] Gán danh sách bài hát: có ${
-            songsList?.length || 0
-          } bài hát`
-        );
-
-        // Gán dữ liệu vào state
         setPlaylistTitle(playlistDetails.title);
         setPlaylistImage(playlistDetails.imageUrl);
         setSongs(songsList || []);
       } catch (err: any) {
-        // Thêm kiểu `any` để truy cập các thuộc tính của lỗi
-        // LOG 4: In ra lỗi chi tiết để gỡ rối
-        console.error("!!!!!!!!!! ĐÃ XẢY RA LỖI !!!!!!!!!!");
-        if (err.response) {
-          // Lỗi từ server (ví dụ: 404, 500)
-          console.error("Lỗi Status:", err.response.status);
-          console.error(
-            "Lỗi Data:",
-            JSON.stringify(err.response.data, null, 2)
-          );
-        } else if (err.request) {
-          // Request đã được gửi nhưng không nhận được phản hồi
-          console.error("Lỗi Request:", err.request);
-        } else {
-          // Lỗi khác
-          console.error("Lỗi Message:", err.message);
-        }
-        console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-
+        console.error("Lỗi tải dữ liệu playlist:", err);
         Alert.alert("Lỗi", "Không thể tải dữ liệu playlist");
       } finally {
-        console.log("[KẾT THÚC] Quá trình fetch data hoàn tất.");
         setLoading(false);
       }
     };
@@ -111,7 +60,71 @@ const PlaylistSong = () => {
     fetchPlaylistData();
   }, [id]);
 
-  // Giữ nguyên phần còn lại của component
+  const handleRemoveSong = async () => {
+    if (!selectedSongId || !id) return;
+    try {
+      await removeSongFromPlaylistAPI(id, selectedSongId);
+      setSongs((prev) => prev.filter((s) => s.id !== selectedSongId));
+      Toast.show({
+        type: "success",
+        text1: "Thành công",
+        text2: "Bài hát đã được xoá khỏi playlist",
+      });
+    } catch (err) {
+      console.error("Lỗi xoá bài hát:", err);
+      Toast.show({
+        type: "error",
+        text1: "Lỗi",
+        text2: "Không thể xoá bài hát",
+      });
+    } finally {
+      setMoreMenuVisible(false);
+      setSelectedSongId(null);
+    }
+  };
+
+  const SongItem = ({
+    id,
+    title,
+    imageUrl,
+  }: {
+    id: string;
+    title: string;
+    imageUrl?: string;
+  }) => (
+    <View
+      key={id}
+      className="flex-row items-center mb-5 border-b border-white/10 pb-4"
+    >
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 8,
+            marginRight: 16,
+          }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4" />
+      )}
+      <View className="flex-1">
+        <Text className="text-white font-bold">{title}</Text>
+      </View>
+      <TouchableOpacity
+        onPress={() => {
+          setSelectedSongId(id);
+          setMoreMenuVisible(true);
+        }}
+        className="ml-2"
+      >
+        <Ionicons name="ellipsis-vertical" size={20} color={APP_COLOR.WHITE} />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <LinearGradient
       colors={[APP_COLOR.LIGHT_PINK, APP_COLOR.BLACK]}
@@ -163,68 +176,15 @@ const PlaylistSong = () => {
               {playlistTitle}
             </Text>
 
-            <View className="flex-row justify-start mb-10 ml-4">
-              <TouchableOpacity
-                onPress={() => console.log("Add songs pressed")}
-                className="bg-pink-500 rounded-lg px-6 py-2 mr-4"
-              >
-                <Text className="text-white font-semibold"> Add </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => console.log("Delete playlist pressed")}
-                className="bg-gray-500 rounded-lg px-6 py-2"
-              >
-                <Text className="text-white font-semibold">
-                  Delete Playlist
-                </Text>
-              </TouchableOpacity>
-            </View>
-
             <View className="px-4">
-              {songs.map((item) => (
-                <View
-                  key={item.id}
-                  className="flex-row items-center mb-5 border-b border-white/10 pb-4"
-                >
-                  {item.imageUrl ? (
-                    <Image
-                      source={{ uri: item.imageUrl }}
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: 8,
-                        marginRight: 16,
-                      }}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View className="w-16 h-16 bg-gray-400 rounded-lg mr-4" />
-                  )}
-                  <View className="flex-1">
-                    <Text className="text-white font-bold">{item.title}</Text>
-                    <Text className="text-gray-400 text-sm">
-                      {item.artists?.map((a) => a.name).join(", ") || "Unknown"}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setSelectedSongId(item.id);
-                      setMoreMenuVisible(true);
-                    }}
-                    className="ml-2"
-                  >
-                    <Ionicons
-                      name="ellipsis-vertical"
-                      size={20}
-                      color={APP_COLOR.WHITE}
-                    />
-                  </TouchableOpacity>
-                </View>
+              {songs.map((s) => (
+                <SongItem key={s.id} {...s} />
               ))}
             </View>
           </>
         )}
       </ScrollView>
+
       <VideoMoreMenu
         visible={isMoreMenuVisible}
         onClose={() => {
@@ -236,26 +196,7 @@ const PlaylistSong = () => {
             label: "Xoá khỏi playlist",
             icon: "trash-outline",
             isDestructive: true,
-            onPress: async () => {
-              if (!selectedSongId) return;
-              try {
-                await removeSongFromPlaylistAPI(id as string, selectedSongId);
-                setSongs((prev) => prev.filter((s) => s.id !== selectedSongId));
-
-                Toast.show({
-                  type: "success",
-                  text1: "Thành công",
-                  text2: "Bài hát đã được xoá khỏi playlist",
-                });
-              } catch (err: any) {
-                console.error("Lỗi xoá bài hát:", err);
-                Toast.show({
-                  type: "error",
-                  text1: "Lỗi",
-                  text2: "Không thể xoá bài hát",
-                });
-              }
-            },
+            onPress: handleRemoveSong,
           },
         ]}
       />
