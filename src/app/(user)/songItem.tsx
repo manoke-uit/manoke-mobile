@@ -43,13 +43,13 @@ const SongItemScreen = () => {
   const videoRef = useRef<Video>(null);
   const [karaokeList, setKaraokeList] = useState<IKaraoke[]>([]);
   const [isPaused, setIsPaused] = useState(false);
-  const [isConfirmScoreModalVisible, setConfirmScoreModalVisible] =
-    useState(false);
+
   const [recordStartTime, setRecordStartTime] = useState<number | null>(null);
   const [
     isConfirmStopRecordingModalVisible,
     setConfirmStopRecordingModalVisible,
   ] = useState(false);
+  const [hasRequestedScore, setHasRequestedScore] = useState(false);
 
   const fetchSongData = async (songId: string, karaokeIdFromParam?: string) => {
     if (recording) {
@@ -100,6 +100,7 @@ const SongItemScreen = () => {
     setRecording(null);
     setIsRecording(false);
     setScoreModalVisible(false);
+    setHasRequestedScore(false);
   };
 
   useEffect(() => {
@@ -167,14 +168,14 @@ const SongItemScreen = () => {
       Alert.alert("Error", "Unable to calculate score");
     } finally {
       setIsUploading(false);
-      setConfirmScoreModalVisible(false);
     }
   };
 
   const handleVideoStatusUpdate = (status: any) => {
-    if (status.didJustFinish && isRecording) {
+    if (status.didJustFinish && isRecording && !hasRequestedScore) {
       setIsRecording(false);
-      setConfirmScoreModalVisible(true);
+      setHasRequestedScore(true);
+      uploadAndScore();
     }
   };
 
@@ -561,80 +562,7 @@ const SongItemScreen = () => {
           </View>
         </View>
       </Modal>
-      <Modal
-        visible={isConfirmScoreModalVisible}
-        transparent
-        animationType="fade"
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.6)",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 20,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: APP_COLOR.BLACK,
-              borderRadius: 20,
-              padding: 20,
-              width: "80%",
-              alignItems: "center",
-              borderWidth: 1,
-              borderColor: APP_COLOR.PINK,
-            }}
-          >
-            <Text
-              style={{
-                color: "white",
-                fontSize: 20,
-                fontWeight: "bold",
-                marginBottom: 20,
-                textAlign: "center",
-              }}
-            >
-              Are you confident to get your singing score?
-            </Text>
 
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-around",
-                width: "100%",
-              }}
-            >
-              <TouchableOpacity
-                onPress={uploadAndScore}
-                style={{
-                  backgroundColor: APP_COLOR.PURPLE,
-                  paddingVertical: 10,
-                  paddingHorizontal: 30,
-                  borderRadius: 20,
-                }}
-              >
-                <Text style={{ color: "white", fontWeight: "bold" }}>Yes</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => {
-                  setConfirmScoreModalVisible(false);
-                  router.back();
-                }}
-                style={{
-                  backgroundColor: APP_COLOR.PINK,
-                  paddingVertical: 10,
-                  paddingHorizontal: 30,
-                  borderRadius: 20,
-                }}
-              >
-                <Text style={{ color: "white", fontWeight: "bold" }}>No</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
       <Modal
         visible={isConfirmStopRecordingModalVisible}
         transparent

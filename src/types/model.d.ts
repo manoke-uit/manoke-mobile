@@ -197,4 +197,11 @@ declare global {
       }[];
     };
   }
+  export interface INotification {
+    id: string;
+    title: string;
+    description: string;
+    createdAt: string;
+    isRead: boolean;
+  }
 }

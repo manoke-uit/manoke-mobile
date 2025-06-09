@@ -1,7 +1,7 @@
 import { router, Tabs } from "expo-router";
-import { Ionicons} from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import { APP_COLOR } from "@/utils/constant";
 import AnimatedTabIcon from "@/components/animation/tabAnimate";
 
@@ -11,16 +11,16 @@ const TabLayout = () => {
       screenOptions={{
         headerShown: true,
         tabBarStyle: {
-          backgroundColor: APP_COLOR.BLACK, 
+          backgroundColor: APP_COLOR.BLACK,
           borderTopWidth: 0,
-          elevation: 0, 
-          height: 70, 
+          elevation: 0,
+          height: 70,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           overflow: "hidden",
-          position: "absolute", 
+          position: "absolute",
         },
-        
+
         tabBarActiveTintColor: APP_COLOR.PINK,
         tabBarInactiveTintColor: "#888",
         tabBarLabelStyle: {
@@ -34,22 +34,29 @@ const TabLayout = () => {
         options={{
           tabBarLabel: "Home",
           headerTitle: () => (
-            <Text 
+            <Text
               style={{ paddingTop: 70, marginBottom: 40 }}
               className="text-white text-3xl font-bold"
             >
-                Discover
+              Discover
             </Text>
           ),
           headerShadowVisible: false,
           headerRight: () => (
-            <MaterialCommunityIcons
-              name="cog-outline"
-              size={24}
-              color="white"
-              style={{ marginRight: 16 }}
-              onPress={() => router.push("/(setting)/setting")}
-            />
+            <View style={{ flexDirection: "row", gap: 16, marginRight: 16 }}>
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color="white"
+                onPress={() => router.push("/(setting)/noti")}
+              />
+              <MaterialCommunityIcons
+                name="cog-outline"
+                size={24}
+                color="white"
+                onPress={() => router.push("/(setting)/setting")}
+              />
+            </View>
           ),
           headerStyle: {
             backgroundColor: APP_COLOR.LT_PINK,
@@ -71,7 +78,7 @@ const TabLayout = () => {
         options={{
           tabBarLabel: "Search",
           headerTitle: () => (
-            <Text 
+            <Text
               style={{ paddingTop: 70, marginBottom: 40 }}
               className="text-white text-3xl font-bold"
             >
@@ -79,13 +86,21 @@ const TabLayout = () => {
             </Text>
           ),
           headerRight: () => (
-            <MaterialCommunityIcons
-              name="cog-outline"
-              size={24}
-              color="white"
-              style={{ marginRight: 16 }}
-              onPress={() => router.push("/(setting)/setting")}
-            />
+            <View style={{ flexDirection: "row", gap: 16, marginRight: 16 }}>
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color="white"
+                onPress={() => router.push("/(setting)/noti")}
+              />
+              <MaterialCommunityIcons
+                name="cog-outline"
+                size={24}
+                color="white"
+                style={{ marginRight: 16 }}
+                onPress={() => router.push("/(setting)/setting")}
+              />
+            </View>
           ),
           headerShadowVisible: false,
           headerStyle: {
@@ -108,7 +123,7 @@ const TabLayout = () => {
         options={{
           tabBarLabel: "Community",
           headerTitle: () => (
-            <Text 
+            <Text
               style={{ paddingTop: 70, marginBottom: 40 }}
               className="text-white text-3xl font-bold"
             >
@@ -116,13 +131,21 @@ const TabLayout = () => {
             </Text>
           ),
           headerRight: () => (
-            <MaterialCommunityIcons
-              name="cog-outline"
-              size={24}
-              color="white"
-              style={{ marginRight: 16 }}
-              onPress={() => router.push("/(setting)/setting")}
-            />
+            <View style={{ flexDirection: "row", gap: 16, marginRight: 16 }}>
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color="white"
+                onPress={() => router.push("/(setting)/noti")}
+              />
+              <MaterialCommunityIcons
+                name="cog-outline"
+                size={24}
+                color="white"
+                style={{ marginRight: 16 }}
+                onPress={() => router.push("/(setting)/setting")}
+              />
+            </View>
           ),
           headerShadowVisible: false,
           headerStyle: {
@@ -145,7 +168,7 @@ const TabLayout = () => {
         options={{
           tabBarLabel: "History",
           headerTitle: () => (
-            <Text 
+            <Text
               style={{ paddingTop: 70, marginBottom: 40 }}
               className="text-white text-3xl font-bold"
             >
@@ -153,13 +176,21 @@ const TabLayout = () => {
             </Text>
           ),
           headerRight: () => (
-            <MaterialCommunityIcons
-              name="cog-outline"
-              size={24}
-              color="white"
-              style={{ marginRight: 16 }}
-              onPress={() => router.push("/(setting)/setting")}
-            />
+            <View style={{ flexDirection: "row", gap: 16, marginRight: 16 }}>
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color="white"
+                onPress={() => router.push("/(setting)/noti")}
+              />
+              <MaterialCommunityIcons
+                name="cog-outline"
+                size={24}
+                color="white"
+                style={{ marginRight: 16 }}
+                onPress={() => router.push("/(setting)/setting")}
+              />
+            </View>
           ),
           headerShadowVisible: false,
           headerStyle: {
@@ -183,13 +214,21 @@ const TabLayout = () => {
           tabBarLabel: "Profile",
           headerTitle: "",
           headerRight: () => (
-            <MaterialCommunityIcons
-              name="cog-outline"
-              size={24}
-              color="white"
-              style={{ marginRight: 16 }}
-              onPress={() => router.push("/(setting)/setting")}
-            />
+            <View style={{ flexDirection: "row", gap: 16, marginRight: 16 }}>
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color="white"
+                onPress={() => router.push("/(setting)/noti")}
+              />
+              <MaterialCommunityIcons
+                name="cog-outline"
+                size={24}
+                color="white"
+                style={{ marginRight: 16 }}
+                onPress={() => router.push("/(setting)/setting")}
+              />
+            </View>
           ),
           headerShadowVisible: false,
           headerStyle: {

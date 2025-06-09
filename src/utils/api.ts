@@ -555,3 +555,8 @@ export const removeSongFromPlaylistAPI = (
 ) => {
   return axios.delete(`/playlists/${playlistId}/songs/${songId}`);
 };
+export const getNotificationsAPI = (userId: string) => {
+  return axios.get("/notifications", {
+    params: { userId },
+  });
+};
