@@ -186,10 +186,7 @@ export const uploadScoreAudioAPI = async (
       },
     });
     return response;
-  } catch (error) {
-    console.error("Upload audio failed:", error);
-    throw error;
-  }
+  } catch (error) {}
 };
 
 export const createPostAPI = async (payload: {
