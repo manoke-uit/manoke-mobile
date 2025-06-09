@@ -58,19 +58,18 @@ const SearchTab = () => {
     "IU",
     "Bruno Mars",
   ];
-
   useEffect(() => {
     const fetchSongs = async () => {
       try {
         const res = await getAllSongs();
         setAllSongs(res.data ?? []);
       } catch (err) {
-        // console.error("Lỗi tải danh sách bài hát:", err);
+        console.error("Lỗi khi lấy bài hát:", err);
       }
     };
+
     fetchSongs();
   }, []);
-
   useEffect(() => {
     if (searchText.trim() === "") {
       setFilteredSongs([]);
@@ -81,8 +80,10 @@ const SearchTab = () => {
     const filtered = allSongs.filter(
       (song) =>
         song.title.toLowerCase().includes(keyword) ||
-        song.artists?.some((a) => a.name.toLowerCase().includes(keyword))
+        song.artists?.some((a) => a.name.toLowerCase().includes(keyword)) ||
+        song.genres?.some((g) => g.name?.toLowerCase().includes(keyword))
     );
+
     setFilteredSongs(filtered);
   }, [searchText, allSongs]);
 
@@ -147,7 +148,7 @@ const SearchTab = () => {
         style={{ flex: 1 }}
       >
         <AnimatedWrapper fade scale slideUp style={{ flex: 1 }}>
-          <ScrollView 
+          <ScrollView
             className="flex-1 px-4"
             onScroll={handleScroll}
             scrollEventThrottle={16}

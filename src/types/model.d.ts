@@ -67,6 +67,7 @@ declare global {
       description: string;
       isPublic: boolean;
     }[];
+    genres?: { name: string }[];
   }
 
   export interface IPaginatedSongs {
