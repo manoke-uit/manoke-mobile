@@ -333,12 +333,20 @@ const CommunityTab = () => {
         postId,
       });
       console.log(res);
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: "Comment added successfully.",
-      });
-      setNewComment((prev) => ({ ...prev, [postId]: "" }));
+      if (res.statusCode === 403) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "You are not authorized to comment on this post.",
+        });
+      } else {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Comment added successfully.",
+        });
+        setNewComment((prev) => ({ ...prev, [postId]: "" }));
+      }
 
       // Fetch updated posts with comments
       const postResponse = await getPostsAPI();
